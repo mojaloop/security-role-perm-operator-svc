@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    deployment.kubernetes.io/revision: '4'
+  labels:
+    app: moja-role-operator
+    app.kubernetes.io/component: moja-role-operator
+    app.kubernetes.io/instance: moja-role-operator
+  name: moja-role-operator
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      deployment: moja-role-operator
+  template:
+    metadata:
+      labels:
+        deployment: moja-role-operator
+    spec:
+      containers:
+        - env:
+            - name: DEV_MODE
+              value: 'false'
+          image: moja-operator-keto:local
+          imagePullPolicy: Never
+          name: moja-role-operator
+          ports:
+            - containerPort: 8080
+              protocol: TCP
+      serviceAccount: moja-role-operator

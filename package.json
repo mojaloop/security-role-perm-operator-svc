@@ -1,0 +1,38 @@
+{
+  "name": "security-role-perm-operator-svc",
+  "version": "0.0.1",
+  "description": "K8S operator for role permission sync to Ory Keto",
+  "author": "Mojaloop",
+  "contributors": [
+    "Vijaya Kumar Guthi <vijaya.guthi@modusbox.com>"
+  ],
+  "repository": "https://github.com/mojaloop/security-role-perm-operator-svc",
+  "main": "dist/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "npx tsc",
+    "watch": "npx tsc -w",
+    "clean": "rm -rf dist node_modules",
+    "start": "node dist/index.js",
+    "startDirect": "ts-node src/index.ts",
+    "dev": "nodemon --watch './src/**/*.ts' --exec 'ts-node' src/index.ts",
+    "lint": "eslint . --ext .ts",
+    "lint-and-fix": "eslint . --ext .ts --fix"
+  },
+  "license": "Apache-2.0",
+  "dependencies": {
+    "@kubernetes/client-node": "^0.14.3",
+    "lodash": "^4.17.21",
+    "typescript": "^4.2.3"
+  },
+  "devDependencies": {
+    "@types/lodash": "^4.14.173",
+    "@typescript-eslint/eslint-plugin": "^4.25.0",
+    "@typescript-eslint/parser": "^4.25.0",
+    "eslint": "^7.27.0",
+    "eslint-config-prettier": "^8.3.0",
+    "eslint-plugin-prettier": "^3.4.0",
+    "prettier": "^2.3.0",
+    "ts-node": "^10.1.0"
+  }
+}
