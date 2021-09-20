@@ -1,0 +1,28 @@
+{
+  "INSPECT": {
+    "DEPTH": 4,
+    "SHOW_HIDDEN": false,
+    "COLOR": true
+  },
+  "ORY_KETO_READ_SERVICE_URL": "http://localhost:4466",
+  "ORY_KETO_WRITE_SERVICE_URL": "http://localhost:4467",
+  "ERROR_HANDLING": {
+    "includeCauseExtension": true,
+    "truncateExtensions": true
+  },
+  "INSTRUMENTATION": {
+    "METRICS": {
+      "DISABLED": false,
+      "labels": {
+        "eventId": "*"
+      },
+      "config": {
+        "timeout": 5000,
+        "prefix": "moja_ra_api",
+        "defaultLabels": {
+          "serviceName": "role-assignment-service"
+        }
+      }
+    }
+  }
+}

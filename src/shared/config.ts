@@ -62,7 +62,6 @@ export interface ServiceConfig {
       };
     };
   };
-  ROLES_LIST: string[];
 }
 
 const RC = parse(rc('ROLE_ASSIGNMENT_SERVICE', Config)) as ServiceConfig
