@@ -1,0 +1,20 @@
+version: "3.7"
+
+services:
+  keto:
+    image: oryd/keto:v0.6.0-alpha.3-sqlite
+    ports:
+      - '4466:4466' # Read port
+      - '4467:4467' # Write port
+    volumes:
+      - ./keto.yml:/opt/keto/keto.yml
+    command: serve --config /opt/keto/keto.yml
+
+  # keto-init:
+  #  image: oryd/keto:v0.6.0-alpha.3-sqlite
+  #  environment:
+  #    - KETO_WRITE_REMOTE=keto:4467
+  #  volumes:
+  #    - ./relation-tuples:/opt/relation-tuples
+  #  command: relation-tuple create /opt/relation-tuples/init_tuples.json
+
