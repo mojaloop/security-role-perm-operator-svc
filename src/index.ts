@@ -31,6 +31,7 @@
 import * as k8s from "@kubernetes/client-node";
 
 import { RoleResources } from "./role-resources";
+import { RolePermissionChangeProcessor } from "./role-permission-change-processor";
 
 // Configure the operator to monitor your custom resources
 // and the namespace for your custom resources
@@ -41,6 +42,7 @@ const RESOURCE_PLURAL = "mojalooproles";
 const NAMESPACE = "mojaloop";
 
 const roleResourceStore = new RoleResources();
+const rolePermissionChangeProcessor = new RolePermissionChangeProcessor();
 
 // Generates a client from an existing kubeconfig whether in memory
 // or from a file.
@@ -87,9 +89,13 @@ async function onEvent(phase: string, apiObj: any) {
   }
   // console.log(JSON.stringify(roleResourceStore.getData(), null, 2))
   log("Stored roles:");
-  log(roleResourceStore.getAggregatedRolePermissions());
-  // log("Generated Keto Tuples (To be synced with Keto service):");
-  // log(roleResourceStore.generateKetoTuples());
+  const rolePermissions = roleResourceStore.getAggregatedRolePermissions();
+  log(rolePermissions);
+
+  // Update role permissions in Ory Keto
+  for (let rolePermission of rolePermissions) {
+    rolePermissionChangeProcessor.addToQueue(rolePermission)
+  }
 }
 
 // Helpers to continue watching after an event

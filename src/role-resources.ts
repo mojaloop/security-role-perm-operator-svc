@@ -28,10 +28,10 @@
 
 import _ from "lodash";
 
-// export interface RolePermissionObject {
-//   role: Logger.Logger
-//   resources: any[]
-// }
+export interface RolePermissionModel {
+  role: string;
+  permissions: string[];
+}
 
 class RoleResources {
   roleResourceData: any;
@@ -83,21 +83,14 @@ class RoleResources {
         }
       }
     }
-    return resourcePermissions;
-  }
-
-  generateKetoTuples () {
-    const ketoTuples = []
-    const resourcePermissions: any = this.getAggregatedRolePermissions();
+    const rolePermissionsArray: RolePermissionModel[] = []
     for (let [k, v] of Object.entries(resourcePermissions)) {
-      const role = k;
-      const permissions = <string[]>v;
-      for (let permission of permissions) {
-        ketoTuples.push(`permission:${permission}#granted@role:${role}#member`);
-      }
+      rolePermissionsArray.push({
+        role: k,
+        permissions: <string[]>v
+      })
     }
-
-    return ketoTuples;
+    return rolePermissionsArray;
   }
 
 }

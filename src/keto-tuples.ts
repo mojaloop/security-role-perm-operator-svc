@@ -76,7 +76,7 @@ class KetoTuples {
     // Construct patch delta
     const patchDeltaArr = this._generatePatchPermissionPatchDeltaArray(roleName, addPermissions, deletePermissions)
     if (patchDeltaArr.length > 0) {
-      console.log('Patching permissions in Ory Keto....')
+      console.log(`Patching permissions for role ${roleName} in Ory Keto....`)
       await this.oryKetoWriteApi.patchRelationTuples(patchDeltaArr)
     }
   }
