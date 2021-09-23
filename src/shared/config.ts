@@ -42,8 +42,13 @@ export interface ServiceConfig {
     COLOR?: boolean;
   };
 
+  WATCH_RESOURCE_GROUP: string;
+  WATCH_RESOURCE_VERSION: string;
+  WATCH_RESOURCE_PLURAL: string;
+  WATCH_NAMESPACE: string;
   ORY_KETO_READ_SERVICE_URL: string;
   ORY_KETO_WRITE_SERVICE_URL: string;
+  KETO_QUEUE_PROCESS_INTERVAL_MS: number;
 
   ERROR_HANDLING: {
     includeCauseExtension: boolean;

@@ -22,6 +22,7 @@
  optionally within square brackets <email>.
  * Gates Foundation
  - Name Surname <name.surname@gatesfoundation.com>
+ 
  - Vijaya Kumar Guthi <vijaya.guthi@modusbox.com>
  --------------
  ******/

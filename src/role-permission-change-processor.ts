@@ -27,18 +27,16 @@
  --------------
  ******/
 
-// import Config from './shared/config';
+import Config from './shared/config';
 import { RolePermissionModel } from './role-resources';
 import { KetoTuples } from './keto-tuples';
-
-const PROCESS_QUEUE_INTERVAL = 1000
+import { logger } from './shared/logger'
 
 const oryKeto = new KetoTuples();
 
 export class RolePermissionChangeProcessor {
 
   queue: RolePermissionModel[];
-  // startProcessing
 
   constructor () {
     this.queue = [];
@@ -51,20 +49,32 @@ export class RolePermissionChangeProcessor {
   _popQueue () {
     return this.queue.shift();
   }
+  _getFirstItemInQueue () {
+    if (this.queue.length > 0) {
+      return this.queue[0];
+    } else {
+      return null
+    }
+  }
 
   async _processQueue () {
-    const rolePermission = this._popQueue()
+    const rolePermission = this._getFirstItemInQueue()
     if (rolePermission) {
-      await this._updateRolePermission(rolePermission)
+      try {
+        await this._updateRolePermission(rolePermission)
+        this._popQueue()
+      } catch(err: any) {
+        logger.error(err.message)
+      }
     }
-    setTimeout(this._processQueue.bind(this), PROCESS_QUEUE_INTERVAL);
+    setTimeout(this._processQueue.bind(this), Config.KETO_QUEUE_PROCESS_INTERVAL_MS);
   }
 
   async _updateRolePermission (rolePermission: RolePermissionModel) {
-    console.log('Updating role permissions in Keto', rolePermission.role, rolePermission.permissions)
     await oryKeto.updateRolePermissions(rolePermission.role, rolePermission.permissions);
+    logger.log('Updated the role permissions in Keto', rolePermission.role, rolePermission.permissions)
     // const updatedPermissions = await oryKeto.getRolePermissions(rolePermission.role);
-    // console.log(rolePermission.role, updatedPermissions);
+    // logger.debug(rolePermission.role, updatedPermissions);
   }
 
   addToQueue ( rolePermission: RolePermissionModel ) {
