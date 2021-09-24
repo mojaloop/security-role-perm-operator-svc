@@ -1,0 +1,83 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: keto-config
+data:
+  keto.yml: |
+    version: v0.6.0-alpha.1
+    log:
+      level: debug
+    namespaces:
+      - id: 0
+        name: role
+      - id: 1
+        name: permission
+    dsn: memory
+    serve:
+      read:
+        host: 0.0.0.0
+        port: 4466
+      write:
+        host: 0.0.0.0
+        port: 4467
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    deployment.kubernetes.io/revision: '4'
+  labels:
+    app: moja-keto
+    app.kubernetes.io/component: moja-keto
+    app.kubernetes.io/instance: moja-keto
+  name: moja-keto
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      deployment: moja-keto
+      app: moja-keto
+  template:
+    metadata:
+      labels:
+        deployment: moja-keto
+        app: moja-keto
+    spec:
+      containers:
+        - image: oryd/keto:v0.6.0-alpha.3-sqlite
+          name: moja-keto
+          ports:
+            - containerPort: 4466
+              protocol: TCP
+            - containerPort: 4467
+              protocol: TCP
+          volumeMounts:
+          - name: keto-config
+            mountPath: "/home/ory"
+            readOnly: true
+      volumes:
+        - name: keto-config
+          configMap:
+            name: keto-config
+            items:
+            - key: "keto.yml"
+              path: "keto.yml"
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: moja-keto-service
+spec:
+  selector:
+    app: moja-keto
+  ports:
+    - name: read-port
+      protocol: TCP
+      port: 4466
+      targetPort: 4466
+    - name: write-port
+      protocol: TCP
+      port: 4467
+      targetPort: 4467
