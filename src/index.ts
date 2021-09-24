@@ -95,7 +95,7 @@ async function onEvent(phase: string, apiObj: any) {
 // Helpers to continue watching after an event
 function onDone(err: any) {
   logger.info(`Connection closed. ${err}`);
-  watchResource();
+  setTimeout(watchResource,1000);
 }
 
 async function watchResource(): Promise<any> {
