@@ -13,8 +13,8 @@
     "build": "npx tsc",
     "watch": "npx tsc -w",
     "clean": "rm -rf dist node_modules",
-    "start": "node dist/index.js",
-    "startDirect": "ts-node src/index.ts",
+    "start": "node dist/src/index.js",
+    "startDev": "ts-node src/index.ts",
     "dev": "nodemon --watch './src/**/*.ts' --exec 'ts-node' src/index.ts",
     "lint": "eslint . --ext .ts",
     "lint-and-fix": "eslint . --ext .ts --fix"
