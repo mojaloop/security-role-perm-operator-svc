@@ -1,0 +1,1 @@
+docker run --rm --network host -it oryd/keto:v0.6.0-alpha.3 --write-remote "localhost:4467" --read-remote "localhost:4466" $@

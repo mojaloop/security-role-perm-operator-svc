@@ -1,0 +1,32 @@
+version: v1beta10
+deployments:
+- name: security-role-perm-operator-svc
+  namespace: moja-operator
+  kubectl:
+    manifests:
+    - resources/moja-role-operator-deployment.yaml
+
+dev:
+  # `dev.sync` configures a file sync between our Pods in k8s and your local project files
+  sync:
+  - imageSelector: image(operator):tag(operator) # Select the Pod that runs our `${IMAGE}`
+    namespace: moja-operator
+    onUpload:
+      restartContainer: true
+    excludePaths:
+    - .git/
+    uploadExcludePaths:
+    - .dockerignore
+    - .eslintignore
+    - .circleci/
+    - Dockerfile
+    - node_modules/
+
+images:
+  operator:
+    image: role-perm-operator
+    dockerfile: ./Dockerfile-dev
+    injectRestartHelper: true
+    build:
+      docker:
+        preferMinikube: true

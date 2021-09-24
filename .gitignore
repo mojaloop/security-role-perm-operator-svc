@@ -74,3 +74,6 @@ dist/
 junit.xml
 
 .vscode
+
+# Ignore DevSpace cache and log folder
+.devspace/

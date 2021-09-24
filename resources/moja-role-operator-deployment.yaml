@@ -22,7 +22,11 @@ spec:
         - env:
             - name: DEV_MODE
               value: 'false'
-          image: moja-operator-keto:local
+            - name: ROLE_ASSIGNMENT_SERVICE_ORY_KETO_READ_SERVICE_URL
+              value: 'http://moja-keto-service:4466'
+            - name: ROLE_ASSIGNMENT_SERVICE_ORY_KETO_WRITE_SERVICE_URL
+              value: 'http://moja-keto-service:4467'
+          image: role-perm-operator:local
           imagePullPolicy: Never
           name: moja-role-operator
           ports:

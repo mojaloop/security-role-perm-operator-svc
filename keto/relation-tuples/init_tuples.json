@@ -1,0 +1,9 @@
+[
+  {
+    "$schema": "./relation_tuple.schema.json",
+    "namespace": "role",
+    "object": "LevelOneAdmin",
+    "relation": "member",
+    "subject": "Level One Admin"
+  }
+]

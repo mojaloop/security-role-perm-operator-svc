@@ -29,49 +29,46 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 import * as k8s from "@kubernetes/client-node";
-
+import { logger } from './shared/logger'
+import Config from './shared/config';
 import { RoleResources } from "./role-resources";
+import { RolePermissionChangeProcessor } from "./role-permission-change-processor";
 
 // Configure the operator to monitor your custom resources
 // and the namespace for your custom resources
-
-const RESOURCE_GROUP = "mojaloop.io";
-const RESOURCE_VERSION = "v1";
-const RESOURCE_PLURAL = "mojalooproles";
-const NAMESPACE = "mojaloop";
+const RESOURCE_GROUP = Config.WATCH_RESOURCE_GROUP;
+const RESOURCE_VERSION = Config.WATCH_RESOURCE_VERSION;
+const RESOURCE_PLURAL = Config.WATCH_RESOURCE_PLURAL;
+const NAMESPACE = Config.WATCH_NAMESPACE;
 
 const roleResourceStore = new RoleResources();
+const rolePermissionChangeProcessor = new RolePermissionChangeProcessor();
 
-// Generates a client from an existing kubeconfig whether in memory
-// or from a file.
 const kc = new k8s.KubeConfig();
 kc.loadFromDefault();
 
-// Creates the different clients for the different parts of the API.
-const k8sApi = kc.makeApiClient(k8s.AppsV1Api);
-const k8sApiMC = kc.makeApiClient(k8s.CustomObjectsApi);
-const k8sApiPods = kc.makeApiClient(k8s.CoreV1Api);
+// If we want to do something in K8S, we can use the following APIs
+// const k8sApi = kc.makeApiClient(k8s.AppsV1Api);
+// const k8sApiMC = kc.makeApiClient(k8s.CustomObjectsApi);
+// const k8sApiPods = kc.makeApiClient(k8s.CoreV1Api);
 
-// This is to listen for events or notifications and act accordingly
-// after all it is the core part of a controller or operator to
-// watch or observe, compare and reconcile
+// Listen for events or notifications and act accordingly
 const watch = new k8s.Watch(kc);
 
 async function onEvent(phase: string, apiObj: any) {
-  log(`Received event in phase ${phase}.`);
-
-  try {
-    // const result = await k8sApiMC.listNamespacedCustomObject(
-    //   RESOURCE_GROUP,
-    //   RESOURCE_VERSION,
-    //   NAMESPACE,
-    //   RESOURCE_PLURAL,
-    // )
-    // console.log(JSON.stringify(result.body, null, 2))
-    // console.log(apiObj?.spec)
-  } catch (err: any) {
-    log(err);
-  }
+  logger.info(`Received event in phase ${phase} for the resource ${apiObj?.metadata?.name}`);
+  // try {
+  //   const result = await k8sApiMC.listNamespacedCustomObject(
+  //     RESOURCE_GROUP,
+  //     RESOURCE_VERSION,
+  //     NAMESPACE,
+  //     RESOURCE_PLURAL,
+  //   )
+  //   console.log(JSON.stringify(result.body, null, 2))
+  //   console.log(apiObj?.spec)
+  // } catch (err: any) {
+  //   logger.error(err);
+  // }
   const resourceName = apiObj?.metadata?.name
   const role = apiObj?.spec?.role
   const permissions = apiObj?.spec?.permissions
@@ -83,23 +80,23 @@ async function onEvent(phase: string, apiObj: any) {
   } else if (phase == "DELETED") {
     roleResourceStore.deleteRoleResource(resourceName);
   } else {
-    log(`Unknown event type: ${phase}`);
+    logger.warn(`Unknown event type: ${phase}`);
   }
-  // console.log(JSON.stringify(roleResourceStore.getData(), null, 2))
-  log("Stored roles:");
-  log(roleResourceStore.getAggregatedRolePermissions());
-  // log("Generated Keto Tuples (To be synced with Keto service):");
-  // log(roleResourceStore.generateKetoTuples());
+  const rolePermissionCombos = roleResourceStore.getUniqueRolePermissionCombos();
+  logger.info('Current permissions in memory' + JSON.stringify(rolePermissionCombos));
+
+  rolePermissionChangeProcessor.addToQueue(rolePermissionCombos)
+
 }
 
 // Helpers to continue watching after an event
 function onDone(err: any) {
-  log(`Connection closed. ${err}`);
-  watchResource();
+  logger.info(`Connection closed. ${err}`);
+  setTimeout(watchResource,1000);
 }
 
 async function watchResource(): Promise<any> {
-  log("Watching API");
+  logger.info("Watching Resources");
   return watch.watch(
     `/apis/${RESOURCE_GROUP}/${RESOURCE_VERSION}/namespaces/${NAMESPACE}/${RESOURCE_PLURAL}`,
     {},
@@ -113,14 +110,9 @@ async function main() {
   await watchResource();
 }
 
-// Helper to pretty print logs
-function log(message: any) {
-  console.log(`${new Date().toLocaleString()}: `, message);
-}
-
 // Helper to get better errors if we miss any promise rejection.
 process.on("unhandledRejection", (reason, p) => {
-  console.log("Unhandled Rejection at: Promise", p, "reason:", reason);
+  logger.error("Unhandled Rejection at promise. reason:" + JSON.stringify(reason));
 });
 
 // Run
