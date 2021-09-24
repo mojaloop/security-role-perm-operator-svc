@@ -82,14 +82,11 @@ async function onEvent(phase: string, apiObj: any) {
   } else {
     logger.warn(`Unknown event type: ${phase}`);
   }
-  // console.log(JSON.stringify(roleResourceStore.getData(), null, 2))
-  const rolePermissions = roleResourceStore.getAggregatedRolePermissions();
-  logger.info(rolePermissions);
+  const rolePermissionCombos = roleResourceStore.getUniqueRolePermissionCombos();
+  logger.info('Current permissions in memory' + JSON.stringify(rolePermissionCombos));
 
-  // Update role permissions in Ory Keto
-  for (let rolePermission of rolePermissions) {
-    rolePermissionChangeProcessor.addToQueue(rolePermission)
-  }
+  rolePermissionChangeProcessor.addToQueue(rolePermissionCombos)
+
 }
 
 // Helpers to continue watching after an event

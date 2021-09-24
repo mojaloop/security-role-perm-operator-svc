@@ -30,6 +30,7 @@
 import * as keto from '@ory/keto-client';
 import { PatchDelta, InternalRelationTuple } from '@ory/keto-client';
 import Config from './shared/config';
+import { logger } from './shared/logger'
 
 class KetoTuples {
 
@@ -48,51 +49,55 @@ class KetoTuples {
   }
 
   /**
-   * Gets permissions of specified role from Ory Keto server.
-   * @param {string} roleName - The role name.
+   * Gets all roles and permissions in the namespace from Ory Keto server.
    */
-  async getRolePermissions (roleName: string) {
+   async getAllRolePermissionCombos () {
     const response = await this.oryKetoReadApi.getRelationTuples(
       'permission',
       undefined,
-      'granted',
-      'role:' + roleName + '#member'
+      'granted'
     )
-    return response.data?.relation_tuples?.map(item => item.object)
+    const relationTuples = response.data?.relation_tuples || []
+    return relationTuples.map(tuple => {
+      const role = tuple.subject.replace(/role:(.*)#.*/, '$1')
+      return role + ':' + tuple.object
+    })
   }
 
   /**
-   * Updates permissions of specified role in Ory Keto server.
+   * Updates all the permissions in Ory Keto server.
    * This function gets the permissions from Keto, compare with the desired permissions and patches the tuples appropriately.
-   * @param {string} roleName - The role name.
-   * @param {string[]} permissions - The list of permissions to update.
+   * @param {rolePermissionCombos: string[]} rolePermissionCombos - The list of role and permission combination strings to update.
    */
-  async updateRolePermissions (roleName: string, permissions: string[]) {
-    const currentPermissions = (await this.getRolePermissions(roleName)) || []
+  async updateAllRolePermissions (rolePermissionCombos: string[]) {
+    const currentPermissionCombos = (await this.getAllRolePermissionCombos()) || []
     // Calculate the permissions to be deleted
-    const deletePermissions = currentPermissions?.filter(item => !permissions.includes(item))
+    const deletePermissionCombos = currentPermissionCombos?.filter(item => !rolePermissionCombos.includes(item))
     // Calculate the permissions to be added
-    const addPermissions = permissions?.filter(item => !currentPermissions.includes(item))
+    const addPermissionCombos = rolePermissionCombos?.filter(item => !currentPermissionCombos.includes(item))
+
     // Construct patch delta
-    const patchDeltaArr = this._generatePatchPermissionPatchDeltaArray(roleName, addPermissions, deletePermissions)
+    const patchDeltaArr = this._generateRolePermissionComboPatchDeltaArray(addPermissionCombos, deletePermissionCombos)
     if (patchDeltaArr.length > 0) {
-      console.log(`Patching permissions for role ${roleName} in Ory Keto....`)
+      logger.info(`Patching permissions in Ory Keto....`)
       await this.oryKetoWriteApi.patchRelationTuples(patchDeltaArr)
     }
   }
 
-  _generatePatchPermissionPatchDeltaArray(role: string, addPermissions: string[], deletePermissions: string[]): PatchDelta[] {
+  _generateRolePermissionComboPatchDeltaArray(addPermissionCombos: string[], deletePermissionCombos: string[]): PatchDelta[] {
     let patchDeltaArray: PatchDelta[] = []
-    patchDeltaArray = patchDeltaArray.concat(addPermissions.map(permission => {
+    patchDeltaArray = patchDeltaArray.concat(addPermissionCombos.map(permissionCombo => {
+      const rolePermissionArr = permissionCombo.split(':')
       return {
         action: 'insert',
-        relation_tuple: this._generatePermissionTuple(role, permission)
+        relation_tuple: this._generatePermissionTuple(rolePermissionArr[0], rolePermissionArr[1])
       }
     }))
-    patchDeltaArray = patchDeltaArray.concat(deletePermissions.map(permission => {
+    patchDeltaArray = patchDeltaArray.concat(deletePermissionCombos.map(permissionCombo => {
+      const rolePermissionArr = permissionCombo.split(':')
       return {
         action: 'delete',
-        relation_tuple: this._generatePermissionTuple(role, permission)
+        relation_tuple: this._generatePermissionTuple(rolePermissionArr[0], rolePermissionArr[1])
       }
     }))
     return patchDeltaArray
