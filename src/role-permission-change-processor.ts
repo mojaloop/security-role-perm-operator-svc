@@ -72,7 +72,7 @@ export class RolePermissionChangeProcessor {
 
   async _updateRolePermissions (rolePermissionCombos: string[]) {
     await oryKeto.updateAllRolePermissions(rolePermissionCombos);
-    logger.log('Updated the role permissions in Keto', rolePermissionCombos)
+    logger.info('Updated the role permissions in Keto', rolePermissionCombos)
   }
 
   addToQueue ( rolePermissionCombos: string[] ) {
