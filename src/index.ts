@@ -91,7 +91,7 @@ async function onEvent(phase: string, apiObj: any) {
 
 // Helpers to continue watching after an event
 function onDone(err: any) {
-  logger.info(`Connection closed. ${err}`);
+  logger.error(`Connection closed. ${err}`);
   setTimeout(watchResource,1000);
 }
 
@@ -107,11 +107,19 @@ async function watchResource(): Promise<any> {
 
 // The watch has begun
 async function main() {
-  await watchResource();
+  try {
+    await watchResource();
+  } catch(err: any ) {
+    if (err.message === 'No currently active cluster') {
+      logger.error('Can not connect to K8S API')
+    } else {
+      logger.error(err.stack)
+    }
+  }
 }
 
 // Helper to get better errors if we miss any promise rejection.
-process.on("unhandledRejection", (reason, p) => {
+process.on("unhandledRejection", (reason, _p) => {
   logger.error("Unhandled Rejection at promise. reason:" + JSON.stringify(reason));
 });
 

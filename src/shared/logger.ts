@@ -27,10 +27,6 @@
  --------------
  ******/
 
-import { Logger as SDKLogger } from '@mojaloop/sdk-standard-components'
+import Logger from '@mojaloop/central-services-logger'
 
-// default SDKLogger instance
-export const logger = new SDKLogger.Logger();
-export function createLogger (params?: SDKLogger.LoggerConstructorParams): SDKLogger.Logger {
-  return new SDKLogger.Logger(params)
-}
+export const logger = Logger;
