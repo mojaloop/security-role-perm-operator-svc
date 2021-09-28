@@ -22,11 +22,11 @@
  optionally within square brackets <email>.
  * Gates Foundation
  - Name Surname <name.surname@gatesfoundation.com>
- 
+
  - Vijaya Kumar Guthi <vijaya.guthi@modusbox.com>
  --------------
  ******/
 
 import Logger from '@mojaloop/central-services-logger'
 
-export const logger = Logger;
+export const logger = Logger

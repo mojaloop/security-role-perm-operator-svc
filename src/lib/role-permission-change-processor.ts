@@ -22,36 +22,37 @@
  optionally within square brackets <email>.
  * Gates Foundation
  - Name Surname <name.surname@gatesfoundation.com>
- 
+
  - Vijaya Kumar Guthi <vijaya.guthi@modusbox.com>
  --------------
  ******/
 
-import Config from '../shared/config';
-import { RolePermissionModel } from './role-resources';
-import { KetoTuples } from './keto-tuples';
+import Config from '../shared/config'
+import { RolePermissionModel } from './role-resources'
+import { KetoTuples } from './keto-tuples'
 import { logger } from '../shared/logger'
 
-const oryKeto = new KetoTuples();
+const oryKeto = new KetoTuples()
 
 export class RolePermissionChangeProcessor {
-
   queue: string[][];
 
   constructor () {
-    this.queue = [];
+    this.queue = []
     setImmediate(this._processQueue.bind(this))
   }
 
   _pushQueue (rolePermissionCombos: string []) {
-    this.queue.push( rolePermissionCombos );
+    this.queue.push(rolePermissionCombos)
   }
+
   _popQueue () {
-    return this.queue.shift();
+    return this.queue.shift()
   }
+
   _getFirstItemInQueue () {
     if (this.queue.length > 0) {
-      return this.queue[0];
+      return this.queue[0]
     } else {
       return null
     }
@@ -63,24 +64,23 @@ export class RolePermissionChangeProcessor {
       try {
         await this._updateRolePermissions(rolePermissionCombos)
         this._popQueue()
-      } catch(err: any) {
+      } catch (err: any) {
         logger.error(err.message)
       }
     }
-    setTimeout(this._processQueue.bind(this), Config.KETO_QUEUE_PROCESS_INTERVAL_MS);
+    setTimeout(this._processQueue.bind(this), Config.KETO_QUEUE_PROCESS_INTERVAL_MS)
   }
 
   async _updateRolePermissions (rolePermissionCombos: string[]) {
-    await oryKeto.updateAllRolePermissions(rolePermissionCombos);
+    await oryKeto.updateAllRolePermissions(rolePermissionCombos)
     logger.info('Updated the role permissions in Keto', rolePermissionCombos)
   }
 
-  addToQueue ( rolePermissionCombos: string[] ) {
-    this._pushQueue( rolePermissionCombos );
+  addToQueue (rolePermissionCombos: string[]) {
+    this._pushQueue(rolePermissionCombos)
   }
 
   getQueue () {
     return this.queue
   }
-
 }
