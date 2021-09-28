@@ -31,8 +31,8 @@
 import * as k8s from "@kubernetes/client-node";
 import { logger } from './shared/logger'
 import Config from './shared/config';
-import { RoleResources } from "./role-resources";
-import { RolePermissionChangeProcessor } from "./role-permission-change-processor";
+import { RoleResources } from "./lib/role-resources";
+import { RolePermissionChangeProcessor } from "./lib/role-permission-change-processor";
 
 // Configure the operator to monitor your custom resources
 // and the namespace for your custom resources

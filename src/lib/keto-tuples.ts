@@ -29,8 +29,8 @@
 
 import * as keto from '@ory/keto-client';
 import { PatchDelta, InternalRelationTuple } from '@ory/keto-client';
-import Config from './shared/config';
-import { logger } from './shared/logger'
+import Config from '../shared/config';
+import { logger } from '../shared/logger'
 
 class KetoTuples {
 

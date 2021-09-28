@@ -27,10 +27,10 @@
  --------------
  ******/
 
-import Config from './shared/config';
+import Config from '../shared/config';
 import { RolePermissionModel } from './role-resources';
 import { KetoTuples } from './keto-tuples';
-import { logger } from './shared/logger'
+import { logger } from '../shared/logger'
 
 const oryKeto = new KetoTuples();
 

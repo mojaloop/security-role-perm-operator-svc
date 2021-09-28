@@ -22,25 +22,11 @@
  optionally within square brackets <email>.
  * Gates Foundation
  - Name Surname <name.surname@gatesfoundation.com>
- 
+
  - Vijaya Kumar Guthi <vijaya.guthi@modusbox.com>
+
  --------------
  ******/
 
-import util from 'util'
-import config from './config'
-
-export const defaults = {
-  SHOW_HIDDEN: false,
-  DEPTH: 5,
-  COLOR: true
-}
-
-export default function inspect (subject: unknown): string {
-  return util.inspect(
-    subject,
-    (config.INSPECT && config.INSPECT.SHOW_HIDDEN) || defaults.SHOW_HIDDEN,
-    (config.INSPECT && config.INSPECT.DEPTH) || defaults.DEPTH,
-    (config.INSPECT && config.INSPECT.COLOR) || defaults.COLOR
-  )
-}
+import { logger } from '../../../src/shared/logger'
+logger.info('INFO_MESSAGE')

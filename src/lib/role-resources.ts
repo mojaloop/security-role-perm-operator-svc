@@ -73,14 +73,12 @@ class RoleResources {
     const rolePermissionCombos: string[] = [];
     for (let [key, value] of Object.entries(this.roleResourceData)) {
       const resourceObj = <any>value;
-      const role = resourceObj?.role;
-      const permissions = resourceObj?.permissions;
-      if (role && permissions) {
-        for (let permission of permissions) {
-          const rolePermissionCombo = role + ':' + permission
-          if (!rolePermissionCombos.includes(rolePermissionCombo)) {
-            rolePermissionCombos.push(rolePermissionCombo)
-          }
+      const role = resourceObj.role;
+      const permissions = resourceObj.permissions;
+      for (let permission of permissions) {
+        const rolePermissionCombo = role + ':' + permission
+        if (!rolePermissionCombos.includes(rolePermissionCombo)) {
+          rolePermissionCombos.push(rolePermissionCombo)
         }
       }
     }
