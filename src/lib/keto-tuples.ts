@@ -22,22 +22,21 @@
  optionally within square brackets <email>.
  * Gates Foundation
  - Name Surname <name.surname@gatesfoundation.com>
- 
+
  - Vijaya Kumar Guthi <vijaya.guthi@modusbox.com>
  --------------
  ******/
 
-import * as keto from '@ory/keto-client';
-import { PatchDelta, InternalRelationTuple } from '@ory/keto-client';
-import Config from '../shared/config';
+import * as keto from '@ory/keto-client'
+import { PatchDelta, InternalRelationTuple } from '@ory/keto-client'
+import Config from '../shared/config'
 import { logger } from '../shared/logger'
 
 class KetoTuples {
-
   oryKetoReadApi: keto.ReadApi;
   oryKetoWriteApi: keto.WriteApi;
 
-  constructor() {
+  constructor () {
     this.oryKetoReadApi = new keto.ReadApi(
       undefined,
       Config.ORY_KETO_READ_SERVICE_URL
@@ -51,7 +50,7 @@ class KetoTuples {
   /**
    * Gets all roles and permissions in the namespace from Ory Keto server.
    */
-   async getAllRolePermissionCombos () {
+  async getAllRolePermissionCombos () {
     const response = await this.oryKetoReadApi.getRelationTuples(
       'permission',
       undefined,
@@ -79,12 +78,12 @@ class KetoTuples {
     // Construct patch delta
     const patchDeltaArr = this._generateRolePermissionComboPatchDeltaArray(addPermissionCombos, deletePermissionCombos)
     if (patchDeltaArr.length > 0) {
-      logger.info(`Patching permissions in Ory Keto....`)
+      logger.info('Patching permissions in Ory Keto....')
       await this.oryKetoWriteApi.patchRelationTuples(patchDeltaArr)
     }
   }
 
-  _generateRolePermissionComboPatchDeltaArray(addPermissionCombos: string[], deletePermissionCombos: string[]): PatchDelta[] {
+  _generateRolePermissionComboPatchDeltaArray (addPermissionCombos: string[], deletePermissionCombos: string[]): PatchDelta[] {
     let patchDeltaArray: PatchDelta[] = []
     patchDeltaArray = patchDeltaArray.concat(addPermissionCombos.map(permissionCombo => {
       const rolePermissionArr = permissionCombo.split(':')
@@ -103,7 +102,7 @@ class KetoTuples {
     return patchDeltaArray
   }
 
-  _generatePermissionTuple(role: string, permission: string): InternalRelationTuple {
+  _generatePermissionTuple (role: string, permission: string): InternalRelationTuple {
     return {
       namespace: 'permission',
       object: permission,
@@ -111,7 +110,6 @@ class KetoTuples {
       subject: 'role:' + role + '#member'
     }
   }
-
 }
 
-export { KetoTuples };
+export { KetoTuples }

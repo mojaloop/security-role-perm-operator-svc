@@ -22,7 +22,7 @@
  optionally within square brackets <email>.
  * Gates Foundation
  - Name Surname <name.surname@gatesfoundation.com>
- 
+
  - Vijaya Kumar Guthi <vijaya.guthi@modusbox.com>
  --------------
  ******/
@@ -34,13 +34,6 @@ import Package from '../../package.json'
 export interface ServiceConfig {
   // package.json
   PACKAGE: Record<string, unknown>;
-
-  // inspect.ts
-  INSPECT?: {
-    DEPTH?: number;
-    SHOW_HIDDEN?: boolean;
-    COLOR?: boolean;
-  };
 
   WATCH_RESOURCE_GROUP: string;
   WATCH_RESOURCE_VERSION: string;
@@ -69,7 +62,7 @@ export interface ServiceConfig {
   };
 }
 
-const RC = parse(rc('ROLE_ASSIGNMENT_SERVICE', Config)) as ServiceConfig
+const RC = parse(rc('ROLE_PERM_OPERATOR', Config)) as ServiceConfig
 
 export default {
   ...RC,

@@ -22,12 +22,12 @@
  optionally within square brackets <email>.
  * Gates Foundation
  - Name Surname <name.surname@gatesfoundation.com>
- 
+
  - Vijaya Kumar Guthi <vijaya.guthi@modusbox.com>
  --------------
  ******/
 
-import _ from "lodash";
+import _ from 'lodash'
 
 export interface RolePermissionModel {
   role: string;
@@ -37,54 +37,53 @@ export interface RolePermissionModel {
 class RoleResources {
   roleResourceData: any;
 
-  constructor() {
+  constructor () {
     this.roleResourceData = {}
   }
 
   _checkResource (resourceName: string) {
     if (!this.roleResourceData[resourceName]) {
-      this.roleResourceData[resourceName] = {};
+      this.roleResourceData[resourceName] = {}
     }
     if (!this.roleResourceData[resourceName].role) {
-      this.roleResourceData[resourceName].role = null;
+      this.roleResourceData[resourceName].role = null
     }
     if (!this.roleResourceData[resourceName].permissions) {
-      this.roleResourceData[resourceName].permissions = [];
+      this.roleResourceData[resourceName].permissions = []
     }
   }
 
   updateRoleResource (resourceName: string, role: string, permissions: string[]) {
-    this._checkResource(resourceName);
-    this.roleResourceData[resourceName].role = role;
-    this.roleResourceData[resourceName].permissions = permissions;
+    this._checkResource(resourceName)
+    this.roleResourceData[resourceName].role = role
+    this.roleResourceData[resourceName].permissions = permissions
   }
 
   deleteRoleResource (resourceName: string) {
     if (this.roleResourceData[resourceName]) {
-      delete this.roleResourceData[resourceName];
+      delete this.roleResourceData[resourceName]
     }
   }
 
   getData () {
-    return this.roleResourceData;
+    return this.roleResourceData
   }
 
   getUniqueRolePermissionCombos () {
-    const rolePermissionCombos: string[] = [];
-    for (let [key, value] of Object.entries(this.roleResourceData)) {
-      const resourceObj = <any>value;
-      const role = resourceObj.role;
-      const permissions = resourceObj.permissions;
-      for (let permission of permissions) {
+    const rolePermissionCombos: string[] = []
+    for (const [key, value] of Object.entries(this.roleResourceData)) {
+      const resourceObj = <any>value
+      const role = resourceObj.role
+      const permissions = resourceObj.permissions
+      for (const permission of permissions) {
         const rolePermissionCombo = role + ':' + permission
         if (!rolePermissionCombos.includes(rolePermissionCombo)) {
           rolePermissionCombos.push(rolePermissionCombo)
         }
       }
     }
-    return rolePermissionCombos;
+    return rolePermissionCombos
   }
-
 }
 
-export { RoleResources };
+export { RoleResources }
