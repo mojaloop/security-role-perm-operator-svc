@@ -144,6 +144,15 @@ jobs:
 
   test-integration:
     executor: default-machine
+    environment:
+      K8S_VERSION: v1.12.0
+      KUBECONFIG: /home/circleci/.kube/config
+      MINIKUBE_VERSION: v0.31.0
+      MINIKUBE_WANTUPDATENOTIFICATION: false
+      MINIKUBE_WANTREPORTERRORPROMPT: false
+      MINIKUBE_HOME: /home/circleci
+      CHANGE_MINIKUBE_NONE_USER: true
+      GOPATH: /home/circleci/go
     steps:
       - checkout
       - run:
@@ -164,26 +173,44 @@ jobs:
           command: |
             [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
             mkdir -p ./test/results
+      # - run:
+      #     name: Build docker images
+      #     command: |
+      #       [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+      #       docker-compose up -d
+      #       npm run wait-4-docker
       - run:
-          name: Build docker images
+          name: Setup kubectl
           command: |
-            [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
-            docker-compose up -d
-            npm run wait-4-docker
+            curl -Lo kubectl https://storage.googleapis.com/kubernetes-release/release/${K8S_VERSION}/bin/linux/amd64/kubectl && chmod +x kubectl && sudo mv kubectl /usr/local/bin/
+            mkdir -p ${HOME}/.kube
+            touch ${HOME}/.kube/config
       - run:
-          name: Execute integration tests
+          name: Setup minikube
           command: |
-            [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
-            npm -s run test:integration
+            curl -Lo minikube https://github.com/kubernetes/minikube/releases/download/${MINIKUBE_VERSION}/minikube-linux-amd64 && chmod +x minikube && sudo mv minikube /usr/local/bin/
       - run:
-          name: Prepare test results
+          name: Start minikube
           command: |
-            mkdir -p test/results
-            mv junit.xml test/results
-      - store_artifacts:
-          path: ./test/results
-      - store_test_results:
-          path: ./test/results
+            sudo -E minikube start --vm-driver=none --cpus 2 --memory 4096 --kubernetes-version=${K8S_VERSION}
+      - run:
+          name: Operator acceptance test
+          command:
+            kubectl get nodes
+      # - run:
+      #     name: Execute integration tests
+      #     command: |
+      #       [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+      #       npm -s run test:integration
+      # - run:
+      #     name: Prepare test results
+      #     command: |
+      #       mkdir -p test/results
+      #       mv junit.xml test/results
+      # - store_artifacts:
+      #     path: ./test/results
+      # - store_test_results:
+      #     path: ./test/results
 
   linting-check:
     executor: default-docker
@@ -476,13 +503,13 @@ workflows:
                 - /feature*/
                 - /bugfix*/
 
-      # - test-integration:
-      #     context: org-global
-      #     requires:
-      #       - setup
-      #     filters:
-      #       tags:
-      #         only: /.*/
+      - test-integration:
+          context: org-global
+          requires:
+            - setup
+          filters:
+            tags:
+              only: /.*/
 
       - test-coverage:
           context: org-global
