@@ -280,13 +280,17 @@ jobs:
     steps:
       - checkout
       - run:
+          name: Setup Docker env variables
+          command: |
+            echo 'export DOCKER_IMAGE_NAME=`cat package.json | jq -r .name | sed s/@// | sed s/\.*\\\\///`' >> $BASH_ENV
+      - run:
           name: Build Docker local image
           command: |
             echo "Building Docker image: local"
             docker build -t $DOCKER_ORG/$CIRCLE_PROJECT_REPONAME:local .
       - run:
           name: Save docker image to workspace
-          command: docker save -o /tmp/docker-image.tar $DOCKER_ORG/$CIRCLE_PROJECT_REPONAME:local
+          command: docker save -o /tmp/docker-image.tar $DOCKER_IMAGE_NAME:local
       - persist_to_workspace:
           root: /tmp
           paths:
