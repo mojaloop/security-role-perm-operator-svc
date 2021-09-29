@@ -19,7 +19,7 @@ spec:
         deployment: moja-role-operator
     spec:
       containers:
-      - image: role-perm-operator:local
+      - image: mojaloop/security-role-perm-operator-svc:local
         imagePullPolicy: Never
         name: moja-role-operator
         ports:

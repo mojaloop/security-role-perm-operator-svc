@@ -10,7 +10,6 @@
   "main": "dist/index.js",
   "scripts": {
     "build": "tsc -p ./tsconfig.build.json",
-    "docker:build": "docker build -t role-perm-operator:local -f ./Dockerfile ./",
     "watch": "npx tsc -w",
     "clean": "rm -rf dist node_modules",
     "start": "node dist/src/index.js",
