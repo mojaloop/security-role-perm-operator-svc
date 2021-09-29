@@ -156,25 +156,18 @@ jobs:
       CHANGE_MINIKUBE_NONE_USER: true
       GOPATH: /home/circleci/go
     steps:
+      - run:
+          name: Install general dependencies
+          command: *defaults_Dependencies
       - checkout
       - run:
-          name: Set up NVM
-          command: |
-            echo ${NVM_DIR}
-            [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
-            nvm install v14.17.6
-            nvm alias default v14.17.6
-      - run:
-          name: install modules
-          command: |
-            [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
-            node --version
-            npm ci
-      - run:
-          name: Create dir for test results
-          command: |
-            [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
-            mkdir -p ./test/results
+          name: Install AWS CLI dependencies
+          command: *defaults_awsCliDependencies
+      - restore_cache:
+          keys:
+            - dependency-cache-{{ checksum "package-lock.json" }}
+      - attach_workspace:
+          at: /tmp
       - run:
           name: Load the pre-built docker image from workspace
           command: docker load -i /tmp/docker-image.tar
@@ -196,6 +189,10 @@ jobs:
           name: Deploy K8S resources
           command:
             sh ./script-k8s-resource-apply.sh
+      - run:
+          name: Create dir for test results
+          command: |
+            mkdir -p ./test/results
       # - run:
       #     name: Execute integration tests
       #     command: |
