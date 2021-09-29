@@ -30,34 +30,9 @@
 
 import { KetoTuples } from "../../../src/lib/keto-tuples";
 
-import * as keto from '@ory/keto-client';
 jest.mock('@ory/keto-client');
 
-const spyPatchRelationTuples = jest.fn();
-(keto.WriteApi as jest.Mock).mockImplementation(() => {
-  return {
-    patchRelationTuples: spyPatchRelationTuples
-  }
-})
-
-const setMockRelationTuplesResponse = (relationTuplesData: any) => {
-  (keto.ReadApi as jest.Mock).mockReset();
-  (keto.ReadApi as jest.Mock).mockImplementation(() => {
-    return {
-      getRelationTuples: () => {
-        return {
-          status: 200,
-          statusText: 'OK',
-          config: {},
-          headers: {},
-          data: relationTuplesData
-        }
-      }
-    }
-  })
-}
-
-setMockRelationTuplesResponse({
+const sampleRelationTupleData = {
   relation_tuples: [
     {
       namespace: 'permission',
@@ -66,15 +41,26 @@ setMockRelationTuplesResponse({
       subject: 'role:sampleRole1#member'
     }
   ]
-})
+}
 
 // const mockLoggerError = jest.spyOn(Logger, 'error')
 
 describe('role-resources', (): void => {
   describe('Keto update tuples', (): void => {
-    var oryKeto: KetoTuples
+    let oryKeto: KetoTuples
+    let spyGetRelationTuples: jest.Mock
+    let spyPatchRelationTuples: jest.Mock
     beforeAll(() => {
       oryKeto = new KetoTuples();
+      spyGetRelationTuples = oryKeto.oryKetoReadApi.getRelationTuples as jest.Mock
+      spyPatchRelationTuples = oryKeto.oryKetoWriteApi.patchRelationTuples as jest.Mock
+      spyGetRelationTuples.mockResolvedValue({
+        status: 200,
+        statusText: 'OK',
+        config: {},
+        headers: {},
+        data: sampleRelationTupleData
+      })
     })
 
     afterEach((): void => {
@@ -120,33 +106,40 @@ describe('role-resources', (): void => {
       await oryKeto.updateAllRolePermissions(newRolePermissionCombos);
       expect(spyPatchRelationTuples).not.toHaveBeenCalled()
     })
-    // // Negative scenarios
-    // it('getAllRolePermissionCombos', async () => {
-    //   // TODO: The following setter method is somehow not working as expected
-    //   setMockRelationTuplesResponse({
-    //     relation_tuples: []
-    //   })
-    //   const rolePermissionCombos = await oryKeto.getAllRolePermissionCombos();
-    //   expect(Array.isArray(rolePermissionCombos)).toBe(true)
-    //   expect(rolePermissionCombos.length).toEqual(0)
-    // })
-    // it('updateAllRolePermissions if the data from keto getTuples call is null', async () => {
-    //   // TODO: The following setter method is somehow not working as expected
-    //   setMockRelationTuplesResponse({
-    //     relation_tuples: []
-    //   })
-    //   const newRolePermissionCombos = [
-    //     'sampleRole2:samplePermission2'
-    //   ]
-    //   await oryKeto.updateAllRolePermissions(newRolePermissionCombos);
-    //   expect(spyPatchRelationTuples).toHaveBeenCalledWith(expect.arrayContaining([
-    //     {
-    //       action: 'insert',
-    //       relation_tuple: expect.objectContaining({ object: 'samplePermission2'})
-    //     }
-    //   ]))
-    // })
-    
+    // Negative scenarios
+    it('getAllRolePermissionCombos', async () => {
+      const spyGetRelationTuples = oryKeto.oryKetoReadApi.getRelationTuples as jest.Mock
+      spyGetRelationTuples.mockResolvedValue({
+        status: 200,
+        statusText: 'OK',
+        config: {},
+        headers: {},
+        data: {
+          relation_tuples: []
+        }
+      })
+      const rolePermissionCombos = await oryKeto.getAllRolePermissionCombos();
+      expect(Array.isArray(rolePermissionCombos)).toBe(true)
+      expect(rolePermissionCombos.length).toEqual(0)
+    })
+    it('updateAllRolePermissions if the data from keto getTuples call is null', async () => {
+      spyGetRelationTuples.mockResolvedValue({
+        status: 200,
+        statusText: 'OK',
+        config: {},
+        headers: {},
+        data: null
+      })
+      const newRolePermissionCombos = [
+        'sampleRole2:samplePermission2'
+      ]
+      await oryKeto.updateAllRolePermissions(newRolePermissionCombos);
+      expect(spyPatchRelationTuples).toHaveBeenCalledWith(expect.arrayContaining([
+        {
+          action: 'insert',
+          relation_tuple: expect.objectContaining({ object: 'samplePermission2'})
+        }
+      ]))
+    })
   })
-
 })
