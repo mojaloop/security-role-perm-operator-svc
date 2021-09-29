@@ -36,10 +36,13 @@ const oryKeto = new KetoTuples()
 
 export class RolePermissionChangeProcessor {
   queue: string[][];
+  timerOn: boolean;
+  timeoutId: NodeJS.Timeout;
 
   constructor () {
     this.queue = []
-    setImmediate(this._processQueue.bind(this))
+    this.timerOn = true
+    this.timeoutId = setTimeout(this._processQueue.bind(this))
   }
 
   _pushQueue (rolePermissionCombos: string []) {
@@ -59,16 +62,18 @@ export class RolePermissionChangeProcessor {
   }
 
   async _processQueue () {
-    const rolePermissionCombos = this._getFirstItemInQueue()
-    if (rolePermissionCombos) {
-      try {
-        await this._updateRolePermissions(rolePermissionCombos)
-        this._popQueue()
-      } catch (err: any) {
-        logger.error(err.message)
+    if (this.timerOn) {
+      const rolePermissionCombos = this._getFirstItemInQueue()
+      if (rolePermissionCombos) {
+        try {
+          await this._updateRolePermissions(rolePermissionCombos)
+          this._popQueue()
+        } catch (err: any) {
+          logger.error(err.message)
+        }
       }
+      this.timeoutId = setTimeout(this._processQueue.bind(this), Config.KETO_QUEUE_PROCESS_INTERVAL_MS)
     }
-    setTimeout(this._processQueue.bind(this), Config.KETO_QUEUE_PROCESS_INTERVAL_MS)
   }
 
   async _updateRolePermissions (rolePermissionCombos: string[]) {
@@ -82,5 +87,15 @@ export class RolePermissionChangeProcessor {
 
   getQueue () {
     return this.queue
+  }
+
+  // Helper functions for unit tests
+  destroy () {
+    this.timerOn = false
+    clearTimeout(this.timeoutId)
+  }
+
+  getOryKeto () {
+    return oryKeto
   }
 }
