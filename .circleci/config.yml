@@ -191,9 +191,18 @@ jobs:
           command:
             sh ./script-k8s-resource-apply.sh
       - run:
+          name: Waiting for deployments
+          command: |
+            kubectl -n moja-operator rollout status deployment moja-role-operator
+            kubectl -n moja-operator rollout status deployment moja-keto
+      - run:
           name: Get all K8S pods
           command:
             kubectl get pods --all-namespaces
+      - run:
+          name: Get Keto Permission Tuples
+          command:
+            curl --location --request GET 'http://localhost:4466/relation-tuples?namespace=permission'
       - run:
           name: Create dir for test results
           command: |
