@@ -184,7 +184,6 @@ jobs:
       - run:
           name: Load the pre-built docker image from workspace
           command: |
-            eval $(minikube -p minikube docker-env)
             docker load -i /tmp/docker-image.tar
       - run:
           name: Deploy K8S resources
@@ -280,11 +279,6 @@ jobs:
     executor: default-machine
     steps:
       - checkout
-      - run:
-          name: Setup Docker env variables
-          command: |
-            echo 'export DOCKER_ORG=`cat package.json | jq -r .name | sed s/@// | sed s/\\\\/.*//`' >> $BASH_ENV
-            echo 'export CIRCLE_PROJECT_REPONAME=`cat package.json | jq -r .name | sed s/@// | sed s/\.*\\\\///`' >> $BASH_ENV
       - run:
           name: Build Docker local image
           command: |
