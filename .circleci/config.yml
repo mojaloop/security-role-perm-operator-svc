@@ -147,9 +147,9 @@ jobs:
       image: circleci/classic:201808-01
       docker_layer_caching: true
     environment:
-      K8S_VERSION: v1.12.0
+      K8S_VERSION: v1.22.0
       KUBECONFIG: /home/circleci/.kube/config
-      MINIKUBE_VERSION: v0.31.0
+      MINIKUBE_VERSION: v1.22.0
       MINIKUBE_WANTUPDATENOTIFICATION: false
       MINIKUBE_WANTREPORTERRORPROMPT: false
       MINIKUBE_HOME: /home/circleci
@@ -176,10 +176,8 @@ jobs:
             [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
             mkdir -p ./test/results
       - run:
-          name: Build docker image
-          command: |
-            [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
-            npm run docker:build
+          name: Load the pre-built docker image from workspace
+          command: docker load -i /tmp/docker-image.tar
       - run:
           name: Setup kubectl
           command: |
@@ -464,12 +462,11 @@ workflows:
   version: 2
   build_and_test:
     jobs:
-      # - build-local:
-      #     context: org-global
-      #     filters:
-      #       tags:
-      #         only: /.*/
-
+      - build-local:
+          context: org-global
+          filters:
+            tags:
+              only: /.*/
       - setup:
           context: org-global
           filters:
@@ -508,6 +505,7 @@ workflows:
           context: org-global
           requires:
             - setup
+            - build-local
           filters:
             tags:
               only: /.*/
