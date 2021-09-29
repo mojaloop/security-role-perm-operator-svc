@@ -28,7 +28,6 @@
  ******/
 
 import Config from '../shared/config'
-import { RolePermissionModel } from './role-resources'
 import { KetoTuples } from './keto-tuples'
 import { logger } from '../shared/logger'
 
@@ -45,15 +44,15 @@ export class RolePermissionChangeProcessor {
     this.timeoutId = setTimeout(this._processQueue.bind(this))
   }
 
-  _pushQueue (rolePermissionCombos: string []) {
+  _pushQueue (rolePermissionCombos: string []) : void {
     this.queue.push(rolePermissionCombos)
   }
 
-  _popQueue () {
+  _popQueue () : string[] | undefined {
     return this.queue.shift()
   }
 
-  _getFirstItemInQueue () {
+  _getFirstItemInQueue () : string[] | null {
     if (this.queue.length > 0) {
       return this.queue[0]
     } else {
@@ -61,7 +60,7 @@ export class RolePermissionChangeProcessor {
     }
   }
 
-  async _processQueue () {
+  async _processQueue () : Promise<void> {
     if (this.timerOn) {
       const rolePermissionCombos = this._getFirstItemInQueue()
       if (rolePermissionCombos) {
@@ -76,26 +75,26 @@ export class RolePermissionChangeProcessor {
     }
   }
 
-  async _updateRolePermissions (rolePermissionCombos: string[]) {
+  async _updateRolePermissions (rolePermissionCombos: string[]) : Promise<void> {
     await oryKeto.updateAllRolePermissions(rolePermissionCombos)
     logger.info('Updated the role permissions in Keto', rolePermissionCombos)
   }
 
-  addToQueue (rolePermissionCombos: string[]) {
+  addToQueue (rolePermissionCombos: string[]) : void {
     this._pushQueue(rolePermissionCombos)
   }
 
-  getQueue () {
+  getQueue () : string[][] {
     return this.queue
   }
 
   // Helper functions for unit tests
-  destroy () {
+  destroy () : void {
     this.timerOn = false
     clearTimeout(this.timeoutId)
   }
 
-  getOryKeto () {
+  getOryKeto () : KetoTuples {
     return oryKeto
   }
 }

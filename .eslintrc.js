@@ -25,7 +25,7 @@ module.exports = {
   rules: {
     indent: 'off',
     '@typescript-eslint/indent': ['error', 2],
-    '@typescript-eslint/no-explicit-any': 'error',
+    '@typescript-eslint/no-explicit-any': 'off',
     '@typescript-eslint/no-var-requires': 'error',
     'no-console': 'off',
     quotes: ['error', 'single'],

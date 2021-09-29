@@ -110,7 +110,7 @@ async function watchResource (): Promise<any> {
 export async function startOperator (): Promise<void> {
   try {
     await watchResource()
-  } catch (err: any ) {
+  } catch (err: any) {
     if (err.message === 'No currently active cluster') {
       logger.error('Can not connect to K8S API')
     } else {

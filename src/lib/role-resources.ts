@@ -27,8 +27,6 @@
  --------------
  ******/
 
-import _ from 'lodash'
-
 export interface RolePermissionModel {
   role: string;
   permissions: string[];
@@ -41,7 +39,7 @@ class RoleResources {
     this.roleResourceData = {}
   }
 
-  _checkResource (resourceName: string) {
+  _checkResource (resourceName: string) : void {
     if (!this.roleResourceData[resourceName]) {
       this.roleResourceData[resourceName] = {}
     }
@@ -53,25 +51,25 @@ class RoleResources {
     }
   }
 
-  updateRoleResource (resourceName: string, role: string, permissions: string[]) {
+  updateRoleResource (resourceName: string, role: string, permissions: string[]) : void {
     this._checkResource(resourceName)
     this.roleResourceData[resourceName].role = role
     this.roleResourceData[resourceName].permissions = permissions
   }
 
-  deleteRoleResource (resourceName: string) {
+  deleteRoleResource (resourceName: string) : void {
     if (this.roleResourceData[resourceName]) {
       delete this.roleResourceData[resourceName]
     }
   }
 
-  getData () {
+  getData () : any {
     return this.roleResourceData
   }
 
-  getUniqueRolePermissionCombos () {
+  getUniqueRolePermissionCombos () : string[] {
     const rolePermissionCombos: string[] = []
-    for (const [key, value] of Object.entries(this.roleResourceData)) {
+    for (const [, value] of Object.entries(this.roleResourceData)) {
       const resourceObj = <any>value
       const role = resourceObj.role
       const permissions = resourceObj.permissions
