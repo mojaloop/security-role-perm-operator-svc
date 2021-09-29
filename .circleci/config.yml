@@ -156,13 +156,7 @@ jobs:
       CHANGE_MINIKUBE_NONE_USER: true
       GOPATH: /home/circleci/go
     steps:
-      - run:
-          name: Install general dependencies
-          command: *defaults_Dependencies
       - checkout
-      - run:
-          name: Install AWS CLI dependencies
-          command: *defaults_awsCliDependencies
       - restore_cache:
           keys:
             - dependency-cache-{{ checksum "package-lock.json" }}
