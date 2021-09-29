@@ -170,7 +170,9 @@ jobs:
           at: /tmp
       - run:
           name: Load the pre-built docker image from workspace
-          command: docker load -i /tmp/docker-image.tar
+          command: |
+            eval $(minikube -p minikube docker-env)
+            docker load -i /tmp/docker-image.tar
       - run:
           name: Setup kubectl
           command: |
@@ -189,6 +191,10 @@ jobs:
           name: Deploy K8S resources
           command:
             sh ./script-k8s-resource-apply.sh
+      - run:
+          name: Get all K8S pods
+          command:
+            kubectl get pods --all-namespaces
       - run:
           name: Create dir for test results
           command: |
