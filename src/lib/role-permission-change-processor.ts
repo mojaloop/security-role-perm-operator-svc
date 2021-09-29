@@ -28,7 +28,6 @@
  ******/
 
 import Config from '../shared/config'
-import { RolePermissionModel } from './role-resources'
 import { KetoTuples } from './keto-tuples'
 import { logger } from '../shared/logger'
 
@@ -36,21 +35,24 @@ const oryKeto = new KetoTuples()
 
 export class RolePermissionChangeProcessor {
   queue: string[][];
+  timerOn: boolean;
+  timeoutId: NodeJS.Timeout;
 
   constructor () {
     this.queue = []
-    setImmediate(this._processQueue.bind(this))
+    this.timerOn = true
+    this.timeoutId = setTimeout(this._processQueue.bind(this))
   }
 
-  _pushQueue (rolePermissionCombos: string []) {
+  _pushQueue (rolePermissionCombos: string []) : void {
     this.queue.push(rolePermissionCombos)
   }
 
-  _popQueue () {
+  _popQueue () : string[] | undefined {
     return this.queue.shift()
   }
 
-  _getFirstItemInQueue () {
+  _getFirstItemInQueue () : string[] | null {
     if (this.queue.length > 0) {
       return this.queue[0]
     } else {
@@ -58,29 +60,41 @@ export class RolePermissionChangeProcessor {
     }
   }
 
-  async _processQueue () {
-    const rolePermissionCombos = this._getFirstItemInQueue()
-    if (rolePermissionCombos) {
-      try {
-        await this._updateRolePermissions(rolePermissionCombos)
-        this._popQueue()
-      } catch (err: any) {
-        logger.error(err.message)
+  async _processQueue () : Promise<void> {
+    if (this.timerOn) {
+      const rolePermissionCombos = this._getFirstItemInQueue()
+      if (rolePermissionCombos) {
+        try {
+          await this._updateRolePermissions(rolePermissionCombos)
+          this._popQueue()
+        } catch (err: any) {
+          logger.error(err.message)
+        }
       }
+      this.timeoutId = setTimeout(this._processQueue.bind(this), Config.KETO_QUEUE_PROCESS_INTERVAL_MS)
     }
-    setTimeout(this._processQueue.bind(this), Config.KETO_QUEUE_PROCESS_INTERVAL_MS)
   }
 
-  async _updateRolePermissions (rolePermissionCombos: string[]) {
+  async _updateRolePermissions (rolePermissionCombos: string[]) : Promise<void> {
     await oryKeto.updateAllRolePermissions(rolePermissionCombos)
     logger.info('Updated the role permissions in Keto', rolePermissionCombos)
   }
 
-  addToQueue (rolePermissionCombos: string[]) {
+  addToQueue (rolePermissionCombos: string[]) : void {
     this._pushQueue(rolePermissionCombos)
   }
 
-  getQueue () {
+  getQueue () : string[][] {
     return this.queue
+  }
+
+  // Helper functions for unit tests
+  destroy () : void {
+    this.timerOn = false
+    clearTimeout(this.timeoutId)
+  }
+
+  getOryKeto () : KetoTuples {
+    return oryKeto
   }
 }

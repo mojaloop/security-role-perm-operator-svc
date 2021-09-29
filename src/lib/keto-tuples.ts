@@ -50,7 +50,7 @@ class KetoTuples {
   /**
    * Gets all roles and permissions in the namespace from Ory Keto server.
    */
-  async getAllRolePermissionCombos () {
+  async getAllRolePermissionCombos () : Promise<string[]> {
     const response = await this.oryKetoReadApi.getRelationTuples(
       'permission',
       undefined,
@@ -65,10 +65,12 @@ class KetoTuples {
 
   /**
    * Updates all the permissions in Ory Keto server.
-   * This function gets the permissions from Keto, compare with the desired permissions and patches the tuples appropriately.
-   * @param {rolePermissionCombos: string[]} rolePermissionCombos - The list of role and permission combination strings to update.
+   * This function gets the permissions from Keto, compare with the
+   * desired permissions and patches the tuples appropriately.
+   * @param {rolePermissionCombos: string[]} rolePermissionCombos
+   *  - The list of role and permission combination strings to update.
    */
-  async updateAllRolePermissions (rolePermissionCombos: string[]) {
+  async updateAllRolePermissions (rolePermissionCombos: string[]) : Promise<void> {
     const currentPermissionCombos = (await this.getAllRolePermissionCombos()) || []
     // Calculate the permissions to be deleted
     const deletePermissionCombos = currentPermissionCombos?.filter(item => !rolePermissionCombos.includes(item))
@@ -83,7 +85,9 @@ class KetoTuples {
     }
   }
 
-  _generateRolePermissionComboPatchDeltaArray (addPermissionCombos: string[], deletePermissionCombos: string[]): PatchDelta[] {
+  _generateRolePermissionComboPatchDeltaArray (
+    addPermissionCombos: string[], deletePermissionCombos: string[]
+  ): PatchDelta[] {
     let patchDeltaArray: PatchDelta[] = []
     patchDeltaArray = patchDeltaArray.concat(addPermissionCombos.map(permissionCombo => {
       const rolePermissionArr = permissionCombo.split(':')
