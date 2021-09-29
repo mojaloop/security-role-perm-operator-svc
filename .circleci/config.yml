@@ -175,12 +175,11 @@ jobs:
           command: |
             [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
             mkdir -p ./test/results
-      # - run:
-      #     name: Build docker images
-      #     command: |
-      #       [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
-      #       docker-compose up -d
-      #       npm run wait-4-docker
+      - run:
+          name: Build docker image
+          command: |
+            [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+            npm run docker:build
       - run:
           name: Setup kubectl
           command: |
@@ -196,9 +195,9 @@ jobs:
           command: |
             sudo -E minikube start --vm-driver=none --cpus 2 --memory 4096 --kubernetes-version=${K8S_VERSION}
       - run:
-          name: Operator acceptance test
+          name: Deploy K8S resources
           command:
-            kubectl get nodes
+            sh ./script-k8s-resource-apply.sh
       # - run:
       #     name: Execute integration tests
       #     command: |
