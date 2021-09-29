@@ -143,7 +143,9 @@ jobs:
             fi
 
   test-integration:
-    executor: default-machine
+    machine:
+      image: circleci/classic:201808-01
+      docker_layer_caching: true
     environment:
       K8S_VERSION: v1.12.0
       KUBECONFIG: /home/circleci/.kube/config
