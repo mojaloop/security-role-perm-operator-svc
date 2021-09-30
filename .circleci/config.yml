@@ -159,6 +159,7 @@ jobs:
       - run:
           name: Change the node version
           command: |
+            [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
             nvm install v12.22.1
       - checkout
       - restore_cache:
@@ -191,7 +192,7 @@ jobs:
       - run:
           name: Start minikube tunnel
           command:
-            nohup minikube tunnel -c > /dev/null 2>&1 &!
+            nohup minikube tunnel -c > /dev/null 2>&1 < /dev/null &
       - run:
           name: Waiting for deployments
           command: |
