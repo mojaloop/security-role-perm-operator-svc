@@ -1,5 +1,5 @@
 {
-  "name": "mojaloop/security-role-perm-operator-svc",
+  "name": "security-role-perm-operator-svc",
   "version": "1.0.0",
   "description": "K8S operator for role permission sync to Ory Keto",
   "author": "Mojaloop",
