@@ -1,0 +1,11 @@
+{
+  "WATCH_RESOURCE_GROUP": "mojaloop.io",
+  "WATCH_RESOURCE_VERSION": "v1",
+  "WATCH_RESOURCE_PLURAL": "mojalooproles",
+  "WATCH_NAMESPACE": "mojaloop",
+  "KETO_READ_PORT": "4466",
+  "KETO_QUEUE_PROCESS_INTERVAL_MS": 1000,
+  "K8S_KETO_SERVICE_NAME": "moja-keto-service",
+  "K8S_OPERATOR_NAMESPACE": "moja-operator",
+  "WAIT_TIME_MS_AFTER_K8S_RESOURCE_CHANGE": 2000
+}
