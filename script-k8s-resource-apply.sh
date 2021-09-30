@@ -11,4 +11,4 @@ kubectl -n $NAMESPACE apply -f resources/moja-role-operator-clusterrolebinding.y
 kubectl -n $NAMESPACE apply -f resources/moja-role-operator-deployment.yaml
 kubectl -n $NAMESPACE apply -f resources/moja-keto.yaml
 kill -9 $(pgrep -f "minikube tunnel")
-minikube tunnel -c &> /dev/null &
+nohup minikube tunnel -c > /dev/null 2>&1 &
