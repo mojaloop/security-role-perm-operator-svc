@@ -48,6 +48,7 @@ const k8sApiCustomObjects = kc.makeApiClient(k8s.CustomObjectsApi)
 describe('K8S operator', (): void => {
   let oryKetoReadApi : keto.ReadApi
   beforeAll(async () => {
+    console.log('Connecting to Keto...', Config.ORY_KETO_READ_SERVICE_URL)
     oryKetoReadApi = new keto.ReadApi(
       undefined,
       Config.ORY_KETO_READ_SERVICE_URL

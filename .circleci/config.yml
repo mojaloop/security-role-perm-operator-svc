@@ -211,7 +211,7 @@ jobs:
           command: |
             [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
             nvm use v12.22.1
-            export ROLE_PERM_OPERATOR_INT_ORY_KETO_READ_SERVICE_URL=`minikube service --url moja-keto-service -n moja-operator |tail -n 1`
+            export ROLE_PERM_OPERATOR_ORY_KETO_READ_SERVICE_URL=`minikube service --url moja-keto-service -n moja-operator |tail -n 1`
             npm -s run test:integration
       - store_artifacts:
           path: ./test/results

@@ -41,6 +41,6 @@ export interface ServiceConfig {
   WAIT_TIME_MS_AFTER_K8S_RESOURCE_CHANGE: number;
 }
 
-const RC = parse(rc('ROLE_PERM_OPERATOR_INT', Config)) as ServiceConfig
+const RC = parse(rc('ROLE_PERM_OPERATOR', Config)) as ServiceConfig
 
 export default RC
