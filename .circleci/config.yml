@@ -192,7 +192,7 @@ jobs:
       - run:
           name: Start minikube tunnel
           command:
-            nohup minikube tunnel -c > /dev/null 2>&1 < /dev/null &
+            screen -A -m -d -S minikube_tunnel minikube tunnel -c &
       - run:
           name: Waiting for deployments
           command: |
@@ -210,6 +210,7 @@ jobs:
           name: Execute integration tests
           command: |
             [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+            nvm use v12.22.1
             npm -s run test:integration
       - store_artifacts:
           path: ./test/results
