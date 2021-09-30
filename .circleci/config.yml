@@ -211,6 +211,7 @@ jobs:
           command: |
             [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
             nvm use v12.22.1
+            export ROLE_PERM_OPERATOR_INT_ORY_KETO_READ_SERVICE_URL=`minikube service --url moja-keto-service -n moja-operator |tail -n 1`
             npm -s run test:integration
       - store_artifacts:
           path: ./test/results
@@ -379,10 +380,10 @@ jobs:
             docker push $DOCKER_ORG/$CIRCLE_PROJECT_REPONAME:latest
             echo "Publishing $DOCKER_ORG/$CIRCLE_PROJECT_REPONAME:${CIRCLE_TAG}"
             docker push $DOCKER_ORG/$CIRCLE_PROJECT_REPONAME:${CIRCLE_TAG}
-      - slack/status:
-          fail_only: true
-          webhook: "$SLACK_WEBHOOK_ANNOUNCEMENT_CI_CD"
-          failure_message: 'Publishing docker image failed for: \`"${DOCKER_ORG}/${CIRCLE_PROJECT_REPONAME}:${CIRCLE_TAG}"\`'
+      # - slack/status:
+      #     fail_only: true
+      #     webhook: "$SLACK_WEBHOOK_ANNOUNCEMENT_CI_CD"
+      #     failure_message: 'Publishing docker image failed for: \`"${DOCKER_ORG}/${CIRCLE_PROJECT_REPONAME}:${CIRCLE_TAG}"\`'
 
   license-scan:
     executor: default-machine
@@ -581,22 +582,21 @@ workflows:
       #           - master
 
       # New Tags are built and deployed as docker artifacts
-      # - publish:
-      #     context: org-global
-      #     requires:
-      #       - build-local
-      #       # - license-scan
-      #       # - image-scan
-      #       - test-unit
-      #       - test-coverage
-      #       - test-integration
-      #       - test-bdd
-      #       - audit-licenses
-      #       - linting-check
-      #       - vulnerability-check
-      #     filters:
-      #       tags:
-      #         only: /.*/
-      #       branches:
-      #         ignore:
-      #           - /.*/
+      - publish:
+          context: org-global
+          requires:
+            - build-local
+            # - license-scan
+            # - image-scan
+            - test-unit
+            - test-coverage
+            - test-integration
+            - audit-licenses
+            - linting-check
+            - vulnerability-check
+          filters:
+            tags:
+              only: /.*/
+            branches:
+              ignore:
+                - /.*/

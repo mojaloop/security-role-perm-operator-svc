@@ -43,30 +43,14 @@ kc.loadFromDefault()
 // If we want to do something in K8S, we can use the following APIs
 // const k8sApi = kc.makeApiClient(k8s.AppsV1Api);
 const k8sApiCustomObjects = kc.makeApiClient(k8s.CustomObjectsApi)
-const k8sApiPods = kc.makeApiClient(k8s.CoreV1Api)
+// const k8sApiPods = kc.makeApiClient(k8s.CoreV1Api)
 
 describe('K8S operator', (): void => {
-  let ketoServiceIP = ''
   let oryKetoReadApi : keto.ReadApi
   beforeAll(async () => {
-    // Get the external IP of keto service
-    const ketoServiceStatusResponse = await k8sApiPods.readNamespacedServiceStatus(
-      Config.K8S_KETO_SERVICE_NAME,
-      Config.K8S_OPERATOR_NAMESPACE
-    )
-    const ketoServiceStatus = ketoServiceStatusResponse.body.status
-    if (ketoServiceStatus) {
-      const ingressStatus = ketoServiceStatus.loadBalancer?.ingress
-      if (ingressStatus) {
-        const firstIngress = ingressStatus[0]
-        ketoServiceIP = firstIngress.ip || ''
-      }
-    }
-    expect(ketoServiceIP).not.toBe('')
-    const ketoReadApiURL = 'http://' + ketoServiceIP + ':' + Config.KETO_READ_PORT
     oryKetoReadApi = new keto.ReadApi(
       undefined,
-      ketoReadApiURL
+      Config.ORY_KETO_READ_SERVICE_URL
     )
   })
   it('Clear all the K8S custom resources', async () => {
