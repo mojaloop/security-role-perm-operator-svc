@@ -1,7 +1,6 @@
 #!/bin/bash
 NAMESPACE=moja-operator
 OPERATION=$1
-kill -9 $(pgrep -f "minikube tunnel")
 kubectl -n $NAMESPACE delete -f resources/moja-role-operator-deployment.yaml
 kubectl -n $NAMESPACE delete -f resources/moja-role-operator-clusterrolebinding.yaml
 kubectl -n $NAMESPACE delete -f resources/mojalooprole-editor-role.yaml
