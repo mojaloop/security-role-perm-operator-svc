@@ -26,7 +26,7 @@ spec:
   - permission_03
   - permission_04'
 ```
-This sequence digram illustrates how Ort Keto is updated.
+This sequence digram illustrates how Ory Keto is updated.
 
 ![Sequence diagram illustrating how roles and participant access is assigned to users](assets/images/rolepermissions.png) 
 
