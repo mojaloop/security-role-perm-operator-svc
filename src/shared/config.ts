@@ -42,24 +42,6 @@ export interface ServiceConfig {
   ORY_KETO_READ_SERVICE_URL: string;
   ORY_KETO_WRITE_SERVICE_URL: string;
   KETO_QUEUE_PROCESS_INTERVAL_MS: number;
-
-  ERROR_HANDLING: {
-    includeCauseExtension: boolean;
-    truncateExtensions: boolean;
-  };
-  INSTRUMENTATION: {
-    METRICS: {
-      DISABLED: boolean;
-      labels: {
-        eventId: string;
-      };
-      config: {
-        timeout: number;
-        prefix: string;
-        defaultLabels?: Map<string, string>;
-      };
-    };
-  };
 }
 
 const RC = parse(rc('ROLE_PERM_OPERATOR', Config)) as ServiceConfig
