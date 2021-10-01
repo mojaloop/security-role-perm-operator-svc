@@ -1,2 +1,2 @@
 eval $(minikube -p minikube docker-env)
-docker build -t role-perm-operator:local .
+docker build -t mojaloop/security-role-perm-operator-svc:local .

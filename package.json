@@ -20,7 +20,7 @@
     "test": "npm run test:unit",
     "test:coverage": "jest --coverage --coverageThreshold='{}' --testMatch '**/test/unit/**/*.(test|spec).ts'",
     "test:coverage-check": "jest -w 1 --coverage --testMatch '**/test/unit/**/*.(test|spec).ts'",
-    "test:integration": "jest --config './jest.integration.config.js' --testMatch '**/test/integration/**/*.(test|spec).ts' --runInBand",
+    "test:integration": "jest --testMatch '**/test/integration/**/*.(test|spec).ts' --runInBand",
     "test:junit": "jest --reporters=default --reporters=jest-junit",
     "test:unit": "jest -w 1 --testMatch '**/test/unit/**/*.(test|spec).ts'",
     "audit:resolve": "SHELL=sh resolve-audit --production",

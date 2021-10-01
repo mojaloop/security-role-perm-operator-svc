@@ -19,17 +19,25 @@ spec:
         deployment: moja-role-operator
     spec:
       containers:
-        - env:
-            - name: DEV_MODE
-              value: 'false'
-            - name: ROLE_ASSIGNMENT_SERVICE_ORY_KETO_READ_SERVICE_URL
-              value: 'http://moja-keto-service:4466'
-            - name: ROLE_ASSIGNMENT_SERVICE_ORY_KETO_WRITE_SERVICE_URL
-              value: 'http://moja-keto-service:4467'
-          image: role-perm-operator:local
-          imagePullPolicy: Never
-          name: moja-role-operator
-          ports:
-            - containerPort: 8080
-              protocol: TCP
+      - image: mojaloop/security-role-perm-operator-svc:local
+        imagePullPolicy: Never
+        name: moja-role-operator
+        ports:
+          - containerPort: 8080
+            protocol: TCP
+        env:
+          - name: DEV_MODE
+            value: 'false'
+          - name: ROLE_PERM_OPERATOR_ORY_KETO_READ_SERVICE_URL
+            value: 'http://moja-keto-service:4466'
+          - name: ROLE_PERM_OPERATOR_ORY_KETO_WRITE_SERVICE_URL
+            value: 'http://moja-keto-service:4467'
+          - name: WATCH_RESOURCE_GROUP
+            value: 'mojaloop.io'
+          - name: WATCH_RESOURCE_VERSION
+            value: 'v1'
+          - name: WATCH_RESOURCE_PLURAL
+            value: 'mojalooproles'
+          - name: WATCH_NAMESPACE
+            value: 'mojaloop'
       serviceAccount: moja-role-operator

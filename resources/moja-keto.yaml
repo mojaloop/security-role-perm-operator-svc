@@ -72,7 +72,7 @@ metadata:
 spec:
   selector:
     app: moja-keto
-  type: LoadBalancer
+  type: NodePort
   ports:
     - name: read-port
       protocol: TCP

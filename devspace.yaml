@@ -24,7 +24,7 @@ dev:
 
 images:
   operator:
-    image: role-perm-operator
+    image: mojaloop/security-role-perm-operator-svc
     dockerfile: ./Dockerfile-dev
     injectRestartHelper: true
     build:

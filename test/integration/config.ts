@@ -29,24 +29,16 @@
 
 import rc from 'rc'
 import parse from 'parse-strings-in-object'
-import Config from '../../config/default.json'
-import Package from '../../package.json'
+import Config from './data/config.json'
 export interface ServiceConfig {
-  // package.json
-  PACKAGE: Record<string, unknown>;
-
   WATCH_RESOURCE_GROUP: string;
   WATCH_RESOURCE_VERSION: string;
   WATCH_RESOURCE_PLURAL: string;
   WATCH_NAMESPACE: string;
   ORY_KETO_READ_SERVICE_URL: string;
-  ORY_KETO_WRITE_SERVICE_URL: string;
-  KETO_QUEUE_PROCESS_INTERVAL_MS: number;
+  WAIT_TIME_MS_AFTER_K8S_RESOURCE_CHANGE: number;
 }
 
 const RC = parse(rc('ROLE_PERM_OPERATOR', Config)) as ServiceConfig
 
-export default {
-  ...RC,
-  PACKAGE: Package
-}
+export default RC

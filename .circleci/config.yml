@@ -143,43 +143,73 @@ jobs:
             fi
 
   test-integration:
-    executor: default-machine
+    machine:
+      image: circleci/classic:201808-01
+      docker_layer_caching: true
+    environment:
+      K8S_VERSION: v1.16.0
+      KUBECONFIG: /home/circleci/.kube/config
+      MINIKUBE_VERSION: v1.16.0
+      MINIKUBE_WANTUPDATENOTIFICATION: false
+      MINIKUBE_WANTREPORTERRORPROMPT: false
+      MINIKUBE_HOME: /home/circleci
+      CHANGE_MINIKUBE_NONE_USER: true
+      GOPATH: /home/circleci/go
     steps:
-      - checkout
       - run:
-          name: Set up NVM
+          name: Change the node version
           command: |
-            echo ${NVM_DIR}
             [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
             nvm install v14.17.6
             nvm alias default v14.17.6
+      - checkout
+      - restore_cache:
+          keys:
+            - dependency-cache-{{ checksum "package-lock.json" }}
+      - attach_workspace:
+          at: /tmp
       - run:
-          name: install modules
+          name: Setup kubectl
           command: |
-            [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
-            node --version
-            npm ci
+            curl -Lo kubectl https://storage.googleapis.com/kubernetes-release/release/${K8S_VERSION}/bin/linux/amd64/kubectl && chmod +x kubectl && sudo mv kubectl /usr/local/bin/
+            mkdir -p ${HOME}/.kube
+            touch ${HOME}/.kube/config
+      - run:
+          name: Setup minikube
+          command: |
+            curl -Lo minikube https://github.com/kubernetes/minikube/releases/download/${MINIKUBE_VERSION}/minikube-linux-amd64 && chmod +x minikube && sudo mv minikube /usr/local/bin/
+      - run:
+          name: Start minikube
+          command: |
+            sudo -E minikube start --vm-driver=none --cpus 2 --memory 4096 --kubernetes-version=${K8S_VERSION}
+      - run:
+          name: Load the pre-built docker image from workspace
+          command: |
+            docker load -i /tmp/docker-image.tar
+      - run:
+          name: Deploy K8S resources
+          command:
+            sh ./script-k8s-resource-apply.sh
+      - run:
+          name: Waiting for deployments
+          command: |
+            kubectl -n moja-operator rollout status deployment moja-role-operator
+            kubectl -n moja-operator rollout status deployment moja-keto
+      - run:
+          name: Get all K8S pods
+          command:
+            kubectl get pods --all-namespaces
       - run:
           name: Create dir for test results
           command: |
-            [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
             mkdir -p ./test/results
-      - run:
-          name: Build docker images
-          command: |
-            [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
-            docker-compose up -d
-            npm run wait-4-docker
       - run:
           name: Execute integration tests
           command: |
             [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+            nvm use v14.17.6
+            export ROLE_PERM_OPERATOR_ORY_KETO_READ_SERVICE_URL=`minikube service list -n moja-operator |grep 4466 |awk '{print $8}'`
             npm -s run test:integration
-      - run:
-          name: Prepare test results
-          command: |
-            mkdir -p test/results
-            mv junit.xml test/results
       - store_artifacts:
           path: ./test/results
       - store_test_results:
@@ -244,18 +274,13 @@ jobs:
     steps:
       - checkout
       - run:
-          name: Setup Docker env variables
-          command: |
-            echo 'export DOCKER_ORG=`cat package.json | jq -r .name | sed s/@// | sed s/\\\\/.*//`' >> $BASH_ENV
-            echo 'export CIRCLE_PROJECT_REPONAME=`cat package.json | jq -r .name | sed s/@// | sed s/\.*\\\\///`' >> $BASH_ENV
-      - run:
           name: Build Docker local image
           command: |
             echo "Building Docker image: local"
-            docker build -t $DOCKER_ORG/$CIRCLE_PROJECT_REPONAME:local .
+            docker build -t ${DOCKER_ORG:-mojaloop}/$CIRCLE_PROJECT_REPONAME:local .
       - run:
           name: Save docker image to workspace
-          command: docker save -o /tmp/docker-image.tar $DOCKER_ORG/$CIRCLE_PROJECT_REPONAME:local
+          command: docker save -o /tmp/docker-image.tar ${DOCKER_ORG:-mojaloop}/$CIRCLE_PROJECT_REPONAME:local
       - persist_to_workspace:
           root: /tmp
           paths:
@@ -352,10 +377,10 @@ jobs:
             docker push $DOCKER_ORG/$CIRCLE_PROJECT_REPONAME:latest
             echo "Publishing $DOCKER_ORG/$CIRCLE_PROJECT_REPONAME:${CIRCLE_TAG}"
             docker push $DOCKER_ORG/$CIRCLE_PROJECT_REPONAME:${CIRCLE_TAG}
-      - slack/status:
-          fail_only: true
-          webhook: "$SLACK_WEBHOOK_ANNOUNCEMENT_CI_CD"
-          failure_message: 'Publishing docker image failed for: \`"${DOCKER_ORG}/${CIRCLE_PROJECT_REPONAME}:${CIRCLE_TAG}"\`'
+      # - slack/status:
+      #     fail_only: true
+      #     webhook: "$SLACK_WEBHOOK_ANNOUNCEMENT_CI_CD"
+      #     failure_message: 'Publishing docker image failed for: \`"${DOCKER_ORG}/${CIRCLE_PROJECT_REPONAME}:${CIRCLE_TAG}"\`'
 
   license-scan:
     executor: default-machine
@@ -436,12 +461,11 @@ workflows:
   version: 2
   build_and_test:
     jobs:
-      # - build-local:
-      #     context: org-global
-      #     filters:
-      #       tags:
-      #         only: /.*/
-
+      - build-local:
+          context: org-global
+          filters:
+            tags:
+              only: /.*/
       - setup:
           context: org-global
           filters:
@@ -476,13 +500,14 @@ workflows:
                 - /feature*/
                 - /bugfix*/
 
-      # - test-integration:
-      #     context: org-global
-      #     requires:
-      #       - setup
-      #     filters:
-      #       tags:
-      #         only: /.*/
+      - test-integration:
+          context: org-global
+          requires:
+            - setup
+            - build-local
+          filters:
+            tags:
+              only: /.*/
 
       - test-coverage:
           context: org-global
@@ -554,22 +579,21 @@ workflows:
       #           - master
 
       # New Tags are built and deployed as docker artifacts
-      # - publish:
-      #     context: org-global
-      #     requires:
-      #       - build-local
-      #       # - license-scan
-      #       # - image-scan
-      #       - test-unit
-      #       - test-coverage
-      #       - test-integration
-      #       - test-bdd
-      #       - audit-licenses
-      #       - linting-check
-      #       - vulnerability-check
-      #     filters:
-      #       tags:
-      #         only: /.*/
-      #       branches:
-      #         ignore:
-      #           - /.*/
+      - publish:
+          context: org-global
+          requires:
+            - build-local
+            # - license-scan
+            # - image-scan
+            - test-unit
+            - test-coverage
+            - test-integration
+            - audit-licenses
+            - linting-check
+            - vulnerability-check
+          filters:
+            tags:
+              only: /.*/
+            branches:
+              ignore:
+                - /.*/
