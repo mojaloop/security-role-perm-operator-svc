@@ -191,10 +191,6 @@ jobs:
           command:
             sh ./script-k8s-resource-apply.sh
       - run:
-          name: Start minikube tunnel
-          command:
-            screen -A -m -d -S minikube_tunnel minikube tunnel -c &
-      - run:
           name: Waiting for deployments
           command: |
             kubectl -n moja-operator rollout status deployment moja-role-operator
