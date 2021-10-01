@@ -160,7 +160,8 @@ jobs:
           name: Change the node version
           command: |
             [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
-            nvm install v12.22.1
+            nvm install v14.17.6
+            nvm alias default v14.17.6
       - checkout
       - restore_cache:
           keys:
@@ -210,7 +211,7 @@ jobs:
           name: Execute integration tests
           command: |
             [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
-            nvm use v12.22.1
+            nvm use v14.17.6
             export ROLE_PERM_OPERATOR_ORY_KETO_READ_SERVICE_URL=`minikube service list -n moja-operator |grep 4466 |awk '{print $8}'`
             npm -s run test:integration
       - store_artifacts:
