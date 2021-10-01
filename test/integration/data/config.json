@@ -5,7 +5,5 @@
   "WATCH_NAMESPACE": "mojaloop",
   "ORY_KETO_READ_SERVICE_URL": "http://localhost:4466",
   "KETO_QUEUE_PROCESS_INTERVAL_MS": 1000,
-  "K8S_KETO_SERVICE_NAME": "moja-keto-service",
-  "K8S_OPERATOR_NAMESPACE": "moja-operator",
   "WAIT_TIME_MS_AFTER_K8S_RESOURCE_CHANGE": 2000
 }

@@ -36,8 +36,6 @@ export interface ServiceConfig {
   WATCH_RESOURCE_PLURAL: string;
   WATCH_NAMESPACE: string;
   ORY_KETO_READ_SERVICE_URL: string;
-  K8S_KETO_SERVICE_NAME: string;
-  K8S_OPERATOR_NAMESPACE: string;
   WAIT_TIME_MS_AFTER_K8S_RESOURCE_CHANGE: number;
 }
 
