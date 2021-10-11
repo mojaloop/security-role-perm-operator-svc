@@ -1,14 +1,22 @@
-FROM registry.access.redhat.com/ubi8/nodejs-14
+# STAGE 1
+FROM node:alpine as builder
+RUN mkdir -p /home/node/app/node_modules && chown -R node:node /home/node/app
+WORKDIR /home/node/app
+COPY package*.json ./
+RUN npm config set unsafe-perm true
+RUN npm install -g typescript
+RUN npm install -g ts-node
+RUN npm install
+COPY --chown=node:node . .
+RUN npm run build
 
-# Add application sources to a directory that the assemble script expects them
-# and set permissions so that the container runs without root access
-USER 0
-ADD . /tmp/src
-RUN chown -R 1001:0 /tmp/src
-USER 1001
+# STAGE 2
+FROM node:alpine
+RUN mkdir -p /home/node/app/node_modules && chown -R node:node /home/node/app
+WORKDIR /home/node/app
+USER root
+COPY package*.json ./
+RUN npm install --production
+COPY --from=builder /home/node/app/dist ./dist
 
-# Install the dependencies
-RUN /usr/libexec/s2i/assemble
-
-# Set the default command for the resulting image
-CMD /usr/libexec/s2i/run
+CMD [ "npm", "start" ]
