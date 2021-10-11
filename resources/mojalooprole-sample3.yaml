@@ -2,7 +2,7 @@ apiVersion: mojaloop.io/v1
 kind: MojaloopRole
 metadata:
   name: mojalooprole-sample3
-  namespace: mojaloop
+  # namespace: mojaloop
 spec:
   role: LevelOneAdmin
   permissions:

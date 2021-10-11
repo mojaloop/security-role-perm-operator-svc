@@ -97,7 +97,7 @@ function onDone(err: any) {
 }
 
 async function watchResource (): Promise<any> {
-  logger.info('Watching Resources')
+  logger.info(`Watching Resources on /apis/${RESOURCE_GROUP}/${RESOURCE_VERSION}/namespaces/${NAMESPACE}/${RESOURCE_PLURAL}`)
   return watch.watch(
     `/apis/${RESOURCE_GROUP}/${RESOURCE_VERSION}/namespaces/${NAMESPACE}/${RESOURCE_PLURAL}`,
     {},
