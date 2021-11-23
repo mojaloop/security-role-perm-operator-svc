@@ -28,7 +28,7 @@
  --------------
  ******/
 
-import { startOperator, getRoleResourceStore, getRolePermissionChangeProcessor, getWatch } from '../../src/operator'
+import { startOperator, getRoleResourceStore, getRolePermissionChangeProcessor, getWatch } from '../mojaloop-role-operator'
 // import { RoleResources } from "./lib/role-resources"
 
 jest.mock('@kubernetes/client-node');

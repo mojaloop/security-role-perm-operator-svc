@@ -27,5 +27,5 @@
  --------------
  ******/
 
-import { startOperator } from './operator'
-startOperator()
+import { startOperator as startMojaloopRoleOperator} from './mojaloop-role-operator'
+startMojaloopRoleOperator()
