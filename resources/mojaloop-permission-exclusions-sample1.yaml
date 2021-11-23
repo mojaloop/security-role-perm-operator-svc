@@ -1,0 +1,12 @@
+apiVersion: mojaloop.io/v1
+kind: MojaloopPermissionExclusions
+metadata:
+  name: mojaloop-pe-sample1
+spec:
+  permissionsA:
+  - createService
+  - listService
+  permissionsB:
+  - deployService
+  - updateService
+
