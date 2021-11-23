@@ -34,10 +34,16 @@ import Package from '../../package.json'
 export interface ServiceConfig {
   // package.json
   PACKAGE: Record<string, unknown>;
-
-  WATCH_RESOURCE_GROUP: string;
-  WATCH_RESOURCE_VERSION: string;
-  WATCH_RESOURCE_PLURAL: string;
+  ROLE_PERMISSION_OPERATOR: {
+    WATCH_RESOURCE_GROUP: string;
+    WATCH_RESOURCE_VERSION: string;
+    WATCH_RESOURCE_PLURAL: string;
+  };
+  PERMISSION_EXCLUSIONS_OPERATOR: {
+    WATCH_RESOURCE_GROUP: string;
+    WATCH_RESOURCE_VERSION: string;
+    WATCH_RESOURCE_PLURAL: string;
+  };
   WATCH_NAMESPACE: string;
   ORY_KETO_READ_SERVICE_URL: string;
   ORY_KETO_WRITE_SERVICE_URL: string;

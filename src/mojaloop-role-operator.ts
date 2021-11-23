@@ -37,9 +37,9 @@ import { RolePermissionChangeProcessor } from "./lib/role-permission-change-proc
 
 // Configure the operator to monitor your custom resources
 // and the namespace for your custom resources
-const RESOURCE_GROUP = Config.WATCH_RESOURCE_GROUP
-const RESOURCE_VERSION = Config.WATCH_RESOURCE_VERSION
-const RESOURCE_PLURAL = Config.WATCH_RESOURCE_PLURAL
+const RESOURCE_GROUP = Config.ROLE_PERMISSION_OPERATOR.WATCH_RESOURCE_GROUP
+const RESOURCE_VERSION = Config.ROLE_PERMISSION_OPERATOR.WATCH_RESOURCE_VERSION
+const RESOURCE_PLURAL = Config.ROLE_PERMISSION_OPERATOR.WATCH_RESOURCE_PLURAL
 const NAMESPACE = Config.WATCH_NAMESPACE
 
 const roleResourceStore = new RoleResources()

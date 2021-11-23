@@ -1,7 +1,14 @@
 {
-  "WATCH_RESOURCE_GROUP": "mojaloop.io",
-  "WATCH_RESOURCE_VERSION": "v1",
-  "WATCH_RESOURCE_PLURAL": "mojalooproles",
+  "ROLE_PERMISSION_OPERATOR" : {
+    "WATCH_RESOURCE_GROUP": "mojaloop.io",
+    "WATCH_RESOURCE_VERSION": "v1",
+    "WATCH_RESOURCE_PLURAL": "mojalooproles"
+  },
+  "PERMISSION_EXCLUSIONS_OPERATOR" : {
+    "WATCH_RESOURCE_GROUP": "mojaloop.io",
+    "WATCH_RESOURCE_VERSION": "v1",
+    "WATCH_RESOURCE_PLURAL": "mojaloop-permission-exclusions"
+  },
   "WATCH_NAMESPACE": "mojaloop",
   "ORY_KETO_READ_SERVICE_URL": "http://localhost:4466",
   "ORY_KETO_WRITE_SERVICE_URL": "http://localhost:4467",
