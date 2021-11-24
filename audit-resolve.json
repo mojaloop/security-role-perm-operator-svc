@@ -1,0 +1,10 @@
+{
+  "decisions": {
+    "1006724|@kubernetes/client-node>request>http-signature>jsprim>json-schema": {
+      "decision": "postpone",
+      "madeAt": 1637781275120
+    }
+  },
+  "rules": {},
+  "version": 1
+}
