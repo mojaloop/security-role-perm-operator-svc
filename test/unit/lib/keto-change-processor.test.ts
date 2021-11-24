@@ -28,28 +28,20 @@
  --------------
  ******/
 
-import { RolePermissionChangeProcessor } from "../../../src/lib/role-permission-change-processor";
-import Config from '../../../src/shared/config';
-import { KetoTuples } from '../../../src/lib/keto-tuples';
+import { KetoChangeProcessor } from '../../../src/lib/keto-change-processor'
+import Config from '../../../src/shared/config'
 
-jest.mock('../../../src/lib/keto-tuples');
-
-(KetoTuples as jest.Mock).mockImplementation(() => {
-  return {
-    updateAllRolePermissions: jest.fn()
-  }
-})
 
 // TODO: The following tests can be optimized to run fast by using jest fakeTimers
 
 describe('role-permission-change-processor', (): void => {
-  describe('RolePermissionChangeProcessor Add Queue', (): void => {
-    let rolePermissionChangeProcessor: RolePermissionChangeProcessor
+  describe('KetoChangeProcessor Add Queue', (): void => {
+    let rolePermissionChangeProcessor: KetoChangeProcessor
     let spyUpdateAllRolePermissions: jest.Mock
 
     it('Initialize rolePermissionChangeProcessor', async () => {
-      rolePermissionChangeProcessor = new RolePermissionChangeProcessor()
-      spyUpdateAllRolePermissions = (rolePermissionChangeProcessor.getOryKeto().updateAllRolePermissions as jest.Mock)
+      spyUpdateAllRolePermissions = jest.fn()
+      rolePermissionChangeProcessor = new KetoChangeProcessor(spyUpdateAllRolePermissions)
       expect(rolePermissionChangeProcessor).toHaveProperty('addToQueue')
       expect(rolePermissionChangeProcessor).toHaveProperty('getQueue')
     })

@@ -27,7 +27,7 @@
  --------------
  ******/
 
-import { startOperator as startMojaloopRoleOperator } from './mojaloop-role-operator'
-import { startOperator as startMojaloopPermissionExclusionsOperator } from './mojaloop-permission-exclusions-operator'
-startMojaloopRoleOperator()
-startMojaloopPermissionExclusionsOperator()
+import { startOperator as startRolePermissionOperator } from './role-permission-operator'
+import { startOperator as startPermissionExclusionsOperator } from './permission-exclusions-operator'
+startRolePermissionOperator()
+startPermissionExclusionsOperator()

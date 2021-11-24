@@ -33,7 +33,8 @@ import * as k8s from "@kubernetes/client-node"
 import { logger } from './shared/logger'
 import Config from './shared/config'
 import { RolePermissionModel, RoleResources } from "./lib/role-resources"
-import { RolePermissionChangeProcessor } from "./lib/role-permission-change-processor"
+import { KetoChangeProcessor } from "./lib/keto-change-processor"
+import { KetoTuples } from './lib/role-permission-keto-tuples'
 
 // Configure the operator to monitor your custom resources
 // and the namespace for your custom resources
@@ -43,7 +44,8 @@ const RESOURCE_PLURAL = Config.ROLE_PERMISSION_OPERATOR.WATCH_RESOURCE_PLURAL
 const NAMESPACE = Config.WATCH_NAMESPACE
 
 const roleResourceStore = new RoleResources()
-const rolePermissionChangeProcessor = new RolePermissionChangeProcessor()
+const oryKeto = new KetoTuples()
+const rolePermissionChangeProcessor = new KetoChangeProcessor(oryKeto.updateAllRolePermissions.bind(oryKeto))
 
 const kc = new k8s.KubeConfig()
 kc.loadFromDefault()
@@ -123,7 +125,7 @@ export async function startOperator (): Promise<void> {
 export function getRoleResourceStore () : RoleResources {
   return roleResourceStore
 }
-export function getRolePermissionChangeProcessor () : RolePermissionChangeProcessor {
+export function getRolePermissionChangeProcessor () : KetoChangeProcessor {
   return rolePermissionChangeProcessor
 }
 export function getWatch () : k8s.Watch {

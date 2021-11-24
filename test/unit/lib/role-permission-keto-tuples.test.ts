@@ -28,9 +28,9 @@
  --------------
  ******/
 
-import { KetoTuples } from "../../../src/lib/keto-tuples";
+import { KetoTuples } from '../../../src/lib/role-permission-keto-tuples'
 
-jest.mock('@ory/keto-client');
+jest.mock('@ory/keto-client')
 
 const sampleRelationTupleData = {
   relation_tuples: [

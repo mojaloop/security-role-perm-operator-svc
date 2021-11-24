@@ -28,12 +28,13 @@
  --------------
  ******/
 
-import { startOperator, getRoleResourceStore, getRolePermissionChangeProcessor, getWatch } from '../mojaloop-role-operator'
+// eslint-disable-next-line max-len
+import { startOperator, getRoleResourceStore, getRolePermissionChangeProcessor, getWatch } from '../../src/role-permission-operator'
 // import { RoleResources } from "./lib/role-resources"
 
 jest.mock('@kubernetes/client-node');
 jest.mock('../../src/lib/role-resources');
-jest.mock('../../src/lib/role-permission-change-processor');
+jest.mock('../../src/lib/keto-change-processor');
 
 // (KetoTuples as jest.Mock).mockImplementation(() => {
 //   return {
