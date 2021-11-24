@@ -4,9 +4,8 @@ metadata:
   name: mojaloop-pe-sample1
 spec:
   permissionsA:
-  - createService
-  - listService
+  - MAKER
   permissionsB:
-  - deployService
-  - updateService
+  - CHECKER
+  - ROLE_API
 

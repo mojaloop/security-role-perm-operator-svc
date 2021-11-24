@@ -33,7 +33,8 @@ import * as k8s from "@kubernetes/client-node"
 import { logger } from './shared/logger'
 import Config from './shared/config'
 import { PermissionExclusionResources } from './lib/permission-exclusions-store'
-// import { RolePermissionChangeProcessor } from "./lib/role-permission-change-processor"
+import { KetoChangeProcessor } from "./lib/keto-change-processor"
+import { KetoTuples } from './lib/permission-exclusions-keto-tuples'
 
 // Configure the operator to monitor your custom resources
 // and the namespace for your custom resources
@@ -43,7 +44,8 @@ const RESOURCE_PLURAL = Config.PERMISSION_EXCLUSIONS_OPERATOR.WATCH_RESOURCE_PLU
 const NAMESPACE = Config.WATCH_NAMESPACE
 
 const permissionExclusionResourceStore = new PermissionExclusionResources()
-// const rolePermissionChangeProcessor = new RolePermissionChangeProcessor()
+const oryKeto = new KetoTuples()
+const permissionExclusionsChangeProcessor = new KetoChangeProcessor(oryKeto.updateAllPermissionExclusions.bind(oryKeto))
 
 const kc = new k8s.KubeConfig()
 kc.loadFromDefault()
@@ -87,6 +89,7 @@ async function onEvent(phase: string, apiObj: any) {
     const permissionExclusionCombos = permissionExclusionResourceStore.getUniquePermissionExclusionCombos()
     logger.info('Current permission exclusions in memory' + JSON.stringify(permissionExclusionCombos))
     // rolePermissionChangeProcessor.addToQueue(rolePermissionCombos)
+    permissionExclusionsChangeProcessor.addToQueue(permissionExclusionCombos)
   }
 }
 
