@@ -126,9 +126,9 @@ export async function startOperator (): Promise<void> {
 export function getPermissionExclusionResourceStore () : PermissionExclusionResources {
   return permissionExclusionResourceStore
 }
-// export function getRolePermissionChangeProcessor () : RolePermissionChangeProcessor {
-//   return rolePermissionChangeProcessor
-// }
+export function getPermissionExclusionsChangeProcessor () : KetoChangeProcessor {
+  return permissionExclusionsChangeProcessor
+}
 export function getWatch () : k8s.Watch {
   return watch
 }
