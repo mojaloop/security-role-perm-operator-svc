@@ -1,0 +1,145 @@
+/*****
+ License
+ --------------
+ Copyright © 2020 Mojaloop Foundation
+ The Mojaloop files are made available by the Mojaloop Foundation under the
+ Apache License, Version 2.0 (the 'License') and you may not use these files
+ except in compliance with the License. You may obtain a copy of the License at
+ http://www.apache.org/licenses/LICENSE-2.0
+ Unless required by applicable law or agreed to in writing, the Mojaloop files
+ are distributed on an 'AS IS' BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ KIND, either express or implied. See the License for the specific language
+ governing permissions and limitations under the License.
+ Contributors
+ --------------
+ This is the official list of the Mojaloop project contributors for this file.
+ Names of the original copyright holders (individuals or organizations)
+ should be listed with a '*' in the first column. People who have
+ contributed from an organization can be listed under the organization
+ that actually holds the copyright for their contributions (see the
+ Gates Foundation organization for an example). Those individuals should have
+ their names indented and be marked with a '-'. Email address can be added
+ optionally within square brackets <email>.
+ * Gates Foundation
+ - Name Surname <name.surname@gatesfoundation.com>
+
+ - Vijaya Kumar Guthi <vijaya.guthi@modusbox.com>
+
+ --------------
+ ******/
+
+import { KetoTuples } from '../../../src/lib/permission-exclusions-keto-tuples'
+
+jest.mock('@ory/keto-client')
+
+const sampleRelationTupleData = {
+  relation_tuples: [
+    {
+      namespace: 'permission',
+      object: 'samplePermission2',
+      relation: 'excludes',
+      subject: 'permission:samplePermission1'
+    }
+  ]
+}
+
+// const mockLoggerError = jest.spyOn(Logger, 'error')
+
+describe('Permission Exclusions Keto Tuples', (): void => {
+  describe('Keto update tuples', (): void => {
+    let oryKeto: KetoTuples
+    let spyGetRelationTuples: jest.Mock
+    let spyPatchRelationTuples: jest.Mock
+    beforeAll(() => {
+      oryKeto = new KetoTuples();
+      spyGetRelationTuples = oryKeto.oryKetoReadApi.getRelationTuples as jest.Mock
+      spyPatchRelationTuples = oryKeto.oryKetoWriteApi.patchRelationTuples as jest.Mock
+      spyGetRelationTuples.mockResolvedValue({
+        status: 200,
+        statusText: 'OK',
+        config: {},
+        headers: {},
+        data: sampleRelationTupleData
+      })
+    })
+
+    afterEach((): void => {
+      spyPatchRelationTuples.mockReset()
+    })
+
+    it('getAllPermissionExclusionCombos', async () => {
+      const permissionExclusionCombos = await oryKeto.getAllPermissionExclusionCombos();
+      expect(Array.isArray(permissionExclusionCombos)).toBe(true)
+      expect(permissionExclusionCombos.length).toEqual(1)
+      expect(permissionExclusionCombos[0]).toEqual('samplePermission1:samplePermission2')
+    })
+    it('updateAllPermissionExclusions', async () => {
+      const newPermissionExclusionCombos = [
+        'samplePermission3:samplePermission4'
+      ]
+      await oryKeto.updateAllPermissionExclusions(newPermissionExclusionCombos);
+      expect(spyPatchRelationTuples).toHaveBeenCalledWith(expect.arrayContaining([
+        {
+          action: 'delete',
+          relation_tuple: expect.objectContaining({ object: 'samplePermission2'})
+        },
+        {
+          action: 'insert',
+          relation_tuple: expect.objectContaining({ object: 'samplePermission4'})
+        }
+      ]))
+    })
+    it('updateAllPermissionExclusions with empty array', async () => {
+      const newPermissionExclusionCombos: any[] = []
+      await oryKeto.updateAllPermissionExclusions(newPermissionExclusionCombos);
+      expect(spyPatchRelationTuples).toHaveBeenCalledWith(expect.arrayContaining([
+        {
+          action: 'delete',
+          relation_tuple: expect.objectContaining({ object: 'samplePermission2'})
+        }
+      ]))
+    })
+    it('updateAllPermissionExclusions with same rolePermissions', async () => {
+      const newPermissionExclusionCombos = [
+        'samplePermission1:samplePermission2'
+      ]
+      await oryKeto.updateAllPermissionExclusions(newPermissionExclusionCombos)
+      expect(spyPatchRelationTuples).not.toHaveBeenCalled()
+    })
+    // Negative scenarios
+    it('getAllPermissionExclusionCombos', async () => {
+      const spyGetRelationTuples = oryKeto.oryKetoReadApi.getRelationTuples as jest.Mock
+      spyGetRelationTuples.mockResolvedValue({
+        status: 200,
+        statusText: 'OK',
+        config: {},
+        headers: {},
+        data: {
+          relation_tuples: []
+        }
+      })
+      const permissionExclusionCombos = await oryKeto.getAllPermissionExclusionCombos()
+      expect(Array.isArray(permissionExclusionCombos)).toBe(true)
+      expect(permissionExclusionCombos.length).toEqual(0)
+    })
+    it('updateAllPermissionExclusions if the data from keto getTuples call is null', async () => {
+      spyGetRelationTuples.mockResolvedValue({
+        status: 200,
+        statusText: 'OK',
+        config: {},
+        headers: {},
+        data: null
+      })
+      const newPermissionExclusionCombos = [
+        'samplePermission10:samplePermission11'
+      ]
+      await oryKeto.updateAllPermissionExclusions(newPermissionExclusionCombos);
+      expect(spyPatchRelationTuples).toHaveBeenCalledWith(expect.arrayContaining([
+        {
+          action: 'insert',
+          relation_tuple: expect.objectContaining({ object: 'samplePermission11'})
+        }
+      ]))
+    })
+  })
+})
