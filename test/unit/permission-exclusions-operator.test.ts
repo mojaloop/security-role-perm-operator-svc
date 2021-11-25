@@ -106,7 +106,7 @@ const createWatchDoneImplementation = (error: string) => {
   }
 }
 
-describe('K8S operator', (): void => {
+describe('Permission Exclusion operator', (): void => {
   let spyUpdateResource: jest.Mock
   let spyDeleteResource: jest.Mock
   let spyAddToQueue: jest.Mock
