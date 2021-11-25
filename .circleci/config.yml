@@ -193,8 +193,8 @@ jobs:
       - run:
           name: Waiting for deployments
           command: |
-            kubectl -n moja-operator rollout status deployment moja-role-operator
-            kubectl -n moja-operator rollout status deployment moja-keto
+            kubectl -n mojaloop rollout status deployment moja-role-operator
+            kubectl -n mojaloop rollout status deployment moja-keto
       - run:
           name: Get all K8S pods
           command:
@@ -208,7 +208,7 @@ jobs:
           command: |
             [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
             nvm use v14.17.6
-            export ROLE_PERM_OPERATOR_ORY_KETO_READ_SERVICE_URL=`minikube service list -n moja-operator |grep 4466 |awk '{print $8}'`
+            export ROLE_PERM_OPERATOR_ORY_KETO_READ_SERVICE_URL=`minikube service list -n mojaloop |grep 4466 |awk '{print $8}'`
             npm -s run test:integration
       - store_artifacts:
           path: ./test/results

@@ -1,6 +1,6 @@
 # permissions for end users to edit mojalooproles.
 apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRole
+kind: Role
 metadata:
   name: mojalooprole-editor-role
 rules:
@@ -9,55 +9,14 @@ rules:
     resources:
       - mojalooproles
     verbs:
-      - create
-      - delete
       - get
       - list
-      - patch
-      - update
       - watch
   - apiGroups:
       - mojaloop.io
     resources:
       - mojalooproles/status
     verbs:
-      - create
-      - delete
       - get
       - list
-      - patch
-      - update
       - watch
-  - apiGroups:
-      - apps
-    verbs:
-      - create
-      - delete
-      - deletecollection
-      - get
-      - list
-      - patch
-      - update
-      - watch
-    resources:
-      - daemonsets
-      - deployments
-      - deployments/rollback
-      - deployments/scale
-      - replicasets
-      - replicasets/scale
-      - statefulsets
-      - statefulsets/scale
-  - apiGroups:
-      - ''
-    verbs:
-      - create
-      - delete
-      - deletecollection
-      - get
-      - list
-      - patch
-      - update
-      - watch
-    resources:
-      - pods
