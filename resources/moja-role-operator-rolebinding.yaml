@@ -1,12 +1,12 @@
 apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRoleBinding
+kind: RoleBinding
 metadata:
   name: manager-rolebinding
 roleRef:
   apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
+  kind: Role
   name: mojalooprole-editor-role
 subjects:
   - kind: ServiceAccount
     name: moja-role-operator
-    namespace: moja-operator
+    namespace: mojaloop

@@ -1,0 +1,16 @@
+{
+  "apiVersion": "mojaloop.io/v1",
+  "kind": "MojaloopPermissionExclusions",
+  "metadata": {
+    "name": "mojaloop-pe-sample2",
+    "namespace": "mojaloop"
+  },
+  "spec": {
+    "permissionsA": [
+      "PERMISSIONX3"
+    ],
+    "permissionsB": [
+      "PERMISSIONY3"
+    ]
+  }
+}

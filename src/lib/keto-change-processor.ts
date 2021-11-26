@@ -28,24 +28,23 @@
  ******/
 
 import Config from '../shared/config'
-import { KetoTuples } from './keto-tuples'
 import { logger } from '../shared/logger'
 
-const oryKeto = new KetoTuples()
-
-export class RolePermissionChangeProcessor {
+export class KetoChangeProcessor {
   queue: string[][];
   timerOn: boolean;
   timeoutId: NodeJS.Timeout;
+  updateFn: (subjectObjectCombos: string[]) => Promise<void>;
 
-  constructor () {
+  constructor (updateFn: (subjectObjectCombos: string[]) => Promise<void>) {
     this.queue = []
     this.timerOn = true
     this.timeoutId = setTimeout(this._processQueue.bind(this))
+    this.updateFn = updateFn
   }
 
-  _pushQueue (rolePermissionCombos: string []) : void {
-    this.queue.push(rolePermissionCombos)
+  _pushQueue (subjectObjectCombos: string []) : void {
+    this.queue.push(subjectObjectCombos)
   }
 
   _popQueue () : string[] | undefined {
@@ -62,10 +61,10 @@ export class RolePermissionChangeProcessor {
 
   async _processQueue () : Promise<void> {
     if (this.timerOn) {
-      const rolePermissionCombos = this._getFirstItemInQueue()
-      if (rolePermissionCombos) {
+      const subjectObjectCombos = this._getFirstItemInQueue()
+      if (subjectObjectCombos) {
         try {
-          await this._updateRolePermissions(rolePermissionCombos)
+          await this._updateRelationTuples(subjectObjectCombos)
           this._popQueue()
         } catch (err: any) {
           logger.error(err.message)
@@ -75,13 +74,13 @@ export class RolePermissionChangeProcessor {
     }
   }
 
-  async _updateRolePermissions (rolePermissionCombos: string[]) : Promise<void> {
-    await oryKeto.updateAllRolePermissions(rolePermissionCombos)
-    logger.info('Updated the role permissions in Keto', rolePermissionCombos)
+  async _updateRelationTuples (subjectObjectCombos: string[]) : Promise<void> {
+    await this.updateFn(subjectObjectCombos)
+    logger.info('Updated the relation tuples in Keto', subjectObjectCombos)
   }
 
-  addToQueue (rolePermissionCombos: string[]) : void {
-    this._pushQueue(rolePermissionCombos)
+  addToQueue (subjectObjectCombos: string[]) : void {
+    this._pushQueue(subjectObjectCombos)
   }
 
   getQueue () : string[][] {
@@ -92,9 +91,5 @@ export class RolePermissionChangeProcessor {
   destroy () : void {
     this.timerOn = false
     clearTimeout(this.timeoutId)
-  }
-
-  getOryKeto () : KetoTuples {
-    return oryKeto
   }
 }

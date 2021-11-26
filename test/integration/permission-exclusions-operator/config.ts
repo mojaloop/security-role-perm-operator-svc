@@ -27,7 +27,18 @@
  --------------
  ******/
 
-import { startOperator as startRolePermissionOperator } from './role-permission-operator'
-import { startOperator as startPermissionExclusionsOperator } from './permission-exclusions-operator'
-startRolePermissionOperator()
-startPermissionExclusionsOperator()
+import rc from 'rc'
+import parse from 'parse-strings-in-object'
+import Config from './data/config.json'
+export interface ServiceConfig {
+  WATCH_RESOURCE_GROUP: string;
+  WATCH_RESOURCE_VERSION: string;
+  WATCH_RESOURCE_PLURAL: string;
+  WATCH_NAMESPACE: string;
+  ORY_KETO_READ_SERVICE_URL: string;
+  WAIT_TIME_MS_AFTER_K8S_RESOURCE_CHANGE: number;
+}
+
+const RC = parse(rc('PERMISSION_EXCLUSIONS_OPERATOR', Config)) as ServiceConfig
+
+export default RC

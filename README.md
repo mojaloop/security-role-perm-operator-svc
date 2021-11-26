@@ -51,9 +51,12 @@ See [`src/shared/config.ts`](src/shared/config.ts) to understand how these varia
 
 | Variable Name | Description | Default Value |
 | -------------------- | ----------- | ------ |
-| WATCH_RESOURCE_GROUP | K8S resource group name | mojaloop.io
-| WATCH_RESOURCE_VERSION | K8S resource version | v1
-| WATCH_RESOURCE_PLURAL | K8S resource plural | mojalooproles
+| ROLE_PERMISSION_OPERATOR.WATCH_RESOURCE_GROUP | K8S resource group name | mojaloop.io
+| ROLE_PERMISSION_OPERATOR.WATCH_RESOURCE_VERSION | K8S resource version | v1
+| ROLE_PERMISSION_OPERATOR.WATCH_RESOURCE_PLURAL | K8S resource plural | mojalooproles
+| PERMISSION_EXCLUSIONS_OPERATOR.WATCH_RESOURCE_GROUP | K8S resource group name | mojaloop.io
+| PERMISSION_EXCLUSIONS_OPERATOR.WATCH_RESOURCE_VERSION | K8S resource version | v1
+| PERMISSION_EXCLUSIONS_OPERATOR.WATCH_RESOURCE_PLURAL | K8S resource plural | mojaloop-permission-exclusions
 | WATCH_NAMESPACE | K8S namespace | mojaloop
 | ORY_KETO_READ_SERVICE_URL | Keto service read URL | http://localhost:4466
 | ORY_KETO_WRITE_SERVICE_URL | Keto service write URL | http://localhost:4467

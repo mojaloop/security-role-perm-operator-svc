@@ -32,18 +32,20 @@
 import * as k8s from "@kubernetes/client-node"
 import { logger } from './shared/logger'
 import Config from './shared/config'
-import { RolePermissionModel, RoleResources } from "./lib/role-resources"
-import { RolePermissionChangeProcessor } from "./lib/role-permission-change-processor"
+import { PermissionExclusionResources } from './lib/permission-exclusions-store'
+import { KetoChangeProcessor } from "./lib/keto-change-processor"
+import { KetoTuples } from './lib/permission-exclusions-keto-tuples'
 
 // Configure the operator to monitor your custom resources
 // and the namespace for your custom resources
-const RESOURCE_GROUP = Config.WATCH_RESOURCE_GROUP
-const RESOURCE_VERSION = Config.WATCH_RESOURCE_VERSION
-const RESOURCE_PLURAL = Config.WATCH_RESOURCE_PLURAL
+const RESOURCE_GROUP = Config.PERMISSION_EXCLUSIONS_OPERATOR.WATCH_RESOURCE_GROUP
+const RESOURCE_VERSION = Config.PERMISSION_EXCLUSIONS_OPERATOR.WATCH_RESOURCE_VERSION
+const RESOURCE_PLURAL = Config.PERMISSION_EXCLUSIONS_OPERATOR.WATCH_RESOURCE_PLURAL
 const NAMESPACE = Config.WATCH_NAMESPACE
 
-const roleResourceStore = new RoleResources()
-const rolePermissionChangeProcessor = new RolePermissionChangeProcessor()
+const permissionExclusionResourceStore = new PermissionExclusionResources()
+const oryKeto = new KetoTuples()
+const permissionExclusionsChangeProcessor = new KetoChangeProcessor(oryKeto.updateAllPermissionExclusions.bind(oryKeto))
 
 const kc = new k8s.KubeConfig()
 kc.loadFromDefault()
@@ -71,22 +73,23 @@ async function onEvent(phase: string, apiObj: any) {
   //   logger.error(err);
   // }
   const resourceName = apiObj?.metadata?.name
-  const role = apiObj?.spec?.role
-  const permissions = apiObj?.spec?.permissions
-  if (resourceName && role && permissions) {
+  const permissionsA = apiObj?.spec?.permissionsA
+  const permissionsB = apiObj?.spec?.permissionsB
+  if (resourceName && permissionsA && permissionsB) {
     if (phase == "ADDED") {
-      roleResourceStore.updateRoleResource(resourceName, role, permissions)
+      permissionExclusionResourceStore.updateResource(resourceName, permissionsA, permissionsB)
     } else if (phase == "MODIFIED") {
-      roleResourceStore.updateRoleResource(resourceName, role, permissions)
+      permissionExclusionResourceStore.updateResource(resourceName, permissionsA, permissionsB)
     } else if (phase == "DELETED") {
-      roleResourceStore.deleteRoleResource(resourceName)
+      permissionExclusionResourceStore.deleteResource(resourceName)
     } else {
       logger.warn(`Unknown event type: ${phase}`)
       return
     }
-    const rolePermissionCombos = roleResourceStore.getUniqueRolePermissionCombos()
-    logger.info('Current permissions in memory' + JSON.stringify(rolePermissionCombos))
-    rolePermissionChangeProcessor.addToQueue(rolePermissionCombos)
+    const permissionExclusionCombos = permissionExclusionResourceStore.getUniquePermissionExclusionCombos()
+    logger.info('Current permission exclusions in memory' + JSON.stringify(permissionExclusionCombos))
+    // rolePermissionChangeProcessor.addToQueue(rolePermissionCombos)
+    permissionExclusionsChangeProcessor.addToQueue(permissionExclusionCombos)
   }
 }
 
@@ -97,7 +100,7 @@ function onDone(err: any) {
 }
 
 async function watchResource (): Promise<any> {
-  logger.info('Watching Resources')
+  logger.info('Watching Permission Exclusions Resources')
   return watch.watch(
     `/apis/${RESOURCE_GROUP}/${RESOURCE_VERSION}/namespaces/${NAMESPACE}/${RESOURCE_PLURAL}`,
     {},
@@ -120,11 +123,11 @@ export async function startOperator (): Promise<void> {
 }
 
 // functions for unit tests
-export function getRoleResourceStore () : RoleResources {
-  return roleResourceStore
+export function getPermissionExclusionResourceStore () : PermissionExclusionResources {
+  return permissionExclusionResourceStore
 }
-export function getRolePermissionChangeProcessor () : RolePermissionChangeProcessor {
-  return rolePermissionChangeProcessor
+export function getPermissionExclusionsChangeProcessor () : KetoChangeProcessor {
+  return permissionExclusionsChangeProcessor
 }
 export function getWatch () : k8s.Watch {
   return watch
