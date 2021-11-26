@@ -209,6 +209,7 @@ jobs:
             [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
             nvm use v14.17.6
             export ROLE_PERM_OPERATOR_ORY_KETO_READ_SERVICE_URL=`minikube service list -n mojaloop |grep 4466 |awk '{print $8}'`
+            export PERMISSION_EXCLUSIONS_OPERATOR_ORY_KETO_READ_SERVICE_URL=`minikube service list -n mojaloop |grep 4466 |awk '{print $8}'`
             npm -s run test:integration
       - store_artifacts:
           path: ./test/results
