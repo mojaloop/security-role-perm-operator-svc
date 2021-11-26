@@ -7,7 +7,7 @@ spec:
   scope: Namespaced
   names:
     plural: mojaloop-permission-exclusions
-    singular: mojaloop-permission-exclusions
+    singular: mojaloop-permission-exclusion
     shortNames:
       - mpe
     kind: MojaloopPermissionExclusions
