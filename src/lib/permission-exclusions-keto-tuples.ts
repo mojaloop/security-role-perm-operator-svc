@@ -112,7 +112,7 @@ class KetoTuples {
       namespace: 'permission',
       object: permissionY,
       relation: 'excludes',
-      subject: 'permission:' + permissionX
+      subject: 'permission:' + permissionX + '#granted'
     }
   }
 }
