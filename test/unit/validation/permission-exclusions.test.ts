@@ -28,16 +28,47 @@
  --------------
  ******/
 
-import { PermissionExclusionsValidator } from '../../../src/validation/permission-exclusions'
-// import Config from '../../../src/shared/config'
+import { PermissionExclusionsValidator, RolePermissions, PermissionExclusions } from '../../../src/validation/permission-exclusions'
+import Config from '../../../src/shared/config'
 
-const permissionExclusionsValidator = new PermissionExclusionsValidator()
+const permissionExclusionsValidator = new PermissionExclusionsValidator(Config)
 
 describe('permission-exclusions', (): void => {
-  describe('validateUserPermissions', (): void => {
+  describe('validateUserPermissionsValid', (): void => {
     describe('Happy Path', (): void => {
       it('Validate the permission exclusion', async () => {
-        permissionExclusionsValidator.validateUserPermissions('user1', ['PERMISSIONC1', 'PERMISSIONC2'])
+        const userRoles = [
+          'ROLE1',
+          'ROLE2'
+        ]
+        const rolePermissions: RolePermissions[] = [
+          {
+            rolename: 'ROLE1',
+            permissions: [
+              'PERMA1',
+              'PERMA2'
+            ]
+          },
+          {
+            rolename: 'ROLE2',
+            permissions: [
+              'PERMB1',
+              'PERMB2'
+            ]
+          }
+        ]
+        const permissionExclusions: PermissionExclusions[] = [
+          {
+            permissionsA: [
+              'PERMA1'
+            ],
+            permissionsB: [
+              'PERMB1',
+              'PERMA2'
+            ]
+          }
+        ]
+        permissionExclusionsValidator.validateUserPermissionsValid(userRoles, rolePermissions, permissionExclusions)
       })
       // it('When already existing permission is passed', async () => {
       //   permissionExclusionsValidator.validateUserPermissions('user1', ['permissionB1'])

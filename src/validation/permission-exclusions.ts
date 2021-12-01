@@ -28,19 +28,29 @@
  ******/
 
 import * as keto from '@ory/keto-client'
-import { PatchDelta, InternalRelationTuple } from '@ory/keto-client'
-import { isConstructorTypeNode } from 'typescript'
 import { ValidationError } from './validation-error'
-import Config from '../shared/config'
+import { ServiceConfig } from '../shared/config'
 import { logger } from '../shared/logger'
+
+export interface RolePermissions {
+  rolename: string;
+  permissions: string[];
+}
+
+export interface PermissionExclusions {
+  permissionsA: string[];
+  permissionsB: string[];
+}
 
 export class PermissionExclusionsValidator {
   oryKetoReadApi: keto.ReadApi
+  serviceConfig: ServiceConfig
 
-  constructor () {
+  constructor (serviceConfig: ServiceConfig) {
+    this.serviceConfig = serviceConfig
     this.oryKetoReadApi = new keto.ReadApi(
       undefined,
-      Config.ORY_KETO_READ_SERVICE_URL
+      serviceConfig.ORY_KETO_READ_SERVICE_URL
     )
   }
 
@@ -70,6 +80,7 @@ export class PermissionExclusionsValidator {
     }
     // TODO: We can stop the validation when the first error occurs based on a config param like quickCheck
   }
+
   // async validateUserPermissionsWithDetails (userId: string, newPermissions: string []) : Promise<void> {
   //   // TODO: Define a model for validation error
   //   const validationErrors : string[] = []
@@ -137,4 +148,74 @@ export class PermissionExclusionsValidator {
   //   // Return list of all the validation errors
   //   // (This functionality can be configurable)
   // }
+
+  _getPermissionExclusionsForPermission (
+    permission: string,
+    permissionExclusions: PermissionExclusions[]
+  ) : Set<string> {
+    const permissionExclusionsSet: Set<string> = new Set()
+    const permissionExclusionsFoundInSetA = permissionExclusions.filter(item => item.permissionsA.includes(permission))
+    const permissionExclusionsFoundInSetB = permissionExclusions.filter(item => item.permissionsB.includes(permission))
+    permissionExclusionsFoundInSetA.forEach(item => {
+      item.permissionsB.forEach(perm => permissionExclusionsSet.add(perm))
+    })
+    permissionExclusionsFoundInSetB.forEach(item => {
+      item.permissionsA.forEach(perm => permissionExclusionsSet.add(perm))
+    })
+    return permissionExclusionsSet
+  }
+
+  validateUserPermissionsValid (
+    userRoles: string[],
+    rolePermissions: RolePermissions [],
+    permissionExclusions: PermissionExclusions[]
+  ) : void {
+    const validationErrors : string[] = []
+    // Get the permissions assigned to user based on the list of roles
+    const totalGrantedPermissions : Set<string> = new Set()
+    for (let i = 0; i < userRoles.length; i++) {
+      const roleItem = rolePermissions.find(item => item.rolename === userRoles[i])
+      if (roleItem) {
+        roleItem.permissions.forEach(perm => totalGrantedPermissions.add(perm))
+      }
+    }
+    // logger.info('Permissions granted for the user are ....')
+    // console.log(totalGrantedPermissions)
+
+    // Iterate through permissions and get the set of excluded permissions
+    const totalPermissionExclusions: Set<string> = new Set()
+    // for (let i = 0; i < totalGrantedPermissions.size; i++) {
+    totalGrantedPermissions.forEach(grantedPerm => {
+      try {
+        // eslint-disable-next-line max-len
+        const permissionExclusionsForPermission = this._getPermissionExclusionsForPermission(grantedPerm, permissionExclusions)
+        permissionExclusionsForPermission.forEach(perm => totalPermissionExclusions.add(perm))
+      } catch (err) {}
+    })
+    // console.log(totalGrantedPermissions, totalPermissionExclusions)
+
+    // Check the new permissions permissions with the excluded permissions using set intersection
+    const intersect = new Set([...totalGrantedPermissions].filter(i => totalPermissionExclusions.has(i)))
+    // console.log('Intersection is', intersect)
+    if (intersect.size > 0) {
+      validationErrors.push('ERROR: permissions ' + Array.from(intersect).join(',') + ' can not co-exist')
+      throw new ValidationError(validationErrors)
+    }
+  }
+
+  // Example scenario
+  // Current Assignments:
+  // ROLE1: PA1, PA2
+  // ROLE2: PB1
+
+  // PB2:PA2
+
+  // Incoming Change:
+
+  // ROLE2: PB1, PB2
+  // ROLE3: PB2, PC1
+  // ROLE4: PB1
+
+  // PC2:PB1
+  // PB2:PA2 (D)
 }

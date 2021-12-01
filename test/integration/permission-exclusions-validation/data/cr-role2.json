@@ -1,0 +1,15 @@
+{
+  "apiVersion": "mojaloop.io/v1",
+  "kind": "MojaloopRole",
+  "metadata": {
+    "name": "pe-validation-test-role2",
+    "namespace": "mojaloop"
+  },
+  "spec": {
+    "role": "PEVALROLE2",
+    "permissions": [
+      "PERMISSIONY1",
+      "PERMISSIONY2"
+    ]
+  }
+}
