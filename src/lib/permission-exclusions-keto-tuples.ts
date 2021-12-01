@@ -58,7 +58,7 @@ class KetoTuples {
     )
     const relationTuples = response.data?.relation_tuples || []
     return relationTuples.map(tuple => {
-      const permissionA = tuple.subject.replace(/permission:(.*)(#.*)?/, '$1')
+      const permissionA = tuple.subject.replace(/permission:([^#.]*)(#.*)?/, '$1')
       return permissionA + ':' + tuple.object
     })
   }

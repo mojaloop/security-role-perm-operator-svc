@@ -1,0 +1,1 @@
+minikube service --url moja-keto-service -n mojaloop

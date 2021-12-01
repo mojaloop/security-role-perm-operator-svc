@@ -45,7 +45,7 @@ const k8sApiCustomObjects = kc.makeApiClient(k8s.CustomObjectsApi)
 // const k8sApiPods = kc.makeApiClient(k8s.CoreV1Api)
 
 const _relationTuplesToPermissionCombos = (relationTuples: Array<any>) => {
-  return relationTuples?.map(item => item.object + ':' + item.subject.replace(/permission:(.*)(#.*)?/, '$1'))
+  return relationTuples?.map(item => item.object + ':' + item.subject.replace(/permission:([^#.]*)(#.*)?/, '$1'))
 }
 
 describe('K8S operator', (): void => {
