@@ -31,7 +31,8 @@
 import * as k8s from "@kubernetes/client-node"
 import Config from './config'
 import ServiceConfig from './../../../src/shared/config'
-import { PermissionExclusionsValidator } from './../../../src/validation/permission-exclusions'
+// eslint-disable-next-line max-len
+import { PermissionExclusionsValidator, RolePermissions, PermissionExclusions } from './../../../src/validation/permission-exclusions'
 import * as keto from '@ory/keto-client'
 import role1Resource from './data/cr-role1.json'
 import role2Resource from './data/cr-role2.json'
@@ -166,13 +167,23 @@ describe('Permission Exclusion Validator', (): void => {
     expect(Array.isArray(response.data.relation_tuples)).toBe(true)
     expect(response.data?.relation_tuples?.length).toEqual(0)
   })
-  it('Add a role permission mapping', async () => {
+  it('Add a role1 permission mapping', async () => {
     const status = await k8sApiCustomObjects.createNamespacedCustomObject(
       Config.WATCH_RESOURCE_GROUP,
       Config.WATCH_RESOURCE_VERSION,
       Config.WATCH_NAMESPACE,
       Config.WATCH_ROLE_PERMISSIONS_RESOURCE_PLURAL,
       role1Resource
+    )
+    expect(status.response.statusCode).toEqual(201)
+  })
+  it('Add a role2 permission mapping', async () => {
+    const status = await k8sApiCustomObjects.createNamespacedCustomObject(
+      Config.WATCH_RESOURCE_GROUP,
+      Config.WATCH_RESOURCE_VERSION,
+      Config.WATCH_NAMESPACE,
+      Config.WATCH_ROLE_PERMISSIONS_RESOURCE_PLURAL,
+      role2Resource
     )
     expect(status.response.statusCode).toEqual(201)
   })
@@ -222,9 +233,58 @@ describe('Permission Exclusion Validator', (): void => {
   it('Wait for some time', async () => {
     await new Promise(resolve => setTimeout(resolve, Config.WAIT_TIME_MS_AFTER_K8S_RESOURCE_CHANGE))
   })
-  it('Try to assign role2 to user1 - TODO: for now just call the validation function', async () => {
-    await permissionExclusionsValidator.validateUserPermissions('user1', ['PERMISSIONY1'])
+  it('Try to execute rolepermissions validation function', async () => {
+    const rolePermissions: RolePermissions[] = [
+      {
+        rolename: 'PEVALROLE1',
+        permissions: [
+          'PERMISSIONX1',
+          'PERMISSIONX2'
+        ]
+      },
+      {
+        rolename: 'PEVALROLE2',
+        permissions: [
+          'PERMISSIONY1',
+          'PERMISSIONY2'
+        ]
+      }
+    ]
+    const permissionExclusions: PermissionExclusions[] = [
+      {
+        permissionsA: [
+          'PERMISSIONX1'
+        ],
+        permissionsB: [
+          'PERMISSIONY1'
+        ]
+      }
+    ]
+    await permissionExclusionsValidator.validateRolePermissions(rolePermissions, permissionExclusions)
   })
+
+  it('Try to assign role2 to user1', async () => {
+    const userRole = {
+      username: 'user1',
+      roles: [
+        'PEVALROLE2'
+      ]
+    }
+    await expect(permissionExclusionsValidator.validateUserRole(userRole)).resolves.not.toThrowError()
+  })
+  it('Try to assign role1 and role2 to user1', async () => {
+    const userRole = {
+      username: 'user1',
+      roles: [
+        'PEVALROLE1',
+        'PEVALROLE2'
+      ]
+    }
+    await expect(permissionExclusionsValidator.validateUserRole(userRole)).rejects.toThrowError()
+  })
+  // it('Try to assign role2 to user1 - TODO: for now just call the validation function', async () => {
+  //   await permissionExclusionsValidator.validateUserPermissions('user1', ['PERMISSIONY1'])
+  // })
 
   // it('Check the keto relation tuples to be updated', async () => {
   //   const response = await oryKetoReadApi.getRelationTuples(

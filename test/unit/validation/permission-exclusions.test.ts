@@ -28,18 +28,102 @@
  --------------
  ******/
 
-import { PermissionExclusionsValidator, RolePermissions, PermissionExclusions } from '../../../src/validation/permission-exclusions'
+// eslint-disable-next-line max-len
+import { PermissionExclusionsValidator, UserRole, RolePermissions, PermissionExclusions } from '../../../src/validation/permission-exclusions'
 import Config from '../../../src/shared/config'
+import { ValidationError } from '../../../src/validation/validation-error'
 
 const permissionExclusionsValidator = new PermissionExclusionsValidator(Config)
 
 describe('permission-exclusions', (): void => {
-  describe('validateUserPermissionsValid', (): void => {
+  describe('validateUserRolePermissions', (): void => {
     describe('Happy Path', (): void => {
       it('Validate the permission exclusion', async () => {
-        const userRoles = [
-          'ROLE1',
-          'ROLE2'
+        const userRoles: UserRole[] = [
+          {
+            username: 'user1',
+            roles: [
+              'ROLE1',
+              'ROLE2'
+            ]
+          }
+        ]
+        const rolePermissions: RolePermissions[] = [
+          {
+            rolename: 'ROLE1',
+            permissions: [
+              'PERMA1',
+              'PERMA2'
+            ]
+          },
+          {
+            rolename: 'ROLE2',
+            permissions: [
+              'PERMB1',
+              'PERMB2'
+            ]
+          }
+        ]
+        const permissionExclusions: PermissionExclusions[] = [
+          {
+            permissionsA: [
+              'PERMA1'
+            ],
+            permissionsB: [
+              'PERMC1'
+            ]
+          }
+        ]
+        permissionExclusionsValidator.validateUserRolePermissions(userRoles, rolePermissions, permissionExclusions)
+      })
+      it('Validate the permission exclusion', async () => {
+        const userRoles: UserRole[] = [
+          {
+            username: 'user1',
+            roles: [
+              'ROLE1'
+            ]
+          }
+        ]
+        const rolePermissions: RolePermissions[] = [
+          {
+            rolename: 'ROLE1',
+            permissions: [
+              'PERMA1',
+              'PERMA2'
+            ]
+          },
+          {
+            rolename: 'ROLE2',
+            permissions: [
+              'PERMB1',
+              'PERMB2'
+            ]
+          }
+        ]
+        const permissionExclusions: PermissionExclusions[] = [
+          {
+            permissionsA: [
+              'PERMA1'
+            ],
+            permissionsB: [
+              'PERMB1'
+            ]
+          }
+        ]
+        permissionExclusionsValidator.validateUserRolePermissions(userRoles, rolePermissions, permissionExclusions)
+      })
+    })
+    describe('Unhappy Path', (): void => {
+      it('Validate the permission exclusion', async () => {
+        const userRoles: UserRole[] = [
+          {
+            username: 'user1',
+            roles: [
+              'ROLE1',
+              'ROLE2'
+            ]
+          }
         ]
         const rolePermissions: RolePermissions[] = [
           {
@@ -68,7 +152,7 @@ describe('permission-exclusions', (): void => {
             ]
           }
         ]
-        permissionExclusionsValidator.validateUserPermissionsValid(userRoles, rolePermissions, permissionExclusions)
+        expect(() => permissionExclusionsValidator.validateUserRolePermissions(userRoles, rolePermissions, permissionExclusions)).toThrow(ValidationError)
       })
       // it('When already existing permission is passed', async () => {
       //   permissionExclusionsValidator.validateUserPermissions('user1', ['permissionB1'])

@@ -32,6 +32,11 @@ import { ValidationError } from './validation-error'
 import { ServiceConfig } from '../shared/config'
 import { logger } from '../shared/logger'
 
+export interface UserRole {
+  username: string;
+  roles: string[];
+}
+
 export interface RolePermissions {
   rolename: string;
   permissions: string[];
@@ -40,6 +45,16 @@ export interface RolePermissions {
 export interface PermissionExclusions {
   permissionsA: string[];
   permissionsB: string[];
+}
+
+export interface PermissionExclusionCombos {
+  permissionA: string;
+  permissionB: string;
+}
+
+// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+export function isPermissionExclusionCombos (object: PermissionExclusions | PermissionExclusionCombos): boolean {
+  return 'permissionA' in object
 }
 
 export class PermissionExclusionsValidator {
@@ -54,10 +69,11 @@ export class PermissionExclusionsValidator {
     )
   }
 
-  async validateUserPermissions (userId: string, newPermissions: string []) : Promise<void> {
+  async validateUserPermissions (userId: string, permissionsToAssign: Set<string>) : Promise<void> {
     const validationErrors : string[] = []
     // Iterate though the list of new permissions and find out if it conflicts with other permissions of the user
-    logger.info(JSON.stringify(newPermissions, null, 2))
+    // logger.info(JSON.stringify(newPermissions, null, 2))
+    const newPermissions = Array.from(permissionsToAssign.values())
     let validationFailed = false
     for (let i = 0; i < newPermissions.length; i++) {
       try {
@@ -81,141 +97,157 @@ export class PermissionExclusionsValidator {
     // TODO: We can stop the validation when the first error occurs based on a config param like quickCheck
   }
 
-  // async validateUserPermissionsWithDetails (userId: string, newPermissions: string []) : Promise<void> {
-  //   // TODO: Define a model for validation error
-  //   const validationErrors : string[] = []
-  //   // Get the roles assigned to user
-  //   let assignedRoles : string[] = []
-  //   try {
-  //     const readRolesResponse = await this.oryKetoReadApi.getRelationTuples(
-  //       'role',
-  //       undefined,
-  //       'member',
-  //       userId
-  //     )
-  //     const readRolesRelationTuples = readRolesResponse.data?.relation_tuples || []
-  //     assignedRoles = readRolesRelationTuples.map(item => item.object)
-  //     logger.info('Roles for the user are ....')
-  //     logger.info(JSON.stringify(assignedRoles, null, 2))
-  //   } catch (err) {
-  //     logger.error('Unable to get roles for the user')
-  //   }
-
-  //   // Get the permissions assigned to user based on the list of roles
-  //   let totalGrantedPermissions = <any>[]
-  //   for (let i = 0; i < assignedRoles.length; i++) {
-  //     try {
-  //       const readPermissionsResponse = await this.oryKetoReadApi.getRelationTuples(
-  //         'permission',
-  //         undefined,
-  //         'granted',
-  //         'role:' + assignedRoles[i] + '#member'
-  //       )
-  //       const readPermissionsRelationTuples = readPermissionsResponse.data?.relation_tuples || []
-  //       const grantedPermissions = readPermissionsRelationTuples.map(item => item.object)
-  //       totalGrantedPermissions = totalGrantedPermissions.concat(grantedPermissions)
-  //     } catch (err) {}
-  //   }
-  //   logger.info('Permissions granted for the user are ....')
-  //   logger.info(JSON.stringify(totalGrantedPermissions, null, 2))
-
-  //   // Iterate through new permissions and get the list of excluded permissions
-  //   let totalPermissionExclusions: string[] = []
-  //   for (let i = 0; i < totalGrantedPermissions.length; i++) {
-  //     try {
-  //       const readPermissionsExclusionsResponse = await this.oryKetoReadApi.getRelationTuples(
-  //         'permission',
-  //         undefined,
-  //         'excludes',
-  //         'permission:' + totalGrantedPermissions[i]
-  //       )
-  //       const permissionExclusionsRelationTuples = readPermissionsExclusionsResponse.data?.relation_tuples || []
-  //       const permissionExclusions = permissionExclusionsRelationTuples.map(item => item.object)
-  //       totalPermissionExclusions = totalPermissionExclusions.concat(permissionExclusions)
-  //     } catch (err) {}
-  //     logger.info(JSON.stringify(totalPermissionExclusions, null, 2))
-  //   }
-
-  //   // Check the new permissions permissions with the excluded permissions
-  //   logger.info(JSON.stringify(newPermissions, null, 2))
-  //   for (let i = 0; i < newPermissions.length; i++) {
-  //     if (totalPermissionExclusions.includes(newPermissions[i])) {
-  //       logger.error(`Can not assign the permission ${newPermissions[i]}`)
-  //     }
-  //   }
-
-  //   // Don't stop the validation for the first error
-  //   // Return list of all the validation errors
-  //   // (This functionality can be configurable)
-  // }
-
   _getPermissionExclusionsForPermission (
     permission: string,
-    permissionExclusions: PermissionExclusions[]
+    permissionExclusions: PermissionExclusions[] | PermissionExclusionCombos[]
   ) : Set<string> {
     const permissionExclusionsSet: Set<string> = new Set()
-    const permissionExclusionsFoundInSetA = permissionExclusions.filter(item => item.permissionsA.includes(permission))
-    const permissionExclusionsFoundInSetB = permissionExclusions.filter(item => item.permissionsB.includes(permission))
-    permissionExclusionsFoundInSetA.forEach(item => {
-      item.permissionsB.forEach(perm => permissionExclusionsSet.add(perm))
-    })
-    permissionExclusionsFoundInSetB.forEach(item => {
-      item.permissionsA.forEach(perm => permissionExclusionsSet.add(perm))
-    })
+    if (permissionExclusions.length <= 0) {
+      return permissionExclusionsSet
+    }
+    if (isPermissionExclusionCombos(permissionExclusions[0])) {
+      const castedPermissionExclusions = <PermissionExclusionCombos[]>permissionExclusions
+      castedPermissionExclusions
+        .filter(item => item.permissionA === permission)
+        .forEach(perm => permissionExclusionsSet.add(perm.permissionB))
+      castedPermissionExclusions
+        .filter(item => item.permissionB === permission)
+        .forEach(perm => permissionExclusionsSet.add(perm.permissionA))
+    } else {
+      const castedPermissionExclusions = <PermissionExclusions[]>permissionExclusions
+      const permissionExclusionsFoundInSetA = castedPermissionExclusions.filter(item => item.permissionsA.includes(permission))
+      const permissionExclusionsFoundInSetB = castedPermissionExclusions.filter(item => item.permissionsB.includes(permission))
+      permissionExclusionsFoundInSetA.forEach(item => {
+        item.permissionsB.forEach(perm => permissionExclusionsSet.add(perm))
+      })
+      permissionExclusionsFoundInSetB.forEach(item => {
+        item.permissionsA.forEach(perm => permissionExclusionsSet.add(perm))
+      })
+    }
     return permissionExclusionsSet
   }
 
-  validateUserPermissionsValid (
-    userRoles: string[],
+  validateUserRolePermissions (
+    userRoles: UserRole[],
     rolePermissions: RolePermissions [],
-    permissionExclusions: PermissionExclusions[]
+    permissionExclusions: PermissionExclusions[] | PermissionExclusionCombos[]
   ) : void {
     const validationErrors : string[] = []
-    // Get the permissions assigned to user based on the list of roles
-    const totalGrantedPermissions : Set<string> = new Set()
-    for (let i = 0; i < userRoles.length; i++) {
-      const roleItem = rolePermissions.find(item => item.rolename === userRoles[i])
-      if (roleItem) {
-        roleItem.permissions.forEach(perm => totalGrantedPermissions.add(perm))
-      }
-    }
-    // logger.info('Permissions granted for the user are ....')
-    // console.log(totalGrantedPermissions)
-
-    // Iterate through permissions and get the set of excluded permissions
-    const totalPermissionExclusions: Set<string> = new Set()
-    // for (let i = 0; i < totalGrantedPermissions.size; i++) {
-    totalGrantedPermissions.forEach(grantedPerm => {
-      try {
-        // eslint-disable-next-line max-len
-        const permissionExclusionsForPermission = this._getPermissionExclusionsForPermission(grantedPerm, permissionExclusions)
-        permissionExclusionsForPermission.forEach(perm => totalPermissionExclusions.add(perm))
-      } catch (err) {}
+    // Construct a map for role and its permission exclusions
+    const rolePermissionExclusions: Map<string, Set<string>> = new Map()
+    rolePermissions.forEach(role => {
+      // Iterate through permissions and get the set of excluded permissions
+      const permissionExclusionsSet: Set<string> = new Set()
+      // for (let i = 0; i < totalGrantedPermissions.size; i++) {
+      role.permissions.forEach(grantedPerm => {
+        try {
+          // eslint-disable-next-line max-len
+          const permissionExclusionsForPermission = this._getPermissionExclusionsForPermission(grantedPerm, permissionExclusions)
+          permissionExclusionsForPermission.forEach(perm => permissionExclusionsSet.add(perm))
+        } catch (err) {}
+      })
+      rolePermissionExclusions.set(role.rolename, permissionExclusionsSet)
     })
-    // console.log(totalGrantedPermissions, totalPermissionExclusions)
 
-    // Check the new permissions permissions with the excluded permissions using set intersection
-    const intersect = new Set([...totalGrantedPermissions].filter(i => totalPermissionExclusions.has(i)))
-    // console.log('Intersection is', intersect)
-    if (intersect.size > 0) {
-      validationErrors.push('ERROR: permissions ' + Array.from(intersect).join(',') + ' can not co-exist')
+    // Get the permissions assigned and excluded to user based on the list of roles assigned to that user
+    userRoles.forEach(user => {
+      const totalGrantedPermissions : Set<string> = new Set()
+      const totalExcludedPermissions : Set<string> = new Set()
+      for (let i = 0; i < user.roles.length; i++) {
+        const roleItem = rolePermissions.find(item => item.rolename === user.roles[i])
+        if (roleItem) {
+          roleItem.permissions.forEach(perm => totalGrantedPermissions.add(perm))
+          const permExclusions = rolePermissionExclusions.get(roleItem.rolename)
+          if (permExclusions) {
+            permExclusions.forEach(permExclusion => totalExcludedPermissions.add(permExclusion))
+          }
+        }
+      }
+      // Check the new permissions permissions with the excluded permissions using set intersection
+      const intersect = new Set([...totalGrantedPermissions].filter(i => totalExcludedPermissions.has(i)))
+      // console.log('Intersection is', intersect)
+      if (intersect.size > 0) {
+        validationErrors.push(
+          'ERROR: permissions ' +
+          Array.from(intersect).join(',') +
+          ` can not be assigned together for the user '${user.username}'`
+        )
+      }
+    })
+    if (validationErrors.length > 0) {
       throw new ValidationError(validationErrors)
     }
   }
 
-  // Example scenario
-  // Current Assignments:
-  // ROLE1: PA1, PA2
-  // ROLE2: PB1
+  async validateRolePermissions (
+    rolePermissions: RolePermissions [],
+    permissionExclusions: PermissionExclusions[]
+  ) : Promise<void> {
+    // const validationErrors : string[] = []
+    // Iterate through all the role permissions and get the user list
+    const userRoles : Map<string, string[]> = new Map()
+    for (let i = 0; i < rolePermissions.length; i++) {
+      try {
+        const readRolesResponse = await this.oryKetoReadApi.getRelationTuples(
+          'role',
+          rolePermissions[i].rolename,
+          'member'
+        )
+        const readRolesRelationTuples = readRolesResponse.data?.relation_tuples || []
+        readRolesRelationTuples.forEach(relationTuple => {
+          const user = relationTuple.subject
+          if (!userRoles.has(user)) {
+            userRoles.set(user, [])
+          }
+          userRoles.get(user)?.push(rolePermissions[i].rolename)
+        })
+      } catch (err) {
+        logger.error('Unable to get roles for the user')
+      }
+    }
+    const userRolesArray = Array.from(userRoles, ([username, roles]) => ({ username, roles }))
+    this.validateUserRolePermissions(userRolesArray, rolePermissions, permissionExclusions)
+  }
 
-  // PB2:PA2
+  async validateUserRole (userRole: UserRole) : Promise<void> {
+    // const validationErrors : string[] = []
+    // Iterate through all the roles and get the role permission mappings
+    const rolePermissions: RolePermissions[] = []
+    for (let i = 0; i < userRole.roles.length; i++) {
+      try {
+        const readRolePermissionsResponse = await this.oryKetoReadApi.getRelationTuples(
+          'permission',
+          undefined,
+          'granted',
+          'role:' + userRole.roles[i] + '#member'
+        )
+        const readRolePermissionsRelationTuples = readRolePermissionsResponse.data?.relation_tuples || []
+        const permissions = readRolePermissionsRelationTuples.map(item => item.object)
+        rolePermissions.push({
+          rolename: userRole.roles[i],
+          permissions
+        })
+      } catch (err) {}
+    }
+    // console.log('Role Permissions are', rolePermissions)
 
-  // Incoming Change:
-
-  // ROLE2: PB1, PB2
-  // ROLE3: PB2, PC1
-  // ROLE4: PB1
-
-  // PC2:PB1
-  // PB2:PA2 (D)
+    // Get all the permission exclusions
+    let permissionExclusionCombos: PermissionExclusionCombos[] = []
+    try {
+      const readPermissionExclusionsResponse = await this.oryKetoReadApi.getRelationTuples(
+        'permission',
+        undefined,
+        'excludes'
+      )
+      const readPermissionExclusionsRelationTuples = readPermissionExclusionsResponse.data?.relation_tuples || []
+      permissionExclusionCombos = readPermissionExclusionsRelationTuples.map(item => {
+        return {
+          permissionA: item.object,
+          permissionB: item.subject.replace(/permission:([^#.]*)(#.*)?/, '$1')
+        }
+      })
+    } catch (err) {}
+    // console.log('Permission Exclusions are', permissionExclusionCombos)
+    this.validateUserRolePermissions([userRole], rolePermissions, permissionExclusionCombos)
+  }
 }
