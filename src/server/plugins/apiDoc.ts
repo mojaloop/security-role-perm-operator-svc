@@ -23,18 +23,22 @@
  * Gates Foundation
  - Name Surname <name.surname@gatesfoundation.com>
 
- - Vijaya Kumar Guthi <vijaya.guthi@modusbox.com>
+ - Vijay Kumar <vijaya.guthi@modusbox.com>
+
  --------------
  ******/
 
-import { startOperator as startRolePermissionOperator } from './role-permission-operator'
-import { startOperator as startPermissionExclusionsOperator } from './permission-exclusions-operator'
-import ServiceServer from './server'
-import Config from './shared/config'
+import Path from 'path'
+import { Util } from '@mojaloop/central-services-shared'
 
-// Setup & start API server
-ServiceServer.run(Config)
+const plugin = {
+  plugin: Util.Hapi.APIDocumentation,
+  options: {
+    documentPath: Path.resolve(__dirname, '../../interface/api.yaml'),
+    widdershinsOptions: {
+      sample: true
+    }
+  }
+}
 
-// Start K8S operators
-startRolePermissionOperator()
-startPermissionExclusionsOperator()
+export default plugin

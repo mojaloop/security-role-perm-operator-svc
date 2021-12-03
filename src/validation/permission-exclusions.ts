@@ -214,39 +214,35 @@ export class PermissionExclusionsValidator {
     // Iterate through all the roles and get the role permission mappings
     const rolePermissions: RolePermissions[] = []
     for (let i = 0; i < userRole.roles.length; i++) {
-      try {
-        const readRolePermissionsResponse = await this.oryKetoReadApi.getRelationTuples(
-          'permission',
-          undefined,
-          'granted',
-          'role:' + userRole.roles[i] + '#member'
-        )
-        const readRolePermissionsRelationTuples = readRolePermissionsResponse.data?.relation_tuples || []
-        const permissions = readRolePermissionsRelationTuples.map(item => item.object)
-        rolePermissions.push({
-          rolename: userRole.roles[i],
-          permissions
-        })
-      } catch (err) {}
+      const readRolePermissionsResponse = await this.oryKetoReadApi.getRelationTuples(
+        'permission',
+        undefined,
+        'granted',
+        'role:' + userRole.roles[i] + '#member'
+      )
+      const readRolePermissionsRelationTuples = readRolePermissionsResponse.data?.relation_tuples || []
+      const permissions = readRolePermissionsRelationTuples.map(item => item.object)
+      rolePermissions.push({
+        rolename: userRole.roles[i],
+        permissions
+      })
     }
     // console.log('Role Permissions are', rolePermissions)
 
     // Get all the permission exclusions
     let permissionExclusionCombos: PermissionExclusionCombos[] = []
-    try {
-      const readPermissionExclusionsResponse = await this.oryKetoReadApi.getRelationTuples(
-        'permission',
-        undefined,
-        'excludes'
-      )
-      const readPermissionExclusionsRelationTuples = readPermissionExclusionsResponse.data?.relation_tuples || []
-      permissionExclusionCombos = readPermissionExclusionsRelationTuples.map(item => {
-        return {
-          permissionA: item.object,
-          permissionB: item.subject.replace(/permission:([^#.]*)(#.*)?/, '$1')
-        }
-      })
-    } catch (err) {}
+    const readPermissionExclusionsResponse = await this.oryKetoReadApi.getRelationTuples(
+      'permission',
+      undefined,
+      'excludes'
+    )
+    const readPermissionExclusionsRelationTuples = readPermissionExclusionsResponse.data?.relation_tuples || []
+    permissionExclusionCombos = readPermissionExclusionsRelationTuples.map(item => {
+      return {
+        permissionA: item.object,
+        permissionB: item.subject.replace(/permission:([^#.]*)(#.*)?/, '$1')
+      }
+    })
     // console.log('Permission Exclusions are', permissionExclusionCombos)
     this.validateUserRolePermissions([userRole], rolePermissions, permissionExclusionCombos)
   }

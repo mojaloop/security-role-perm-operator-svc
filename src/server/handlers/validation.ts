@@ -23,43 +23,50 @@
  * Gates Foundation
  - Name Surname <name.surname@gatesfoundation.com>
 
- - Vijaya Kumar Guthi <vijaya.guthi@modusbox.com>
+ - Vijay Kumar <vijaya.guthi@modusbox.com>
+
  --------------
  ******/
 
-import rc from 'rc'
-import parse from 'parse-strings-in-object'
-import Config from '../../config/default.json'
-import Package from '../../package.json'
-export interface ServiceConfig {
-  // package.json
-  PACKAGE: Record<string, unknown>;
-  // API Server
-  PORT: number;
-  HOST: string;
-  CORS_WHITELIST: string[];
-  ALLOW_CREDENTIALS: boolean;
+// import btoa from 'btoa'
+import { StateResponseToolkit } from '~/server/plugins/state'
+import { Request, ResponseObject } from '@hapi/hapi'
+import { PermissionExclusionsValidator, UserRole } from '../../validation/permission-exclusions'
+import { ValidationError } from '../../validation/validation-error'
+import Config from '../../shared/config'
 
-  // Operators
-  ROLE_PERMISSION_OPERATOR: {
-    WATCH_RESOURCE_GROUP: string;
-    WATCH_RESOURCE_VERSION: string;
-    WATCH_RESOURCE_PLURAL: string;
-  };
-  PERMISSION_EXCLUSIONS_OPERATOR: {
-    WATCH_RESOURCE_GROUP: string;
-    WATCH_RESOURCE_VERSION: string;
-    WATCH_RESOURCE_PLURAL: string;
-  };
-  WATCH_NAMESPACE: string;
-  ORY_KETO_READ_SERVICE_URL: string;
-  ORY_KETO_WRITE_SERVICE_URL: string;
-  KETO_QUEUE_PROCESS_INTERVAL_MS: number;
+interface ValidationErrorResponse {
+  isValid: boolean;
+  errors: string[];
 }
 
-const RC = parse(rc('ROLE_PERM_OPERATOR', Config)) as ServiceConfig
+const permissionExclusionsValidator = new PermissionExclusionsValidator(Config)
+
+// eslint-disable-next-line max-len
+const ValidateUserRole = async (_context: unknown, _request: Request, h: StateResponseToolkit): Promise<ResponseObject> => {
+  try {
+    const response = {}
+    const userRole : UserRole = <UserRole>_request.payload
+    try {
+      await permissionExclusionsValidator.validateUserRole(userRole)
+    } catch (err) {
+      if (err instanceof ValidationError) {
+        const errorResponse: ValidationErrorResponse = {
+          isValid: false,
+          errors: err.validationErrors
+        }
+        return h.response(errorResponse).code(406)
+      } else {
+        throw err
+      }
+    }
+    return h.response(response).code(200)
+  } catch (e) {
+    h.getLogger().error(e)
+    return h.response().code(500)
+  }
+}
 
 export default {
-  ...RC,
-  PACKAGE: Package
+  ValidateUserRole
 }

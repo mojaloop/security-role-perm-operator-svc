@@ -4,8 +4,8 @@
   "WATCH_ROLE_PERMISSIONS_RESOURCE_PLURAL": "mojalooproles",
   "WATCH_PERMISSION_EXCLUSIONS_RESOURCE_PLURAL": "mojaloop-permission-exclusions",
   "WATCH_NAMESPACE": "mojaloop",
-  "ORY_KETO_READ_SERVICE_URL": "http://localhost:57500",
-  "ORY_KETO_WRITE_SERVICE_URL": "http://localhost:57501",
+  "ORY_KETO_READ_SERVICE_URL": "http://localhost:4466",
+  "ORY_KETO_WRITE_SERVICE_URL": "http://localhost:4467",
   "KETO_QUEUE_PROCESS_INTERVAL_MS": 1000,
   "WAIT_TIME_MS_AFTER_K8S_RESOURCE_CHANGE": 2000
 }

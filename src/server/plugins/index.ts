@@ -23,18 +23,56 @@
  * Gates Foundation
  - Name Surname <name.surname@gatesfoundation.com>
 
- - Vijaya Kumar Guthi <vijaya.guthi@modusbox.com>
+ - Vijay Kumar <vijaya.guthi@modusbox.com>
  --------------
  ******/
 
-import { startOperator as startRolePermissionOperator } from './role-permission-operator'
-import { startOperator as startPermissionExclusionsOperator } from './permission-exclusions-operator'
-import ServiceServer from './server'
-import Config from './shared/config'
+import Inert from '@hapi/inert'
+import Vision from '@hapi/vision'
+import { Server, ServerRoute } from '@hapi/hapi'
 
-// Setup & start API server
-ServiceServer.run(Config)
+import ErrorHandling from '@mojaloop/central-services-error-handling'
+import { Util } from '@mojaloop/central-services-shared'
+import OpenAPI from './openAPI'
+import ApiDoc from './apiDoc'
+import { StatePlugin } from './state'
 
-// Start K8S operators
-startRolePermissionOperator()
-startPermissionExclusionsOperator()
+async function register (server: Server): Promise<Server> {
+  const openapiBackend = await OpenAPI.initialize()
+  const plugins = [
+    StatePlugin,
+    ApiDoc,
+    Util.Hapi.OpenapiBackendValidator,
+    openapiBackend,
+    Inert,
+    Vision,
+    ErrorHandling,
+    Util.Hapi.HapiEventPlugin
+  ]
+
+  await server.register(plugins)
+
+  // use as a catch-all handler
+  server.route({
+    method: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
+    path: '/{path*}',
+    handler: (req, h): ServerRoute =>
+      openapiBackend.options.openapi.handleRequest(
+        {
+          method: req.method,
+          path: req.path,
+          body: req.payload,
+          query: req.query,
+          headers: req.headers
+        },
+        req,
+        h
+      )
+  })
+
+  return server
+}
+
+export default {
+  register
+}

@@ -23,18 +23,17 @@
  * Gates Foundation
  - Name Surname <name.surname@gatesfoundation.com>
 
- - Vijaya Kumar Guthi <vijaya.guthi@modusbox.com>
+ - Vijay Kumar <vijaya.guthi@modusbox.com>
+
  --------------
  ******/
 
-import { startOperator as startRolePermissionOperator } from './role-permission-operator'
-import { startOperator as startPermissionExclusionsOperator } from './permission-exclusions-operator'
-import ServiceServer from './server'
-import Config from './shared/config'
+import Boom from '@hapi/boom'
+import { Request, Lifecycle, ResponseToolkit } from '@hapi/hapi'
 
-// Setup & start API server
-ServiceServer.run(Config)
-
-// Start K8S operators
-startRolePermissionOperator()
-startPermissionExclusionsOperator()
+export default function onValidateFail (
+  _request: Request,
+  _h: ResponseToolkit,
+  err?: Error | undefined): Lifecycle.ReturnValue {
+  throw Boom.boomify(err as Error)
+}

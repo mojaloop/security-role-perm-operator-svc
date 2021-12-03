@@ -23,18 +23,20 @@
  * Gates Foundation
  - Name Surname <name.surname@gatesfoundation.com>
 
- - Vijaya Kumar Guthi <vijaya.guthi@modusbox.com>
+ - Vijay Kumar <vijaya.guthi@modusbox.com>
+
  --------------
  ******/
+import { Util } from '@mojaloop/central-services-shared'
+import Health from './health'
+import Validation from './validation'
 
-import { startOperator as startRolePermissionOperator } from './role-permission-operator'
-import { startOperator as startPermissionExclusionsOperator } from './permission-exclusions-operator'
-import ServiceServer from './server'
-import Config from './shared/config'
+const OpenapiBackend = Util.OpenapiBackend
 
-// Setup & start API server
-ServiceServer.run(Config)
-
-// Start K8S operators
-startRolePermissionOperator()
-startPermissionExclusionsOperator()
+export default {
+  HealthGet: Health.get,
+  ValidateUserRole: Validation.ValidateUserRole,
+  validationFail: OpenapiBackend.validationFail,
+  notFound: OpenapiBackend.notFound,
+  methodNotAllowed: OpenapiBackend.methodNotAllowed
+}

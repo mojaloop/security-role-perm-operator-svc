@@ -1,0 +1,374 @@
+openapi: 3.0.2
+info:
+  title: Mojaloop Role Permission Operator Service
+  version: '1.0'
+  description: >-
+    A Mojaloop API to assign roles to users, validating role permission mappings and permission exclusions
+  license:
+    name: TBD
+    url: TBD
+servers:
+  - url: /
+paths:
+  /health:
+    get:
+      operationId: HealthGet
+      summary: Health check endpoint
+      description: >-
+        The HTTP request GET /health is used to return the current status of the
+        API.
+      tags:
+        - health
+      responses:
+        '200':
+          $ref: '#/components/responses/200'
+        '400':
+          $ref: '#/components/responses/400'
+        '401':
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
+        '404':
+          $ref: '#/components/responses/404'
+        '405':
+          $ref: '#/components/responses/405'
+        '406':
+          $ref: '#/components/responses/406'
+        '501':
+          $ref: '#/components/responses/501'
+        '503':
+          $ref: '#/components/responses/503'
+
+  /validate/user-role:
+    post:
+      operationId: ValidateUserRole
+      description: >-
+        This request is used to validate a user role assignment.
+        Checks with the permission exclusions set for any conflicts.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ValidateUserRoleRequest'
+        required: true
+      responses:
+        '200':
+          $ref: '#/components/responses/ValidationResponseSuccess'
+        '400':
+          $ref: '#/components/responses/400'
+        '401':
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
+        '404':
+          $ref: '#/components/responses/404'
+        '405':
+          $ref: '#/components/responses/405'
+        '406':
+          $ref: '#/components/responses/ValidationResponseFailed'
+        '501':
+          $ref: '#/components/responses/501'
+        '503':
+          $ref: '#/components/responses/503'
+
+  /validate/role-permissions:
+    post:
+      operationId: ValidateRolePermissions
+      description: >-
+        This request is used to validate the role permission mapping.
+        Checks with the permission exclusions set for any conflicts.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ValidateRolePermissionsRequest'
+        required: true
+      responses:
+        '200':
+          $ref: '#/components/responses/ValidationResponseSuccess'
+        '400':
+          $ref: '#/components/responses/400'
+        '401':
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
+        '404':
+          $ref: '#/components/responses/404'
+        '405':
+          $ref: '#/components/responses/405'
+        '406':
+          $ref: '#/components/responses/ValidationResponseFailed'
+        '501':
+          $ref: '#/components/responses/501'
+        '503':
+          $ref: '#/components/responses/503'
+
+components:
+  responses:
+    '200':
+      description: OK
+    '400':
+      description: Bad Request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorInformationResponse'
+      headers:
+        Content-Length:
+          $ref: '#/components/headers/Content-Length'
+        Content-Type:
+          $ref: '#/components/headers/Content-Type'
+    '401':
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorInformationResponse'
+      headers:
+        Content-Length:
+          $ref: '#/components/headers/Content-Length'
+        Content-Type:
+          $ref: '#/components/headers/Content-Type'
+    '403':
+      description: Forbidden
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorInformationResponse'
+      headers:
+        Content-Length:
+          $ref: '#/components/headers/Content-Length'
+        Content-Type:
+          $ref: '#/components/headers/Content-Type'
+    '404':
+      description: Not Found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorInformationResponse'
+      headers:
+        Content-Length:
+          $ref: '#/components/headers/Content-Length'
+        Content-Type:
+          $ref: '#/components/headers/Content-Type'
+    '405':
+      description: Method Not Allowed
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorInformationResponse'
+      headers:
+        Content-Length:
+          $ref: '#/components/headers/Content-Length'
+        Content-Type:
+          $ref: '#/components/headers/Content-Type'
+    '406':
+      description: Not Acceptable
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorInformationResponse'
+      headers:
+        Content-Length:
+          $ref: '#/components/headers/Content-Length'
+        Content-Type:
+          $ref: '#/components/headers/Content-Type'
+    '501':
+      description: Not Implemented
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorInformationResponse'
+      headers:
+        Content-Length:
+          $ref: '#/components/headers/Content-Length'
+        Content-Type:
+          $ref: '#/components/headers/Content-Type'
+    '503':
+      description: Service Unavailable
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorInformationResponse'
+      headers:
+        Content-Length:
+          $ref: '#/components/headers/Content-Length'
+        Content-Type:
+          $ref: '#/components/headers/Content-Type'
+    ValidationResponseSuccess:
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ValidationResponse'
+      headers:
+        Content-Length:
+          $ref: '#/components/headers/Content-Length'
+        Content-Type:
+          $ref: '#/components/headers/Content-Type'
+    ValidationResponseFailed:
+      description: 'Validation Failed'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorValidationResponse'
+      headers:
+        Content-Length:
+          $ref: '#/components/headers/Content-Length'
+        Content-Type:
+          $ref: '#/components/headers/Content-Type'
+
+  headers:
+    Content-Length:
+      required: false
+      schema:
+        type: integer
+      description: >-
+        The `Content-Length` header field indicates the anticipated size of the
+        payload body. Only sent if there is a body.
+
+
+        **Note:** The API supports a maximum size of 5242880 bytes (5
+        Megabytes).
+    Content-Type:
+      schema:
+        type: string
+      required: true
+      description: >-
+        The `Content-Type` header indicates the specific version of the API used
+        to send the payload body.
+  schemas:
+    ValidateUserRoleRequest:
+      $ref: '#/components/schemas/UserRole'
+    UserRole:
+      title: UserRole
+      type: object
+      required:
+        - username
+        - roles
+      properties:
+        username:
+          type: string
+          description: User ID of the user
+        roles:
+          type: array
+          description: List of roles assigned to user
+          items:
+            type: string
+            description: Unique role name
+      description: Data model for user role assignment.
+    ValidateRolePermissionsRequest:
+      title: ValidateRolePermissionsRequest
+      type: object
+      required:
+        - rolePermissions
+        - permissionExclusions
+      properties:
+        rolePermissions:
+          type: array
+          items:
+            $ref: '#/components/schemas/RolePermisions'
+        permissionExclusions:
+          type: array
+          items:
+            $ref: '#/components/schemas/PermissionExclusions'
+    RolePermisions:
+      title: RolePermisions
+      type: object
+      properties:
+        rolename:
+          type: string
+          description: Role name
+        permissions:
+          type: array
+          description: List of permissions mapped to role
+          items:
+            type: string
+            description: Permission name
+      description: Data model for role permission assignment.
+    PermissionExclusions:
+      title: PermissionExclusions
+      type: object
+      properties:
+        permissionsA:
+          type: array
+          description: List of permissions in first set
+          items:
+            type: string
+            description: Permission name
+        permissionsB:
+          type: array
+          description: List of permissions in second set
+          items:
+            type: string
+            description: Permission name
+      description: Data model for permission exclusions.
+    ValidationResponse:
+      title: ValidateUserRoleRequest
+      type: object
+      description: >-
+        Validation result for user role assignment.
+      properties:
+        isValid:
+          type: boolean
+          description: Validation is valid
+    ErrorValidationResponse:
+      title: ErrorValidateUserRoleResponse
+      type: object
+      description: >-
+        Error validation result for user role assignment.
+      properties:
+        isValid:
+          type: boolean
+          description: Validation is valid
+        errors:
+          type: array
+          description: Validation is valid
+          items:
+            $ref: '#/components/schemas/ValidationError'
+    ValidationError:
+      title: ValidationError
+      type: string
+      minLength: 1
+      maxLength: 128
+      description: Error with validation.
+    ErrorCode:
+      title: ErrorCode
+      type: string
+      pattern: '^[1-9]\d{3}$'
+      description: >-
+        The API data type ErrorCode is a JSON String of four characters,
+        consisting of digits only. Negative numbers are not allowed. A leading
+        zero is not allowed. Each error code in the API is a four-digit number,
+        for example, 1234, where the first number (1 in the example) represents
+        the high-level error category, the second number (2 in the example)
+        represents the low-level error category, and the last two numbers (34 in
+        the example) represent the specific error.
+      example: '5100'
+    ErrorDescription:
+      title: ErrorDescription
+      type: string
+      minLength: 1
+      maxLength: 128
+      description: Error description string.
+    ErrorInformation:
+      title: ErrorInformation
+      type: object
+      description: Data model for the complex type ErrorInformation.
+      properties:
+        errorCode:
+          $ref: '#/components/schemas/ErrorCode'
+        errorDescription:
+          $ref: '#/components/schemas/ErrorDescription'
+      required:
+        - errorCode
+        - errorDescription
+    ErrorInformationResponse:
+      title: ErrorInformationResponse
+      type: object
+      description: >-
+        Data model for the complex type object that contains an optional element
+        ErrorInformation used along with 4xx and 5xx responses.
+      properties:
+        errorInformation:
+          $ref: '#/components/schemas/ErrorInformation'
