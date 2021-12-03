@@ -30,6 +30,8 @@
 
 import Shared from '@mojaloop/central-services-shared'
 import Config from '../../shared/config'
+import { getHealthStatus as getPermissionExclusionsOperatorHealthStatus } from '../../permission-exclusions-operator'
+import { getHealthStatus as getRolePermissionOperatorHealthStatus } from '../../role-permission-operator'
 import { StateResponseToolkit } from '../plugins/state'
 import { Request, ResponseObject } from '@hapi/hapi'
 
@@ -49,6 +51,10 @@ const get = async (_context: unknown, _request: Request, h: StateResponseToolkit
   const response = await healthCheck.getHealth()
 
   response.LoggerPresent = typeof h.getLogger() !== 'undefined'
+  response.OperatorsHealth = {
+    RolePermissionOperator: getRolePermissionOperatorHealthStatus(),
+    PermissionExclusionsOperator: getPermissionExclusionsOperatorHealthStatus()
+  }
   return h.response(response).code(200)
 }
 

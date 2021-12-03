@@ -50,6 +50,8 @@ const rolePermissionChangeProcessor = new KetoChangeProcessor(oryKeto.updateAllR
 const kc = new k8s.KubeConfig()
 kc.loadFromDefault()
 
+let healthStatus = "Unknown"
+
 // If we want to do something in K8S, we can use the following APIs
 // const k8sApi = kc.makeApiClient(k8s.AppsV1Api);
 // const k8sApiMC = kc.makeApiClient(k8s.CustomObjectsApi);
@@ -112,13 +114,20 @@ async function watchResource (): Promise<any> {
 export async function startOperator (): Promise<void> {
   try {
     await watchResource()
+    healthStatus = 'OK'
   } catch (err: any) {
     if (err.message === 'No currently active cluster') {
+      healthStatus = 'Error: Can not connect to K8S API'
       logger.error('Can not connect to K8S API')
     } else {
+      healthStatus = 'Error: ' + err.message
       logger.error(err.stack)
     }
   }
+}
+
+export function getHealthStatus () : string {
+  return healthStatus
 }
 
 // functions for unit tests
