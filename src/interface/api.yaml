@@ -39,6 +39,38 @@ paths:
         '503':
           $ref: '#/components/responses/503'
 
+  /assignment/user-role:
+    post:
+      operationId: AssignUserRole
+      description: >-
+        This request is used to assign a list of roles to a user.
+        Checks with the permission exclusions set for any conflicts.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AssignUserRoleRequest'
+        required: true
+      responses:
+        '200':
+          $ref: '#/components/responses/200'
+        '400':
+          $ref: '#/components/responses/400'
+        '401':
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
+        '404':
+          $ref: '#/components/responses/404'
+        '405':
+          $ref: '#/components/responses/405'
+        '406':
+          $ref: '#/components/responses/ValidationResponseFailed'
+        '501':
+          $ref: '#/components/responses/501'
+        '503':
+          $ref: '#/components/responses/503'
+
   /validate/user-role:
     post:
       operationId: ValidateUserRole
@@ -239,6 +271,8 @@ components:
         to send the payload body.
   schemas:
     ValidateUserRoleRequest:
+      $ref: '#/components/schemas/UserRole'
+    AssignUserRoleRequest:
       $ref: '#/components/schemas/UserRole'
     UserRole:
       title: UserRole

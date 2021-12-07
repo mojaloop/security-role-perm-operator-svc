@@ -30,12 +30,15 @@
 import { Util } from '@mojaloop/central-services-shared'
 import Health from './health'
 import Validation from './validation'
+import UserRoleAssignment from './user-role-assignment'
 
 const OpenapiBackend = Util.OpenapiBackend
 
 export default {
   HealthGet: Health.get,
   ValidateUserRole: Validation.ValidateUserRole,
+  ValidateRolePermissions: Validation.ValidateRolePermissions,
+  AssignUserRole: UserRoleAssignment.AssignUserRole,
   validationFail: OpenapiBackend.validationFail,
   notFound: OpenapiBackend.notFound,
   methodNotAllowed: OpenapiBackend.methodNotAllowed

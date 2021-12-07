@@ -13,17 +13,19 @@ spec:
   selector:
     matchLabels:
       deployment: moja-role-operator
+      app: moja-role-operator
   template:
     metadata:
       labels:
         deployment: moja-role-operator
+        app: moja-role-operator
     spec:
       containers:
       - image: mojaloop/security-role-perm-operator-svc:local
         imagePullPolicy: Never
         name: moja-role-operator
         ports:
-          - containerPort: 8080
+          - containerPort: 3001
             protocol: TCP
         env:
           - name: DEV_MODE
@@ -41,3 +43,18 @@ spec:
           - name: WATCH_NAMESPACE
             value: 'mojaloop'
       serviceAccount: moja-role-operator
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: moja-role-operator
+spec:
+  selector:
+    app: moja-role-operator
+  type: NodePort
+  ports:
+    - name: api-port
+      protocol: TCP
+      port: 3001
+      targetPort: 3001
