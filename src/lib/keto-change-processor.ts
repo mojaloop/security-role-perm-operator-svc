@@ -36,25 +36,26 @@ interface KetoQueueItem {
 }
 
 export class KetoChangeProcessor {
-  queue: KetoQueueItem[];
-  timerOn: boolean;
-  timeoutId: NodeJS.Timeout;
+  private static _instance: KetoChangeProcessor;
+  private queue: KetoQueueItem[];
+  private timerOn: boolean;
+  private timeoutId: NodeJS.Timeout;
 
-  constructor () {
+  private constructor () {
     this.queue = []
     this.timerOn = true
     this.timeoutId = setTimeout(this._processQueue.bind(this))
   }
 
-  _pushQueue (qItem: KetoQueueItem) : void {
+  private _pushQueue (qItem: KetoQueueItem) : void {
     this.queue.push(qItem)
   }
 
-  _popQueue () : KetoQueueItem | undefined {
+  private _popQueue () : KetoQueueItem | undefined {
     return this.queue.shift()
   }
 
-  _getFirstItemInQueue () : KetoQueueItem | null {
+  private _getFirstItemInQueue () : KetoQueueItem | null {
     if (this.queue.length > 0) {
       return this.queue[0]
     } else {
@@ -62,7 +63,7 @@ export class KetoChangeProcessor {
     }
   }
 
-  async _processQueue () : Promise<void> {
+  private async _processQueue () : Promise<void> {
     if (this.timerOn) {
       const queueItem = this._getFirstItemInQueue()
       if (queueItem) {
@@ -77,26 +78,30 @@ export class KetoChangeProcessor {
     }
   }
 
-  addToQueue (queueArgs: any, updateFn: (fnArgs: any) => Promise<void>) : void {
+  public addToQueue (queueArgs: any, updateFn: (fnArgs: any) => Promise<void>) : void {
     this._pushQueue({
       queueArgs,
       updateFn
     })
   }
 
-  getQueue () : KetoQueueItem[] {
+  public getQueue () : KetoQueueItem[] {
     return this.queue
   }
 
-  async waitForQueueToBeProcessed () : Promise<void> {
+  public async waitForQueueToBeProcessed () : Promise<void> {
     if (this.queue.length > 0) {
       setTimeout(this.waitForQueueToBeProcessed.bind(this), 100)
     }
   }
 
   // Helper functions for unit tests
-  destroy () : void {
+  public destroy () : void {
     this.timerOn = false
     clearTimeout(this.timeoutId)
+  }
+
+  public static getInstance (): KetoChangeProcessor {
+    return this._instance || (this._instance = new this())
   }
 }

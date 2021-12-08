@@ -48,7 +48,7 @@ const NAMESPACE = Config.WATCH_NAMESPACE
 
 const permissionExclusionResourceStore = new PermissionExclusionResources()
 const oryKeto = new KetoTuples()
-const permissionExclusionsChangeProcessor = new KetoChangeProcessor()
+const permissionExclusionsChangeProcessor = KetoChangeProcessor.getInstance()
 const updateKetoFn = async (fnArgs: any) => {
   const boundedFn = oryKeto.updateAllPermissionExclusions.bind(oryKeto)
   boundedFn(fnArgs.subjectObjectCombos)

@@ -48,7 +48,7 @@ const NAMESPACE = Config.WATCH_NAMESPACE
 
 const roleResourceStore = new RoleResources()
 const oryKeto = new KetoTuples()
-const rolePermissionChangeProcessor = new KetoChangeProcessor()
+const rolePermissionChangeProcessor = KetoChangeProcessor.getInstance()
 const updateKetoFn = async (fnArgs: any) => {
   const boundedFn = oryKeto.updateAllRolePermissions.bind(oryKeto)
   boundedFn(fnArgs.subjectObjectCombos)
