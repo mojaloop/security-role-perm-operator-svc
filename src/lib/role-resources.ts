@@ -67,6 +67,23 @@ class RoleResources {
     return this.roleResourceData
   }
 
+  getConsolidatedTempData (resourceName: string, role: string, permissions: string[]) : any {
+    // Create a deep clone of existing data
+    const tempRoleResourceData = JSON.parse(JSON.stringify(this.roleResourceData))
+    if (!tempRoleResourceData[resourceName]) {
+      tempRoleResourceData[resourceName] = {}
+    }
+    if (!tempRoleResourceData[resourceName].role) {
+      tempRoleResourceData[resourceName].role = null
+    }
+    if (!tempRoleResourceData[resourceName].permissions) {
+      tempRoleResourceData[resourceName].permissions = []
+    }
+    tempRoleResourceData[resourceName].role = role
+    tempRoleResourceData[resourceName].permissions = permissions
+    return tempRoleResourceData
+  }
+
   getUniqueRolePermissionCombos () : string[] {
     const rolePermissionCombos: string[] = []
     for (const [, value] of Object.entries(this.roleResourceData)) {

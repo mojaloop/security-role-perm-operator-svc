@@ -33,9 +33,12 @@ import * as k8s from "@kubernetes/client-node"
 import { logger } from './shared/logger'
 import Config from './shared/config'
 import { PermissionExclusionResources } from './lib/permission-exclusions-store'
+import { PermissionExclusions, PermissionExclusionsValidator } from './validation/permission-exclusions'
 import { KetoChangeProcessor } from "./lib/keto-change-processor"
 import { KetoTuples } from './lib/permission-exclusions-keto-tuples'
+import { ValidationError } from "./validation/validation-error"
 
+const permissionExclusionsValidator = new PermissionExclusionsValidator(Config)
 // Configure the operator to monitor your custom resources
 // and the namespace for your custom resources
 const RESOURCE_GROUP = Config.PERMISSION_EXCLUSIONS_OPERATOR.WATCH_RESOURCE_GROUP
@@ -56,42 +59,84 @@ let healthStatus = "Unknown"
 // const k8sApi = kc.makeApiClient(k8s.AppsV1Api);
 // const k8sApiMC = kc.makeApiClient(k8s.CustomObjectsApi);
 // const k8sApiPods = kc.makeApiClient(k8s.CoreV1Api);
+const k8sApiCustomObjects = kc.makeApiClient(k8s.CustomObjectsApi)
 
 // Listen for events or notifications and act accordingly
 const watch = new k8s.Watch(kc)
 
 async function onEvent(phase: string, apiObj: any) {
+  // Ignore status updates
+  if (phase === 'MODIFIED' && apiObj.status) {
+    return
+  }
   logger.info(`Received event in phase ${phase} for the resource ${apiObj?.metadata?.name}`)
-  // try {
-  //   const result = await k8sApiMC.listNamespacedCustomObject(
-  //     RESOURCE_GROUP,
-  //     RESOURCE_VERSION,
-  //     NAMESPACE,
-  //     RESOURCE_PLURAL,
-  //   )
-  //   console.log(JSON.stringify(result.body, null, 2))
-  //   console.log(apiObj?.spec)
-  // } catch (err: any) {
-  //   logger.error(err);
-  // }
   const resourceName = apiObj?.metadata?.name
   const permissionsA = apiObj?.spec?.permissionsA
   const permissionsB = apiObj?.spec?.permissionsB
   if (resourceName && permissionsA && permissionsB) {
-    if (phase == "ADDED") {
-      permissionExclusionResourceStore.updateResource(resourceName, permissionsA, permissionsB)
-    } else if (phase == "MODIFIED") {
-      permissionExclusionResourceStore.updateResource(resourceName, permissionsA, permissionsB)
-    } else if (phase == "DELETED") {
+    if (phase === 'ADDED' || phase === 'MODIFIED') {
+      // Get the temporary consolidated permissions based on already stored permissions
+      const consolidatedPermissionExclusions = permissionExclusionResourceStore.getConsolidatedTempData(resourceName, permissionsA, permissionsB)
+      const permissionExclusions: PermissionExclusions[] = Object.entries(consolidatedPermissionExclusions).map(item => {
+        return {
+          permissionsA: (<any>item[1]).permissionsA,
+          permissionsB: (<any>item[1]).permissionsB
+        }
+      })
+      // Validate the resultant calculated permission exclusions with role permission assignments and user role mappings
+      try {
+        await permissionExclusionsValidator.validatePermissionExclusions(permissionExclusions)
+        permissionExclusionResourceStore.updateResource(resourceName, permissionsA, permissionsB)
+        // Set the status of our resource
+        await _updateResourceStatus(apiObj, 'VALIDATED')
+      } catch (err) {
+        logger.error(`Validation failed for the permission exclusion resource: ${resourceName}`)
+        if (err instanceof ValidationError) {
+          console.log(err.validationErrors)
+          await _updateResourceStatus(apiObj, 'VALIDATION FAILED', err.validationErrors)
+        } else {
+          await _updateResourceStatus(apiObj, 'UNKNOWN ERROR')
+        }
+        return
+      }
+    } else if (phase === 'DELETED') {
       permissionExclusionResourceStore.deleteResource(resourceName)
     } else {
       logger.warn(`Unknown event type: ${phase}`)
       return
     }
     const permissionExclusionCombos = permissionExclusionResourceStore.getUniquePermissionExclusionCombos()
+
     logger.info('Current permission exclusions in memory' + JSON.stringify(permissionExclusionCombos))
-    // rolePermissionChangeProcessor.addToQueue(rolePermissionCombos)
     permissionExclusionsChangeProcessor.addToQueue(permissionExclusionCombos)
+  }
+}
+
+async function _updateResourceStatus (apiObj: any, statusText: string, errors?: string[]) : Promise<void> {
+  const status: any = {
+    apiVersion: apiObj.apiVersion,
+    kind: apiObj.kind,
+    metadata: {
+      name: apiObj.metadata.name!,
+      resourceVersion: apiObj.metadata.resourceVersion
+    },
+    status: {
+      state: statusText,
+      errors: errors
+    }
+  }
+
+  try {
+    k8sApiCustomObjects.replaceNamespacedCustomObjectStatus(
+      RESOURCE_GROUP,
+      RESOURCE_VERSION,
+      NAMESPACE,
+      RESOURCE_PLURAL,
+      apiObj.metadata.name,
+      status
+    )
+  } catch (err) {
+    logger.error('Error updating status of the custom resource ' + apiObj.metadata.name, err)
   }
 }
 

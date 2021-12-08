@@ -32,10 +32,13 @@
 import * as k8s from "@kubernetes/client-node"
 import { logger } from './shared/logger'
 import Config from './shared/config'
-import { RolePermissionModel, RoleResources } from "./lib/role-resources"
+import { RoleResources } from "./lib/role-resources"
+import { RolePermissions, PermissionExclusionsValidator } from './validation/permission-exclusions'
 import { KetoChangeProcessor } from "./lib/keto-change-processor"
 import { KetoTuples } from './lib/role-permission-keto-tuples'
+import { ValidationError } from "./validation/validation-error"
 
+const permissionExclusionsValidator = new PermissionExclusionsValidator(Config)
 // Configure the operator to monitor your custom resources
 // and the namespace for your custom resources
 const RESOURCE_GROUP = Config.ROLE_PERMISSION_OPERATOR.WATCH_RESOURCE_GROUP
@@ -45,7 +48,13 @@ const NAMESPACE = Config.WATCH_NAMESPACE
 
 const roleResourceStore = new RoleResources()
 const oryKeto = new KetoTuples()
-const rolePermissionChangeProcessor = new KetoChangeProcessor(oryKeto.updateAllRolePermissions.bind(oryKeto))
+// const rolePermissionChangeProcessor = new KetoChangeProcessor(oryKeto.updateAllRolePermissions.bind(oryKeto))
+const rolePermissionChangeProcessor = new KetoChangeProcessor()
+const updateRolePerm = async (fnArgs: any) => {
+  const boundedFn = oryKeto.updateAllRolePermissions.bind(oryKeto)
+  boundedFn(fnArgs.subjectObjectCombos)
+  logger.info('Updated the relation tuples in Keto', fnArgs.subjectObjectCombos)
+}
 
 const kc = new k8s.KubeConfig()
 kc.loadFromDefault()
@@ -56,33 +65,49 @@ let healthStatus = "Unknown"
 // const k8sApi = kc.makeApiClient(k8s.AppsV1Api);
 // const k8sApiMC = kc.makeApiClient(k8s.CustomObjectsApi);
 // const k8sApiPods = kc.makeApiClient(k8s.CoreV1Api);
+const k8sApiCustomObjects = kc.makeApiClient(k8s.CustomObjectsApi)
 
 // Listen for events or notifications and act accordingly
 const watch = new k8s.Watch(kc)
 
 async function onEvent(phase: string, apiObj: any) {
+  // Ignore status updates
+  if (phase === 'MODIFIED' && apiObj.status) {
+    return
+  }
   logger.info(`Received event in phase ${phase} for the resource ${apiObj?.metadata?.name}`)
-  // try {
-  //   const result = await k8sApiMC.listNamespacedCustomObject(
-  //     RESOURCE_GROUP,
-  //     RESOURCE_VERSION,
-  //     NAMESPACE,
-  //     RESOURCE_PLURAL,
-  //   )
-  //   console.log(JSON.stringify(result.body, null, 2))
-  //   console.log(apiObj?.spec)
-  // } catch (err: any) {
-  //   logger.error(err);
-  // }
   const resourceName = apiObj?.metadata?.name
   const role = apiObj?.spec?.role
   const permissions = apiObj?.spec?.permissions
   if (resourceName && role && permissions) {
-    if (phase == "ADDED") {
-      roleResourceStore.updateRoleResource(resourceName, role, permissions)
-    } else if (phase == "MODIFIED") {
-      roleResourceStore.updateRoleResource(resourceName, role, permissions)
-    } else if (phase == "DELETED") {
+    if (phase === 'ADDED' || phase === 'MODIFIED') {
+      // Get the temporary consolidated role assignments based on already stored roles
+      const consolidatedRolePermissions = roleResourceStore.getConsolidatedTempData(resourceName, role, permissions)
+      const rolePermissions: RolePermissions[] = Object.entries(consolidatedRolePermissions).map(item => {
+        return {
+          rolename: (<any>item[1]).role,
+          permissions: (<any>item[1]).permissions
+        }
+      })
+      // Validate the resultant calculated permission exclusions with role permission assignments and user role mappings
+      try {
+        await rolePermissionChangeProcessor.waitForQueueToBeProcessed()
+        await permissionExclusionsValidator.validateRolePermissions(rolePermissions)
+        roleResourceStore.updateRoleResource(resourceName, role, permissions)
+        // Set the status of our resource
+        await _updateResourceStatus(apiObj, 'VALIDATED')
+      } catch (err) {
+        logger.error(`Validation failed for the role permission resource: ${resourceName}`)
+        if (err instanceof ValidationError) {
+          console.log(err.validationErrors)
+          await _updateResourceStatus(apiObj, 'VALIDATION FAILED', err.validationErrors)
+        } else {
+          await _updateResourceStatus(apiObj, 'UNKNOWN ERROR')
+        }
+        return
+      }
+      // roleResourceStore.updateRoleResource(resourceName, role, permissions)
+    } else if (phase === 'DELETED') {
       roleResourceStore.deleteRoleResource(resourceName)
     } else {
       logger.warn(`Unknown event type: ${phase}`)
@@ -90,12 +115,40 @@ async function onEvent(phase: string, apiObj: any) {
     }
     const rolePermissionCombos = roleResourceStore.getUniqueRolePermissionCombos()
     logger.info('Current permissions in memory' + JSON.stringify(rolePermissionCombos))
-    rolePermissionChangeProcessor.addToQueue(rolePermissionCombos)
+    rolePermissionChangeProcessor.addToQueue(rolePermissionCombos, updateRolePerm)
+  }
+}
+
+async function _updateResourceStatus (apiObj: any, statusText: string, errors?: string[]) : Promise<void> {
+  const status: any = {
+    apiVersion: apiObj.apiVersion,
+    kind: apiObj.kind,
+    metadata: {
+      name: apiObj.metadata.name!,
+      resourceVersion: apiObj.metadata.resourceVersion
+    },
+    status: {
+      state: statusText,
+      errors: errors
+    }
+  }
+
+  try {
+    k8sApiCustomObjects.replaceNamespacedCustomObjectStatus(
+      RESOURCE_GROUP,
+      RESOURCE_VERSION,
+      NAMESPACE,
+      RESOURCE_PLURAL,
+      apiObj.metadata.name,
+      status
+    )
+  } catch (err) {
+    logger.error('Error updating status of the custom resource ' + apiObj.metadata.name, err)
   }
 }
 
 // Helpers to continue watching after an event
-function onDone(err: any) {
+function onDone (err: any) {
   logger.error(`Connection closed. ${err}`)
   setTimeout(watchResource,1000)
 }

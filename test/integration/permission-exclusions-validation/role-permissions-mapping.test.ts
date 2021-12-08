@@ -35,6 +35,7 @@ import ServiceConfig from './../../../src/shared/config'
 import { PermissionExclusionsValidator, RolePermissions, PermissionExclusions } from './../../../src/validation/permission-exclusions'
 import role1Resource from './data/cr-role1.json'
 import role2Resource from './data/cr-role2.json'
+import role3Resource from './data/cr-role3.json'
 import pe1Resource from './data/cr-permission-exclusion1.json'
 import pe2Resource from './data/cr-permission-exclusion2.json'
 
@@ -114,6 +115,15 @@ describe('Permission Exclusion Validator', (): void => {
         Config.WATCH_NAMESPACE,
         Config.WATCH_ROLE_PERMISSIONS_RESOURCE_PLURAL,
         role2Resource.metadata.name
+      )
+    } catch (err) {}
+    try {
+      await k8sApiCustomObjects.deleteNamespacedCustomObject(
+        Config.WATCH_RESOURCE_GROUP,
+        Config.WATCH_RESOURCE_VERSION,
+        Config.WATCH_NAMESPACE,
+        Config.WATCH_ROLE_PERMISSIONS_RESOURCE_PLURAL,
+        role3Resource.metadata.name
       )
     } catch (err) {}
     // Remove permission exclusions
@@ -273,7 +283,7 @@ describe('Permission Exclusion Validator', (): void => {
   it('Wait for some time', async () => {
     await new Promise(resolve => setTimeout(resolve, Config.WAIT_TIME_MS_AFTER_K8S_RESOURCE_CHANGE))
   })
-  it('Validate user role assignment prior to actual assignment', async () => {
+  it('Assign role1 and role2 to user1 now', async () => {
     const postData = {
       username: 'user1',
       roles: [
@@ -281,6 +291,120 @@ describe('Permission Exclusion Validator', (): void => {
         'PEVALROLE2'
       ]
     }
-    await expect(axios.post(Config.PERMISSION_OPERATOR_API_URL + '/validate/user-role', postData)).resolves.toBeTruthy()
+    await expect(axios.post(Config.PERMISSION_OPERATOR_API_URL + '/assignment/user-role', postData)).resolves.toBeTruthy()
+  })
+  it('rolepermissions validation should be failed again now', async () => {
+    const postData = {
+      rolePermissions,
+      permissionExclusions
+    }
+    await expect(axios.post(Config.PERMISSION_OPERATOR_API_URL + '/validate/role-permissions', postData)).rejects.toThrowError()
+  })
+  it('If we try to add permission exclusions even after validation failure, the CR should be set with invalid status', async () => {
+    const status = await k8sApiCustomObjects.createNamespacedCustomObject(
+      Config.WATCH_RESOURCE_GROUP,
+      Config.WATCH_RESOURCE_VERSION,
+      Config.WATCH_NAMESPACE,
+      Config.WATCH_PERMISSION_EXCLUSIONS_RESOURCE_PLURAL,
+      pe1Resource
+    )
+    expect(status.response.statusCode).toEqual(201)
+  })
+  it('Wait for some time', async () => {
+    await new Promise(resolve => setTimeout(resolve, Config.WAIT_TIME_MS_AFTER_K8S_RESOURCE_CHANGE))
+  })
+  it('Status of the custom resource should be set to INVALID', async () => {
+    const status = await k8sApiCustomObjects.getNamespacedCustomObjectStatus(
+      Config.WATCH_RESOURCE_GROUP,
+      Config.WATCH_RESOURCE_VERSION,
+      Config.WATCH_NAMESPACE,
+      Config.WATCH_PERMISSION_EXCLUSIONS_RESOURCE_PLURAL,
+      pe1Resource.metadata.name
+    )
+    expect(status.response.statusCode).toEqual(200)
+    expect(status.body).toHaveProperty('status')
+    expect((<any>status.body).status).toHaveProperty('state')
+    expect((<any>status.body).status.state).not.toEqual('VALIDATED')
+  })
+  it('Delete the permission exclusion', async () => {
+    const status = await k8sApiCustomObjects.deleteNamespacedCustomObject(
+      Config.WATCH_RESOURCE_GROUP,
+      Config.WATCH_RESOURCE_VERSION,
+      Config.WATCH_NAMESPACE,
+      Config.WATCH_PERMISSION_EXCLUSIONS_RESOURCE_PLURAL,
+      pe1Resource.metadata.name
+    )
+    expect(status.response.statusCode).toEqual(200)
+  })
+  it('Wait for some time', async () => {
+    await new Promise(resolve => setTimeout(resolve, Config.WAIT_TIME_MS_AFTER_K8S_RESOURCE_CHANGE))
+  })
+  it('Un-assign role2 from user1', async () => {
+    const postData = {
+      username: 'user1',
+      roles: [
+        'PEVALROLE1'
+      ]
+    }
+    await expect(axios.post(Config.PERMISSION_OPERATOR_API_URL + '/assignment/user-role', postData)).resolves.toBeTruthy()
+  })
+  it('rolepermissions validation should be passed now', async () => {
+    const postData = {
+      rolePermissions,
+      permissionExclusions
+    }
+    await expect(axios.post(Config.PERMISSION_OPERATOR_API_URL + '/validate/role-permissions', postData)).resolves.toBeTruthy()
+  })
+  it('Add permission exclusions now and check the CR status', async () => {
+    const status = await k8sApiCustomObjects.createNamespacedCustomObject(
+      Config.WATCH_RESOURCE_GROUP,
+      Config.WATCH_RESOURCE_VERSION,
+      Config.WATCH_NAMESPACE,
+      Config.WATCH_PERMISSION_EXCLUSIONS_RESOURCE_PLURAL,
+      pe1Resource
+    )
+    expect(status.response.statusCode).toEqual(201)
+  })
+  it('Wait for some time', async () => {
+    await new Promise(resolve => setTimeout(resolve, Config.WAIT_TIME_MS_AFTER_K8S_RESOURCE_CHANGE))
+  })
+  it('Status of the custom resource should be set to VALIDATED', async () => {
+    const status = await k8sApiCustomObjects.getNamespacedCustomObjectStatus(
+      Config.WATCH_RESOURCE_GROUP,
+      Config.WATCH_RESOURCE_VERSION,
+      Config.WATCH_NAMESPACE,
+      Config.WATCH_PERMISSION_EXCLUSIONS_RESOURCE_PLURAL,
+      pe1Resource.metadata.name
+    )
+    expect(status.response.statusCode).toEqual(200)
+    expect(status.body).toHaveProperty('status')
+    expect((<any>status.body).status).toHaveProperty('state')
+    expect((<any>status.body).status.state).toEqual('VALIDATED')
+  })
+  it('Try to assign permissionY1 to rol1, CR should be rejected', async () => {
+    const status = await k8sApiCustomObjects.createNamespacedCustomObject(
+      Config.WATCH_RESOURCE_GROUP,
+      Config.WATCH_RESOURCE_VERSION,
+      Config.WATCH_NAMESPACE,
+      Config.WATCH_ROLE_PERMISSIONS_RESOURCE_PLURAL,
+      role3Resource
+    )
+    expect(status.response.statusCode).toEqual(201)
+  })
+  it('Wait for some time', async () => {
+    await new Promise(resolve => setTimeout(resolve, Config.WAIT_TIME_MS_AFTER_K8S_RESOURCE_CHANGE))
+  })
+  it('Status of the custom resource should be set to INVALID', async () => {
+    const status = await k8sApiCustomObjects.getNamespacedCustomObjectStatus(
+      Config.WATCH_RESOURCE_GROUP,
+      Config.WATCH_RESOURCE_VERSION,
+      Config.WATCH_NAMESPACE,
+      Config.WATCH_ROLE_PERMISSIONS_RESOURCE_PLURAL,
+      role3Resource.metadata.name
+    )
+    expect(status.response.statusCode).toEqual(200)
+    expect(status.body).toHaveProperty('status')
+    expect((<any>status.body).status).toHaveProperty('state')
+    expect((<any>status.body).status.state).not.toEqual('VALIDATED')
   })
 })

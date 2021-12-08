@@ -67,6 +67,23 @@ class PermissionExclusionResources {
     return this.permissionExclusionResourceData
   }
 
+  getConsolidatedTempData (resourceName: string, permissionsA: string[], permissionsB: string[]) : any {
+    // Create a deep clone of existing data
+    const tempPermissionExclusionResourceData = JSON.parse(JSON.stringify(this.permissionExclusionResourceData))
+    if (!tempPermissionExclusionResourceData[resourceName]) {
+      tempPermissionExclusionResourceData[resourceName] = {}
+    }
+    if (!tempPermissionExclusionResourceData[resourceName].permissionsA) {
+      tempPermissionExclusionResourceData[resourceName].permissionsA = []
+    }
+    if (!tempPermissionExclusionResourceData[resourceName].permissionsB) {
+      tempPermissionExclusionResourceData[resourceName].permissionsB = []
+    }
+    tempPermissionExclusionResourceData[resourceName].permissionsA = permissionsA
+    tempPermissionExclusionResourceData[resourceName].permissionsB = permissionsB
+    return tempPermissionExclusionResourceData
+  }
+
   getUniquePermissionExclusionCombos () : string[] {
     const permissionCombos: string[] = []
     for (const [, value] of Object.entries(this.permissionExclusionResourceData)) {

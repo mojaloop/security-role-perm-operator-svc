@@ -165,12 +165,12 @@ export class PermissionExclusionsValidator {
       }
       // Check the new permissions permissions with the excluded permissions using set intersection
       const intersect = new Set([...totalGrantedPermissions].filter(i => totalExcludedPermissions.has(i)))
-      // console.log('Intersection is', intersect)
+      console.log('Intersection is', intersect)
       if (intersect.size > 0) {
         validationErrors.push(
           'ERROR: permissions ' +
           Array.from(intersect).join(',') +
-          ` can not be assigned together for the user '${user.username}'`
+          ` can not be assigned together for the user: ${user.username}`
         )
       }
     })
@@ -179,9 +179,9 @@ export class PermissionExclusionsValidator {
     }
   }
 
-  async validateRolePermissions (
+  async validateRolePermissionsAndPermissionExclusions (
     rolePermissions: RolePermissions [],
-    permissionExclusions: PermissionExclusions[]
+    permissionExclusions: PermissionExclusions[] | PermissionExclusionCombos[]
   ) : Promise<void> {
     // const validationErrors : string[] = []
     // Iterate through all the role permissions and get the user list
@@ -245,5 +245,54 @@ export class PermissionExclusionsValidator {
     })
     // console.log('Permission Exclusions are', permissionExclusionCombos)
     this.validateUserRolePermissions([userRole], rolePermissions, permissionExclusionCombos)
+  }
+
+  async validatePermissionExclusions (permissionExclusions: PermissionExclusions[]) : Promise<void> {
+    // const validationErrors : string[] = []
+    // Get all the role permission mappings
+    const roles: any = {}
+    const readRolePermissionsResponse = await this.oryKetoReadApi.getRelationTuples(
+      'permission',
+      undefined,
+      'granted'
+    )
+    const readRolePermissionsRelationTuples = readRolePermissionsResponse.data?.relation_tuples || []
+    readRolePermissionsRelationTuples.forEach(rolePermission => {
+      const rolename = rolePermission.subject.replace(/role:([^#.]*)(#.*)?/, '$1')
+      const permissions = rolePermission.object
+      if (!roles[rolename]) {
+        roles[rolename] = []
+      }
+      roles[rolename] = roles[rolename].concat(permissions)
+    })
+    const rolePermissions: RolePermissions[] = Object.entries(roles).map(item => {
+      return {
+        rolename: item[0],
+        permissions: <string[]>item[1]
+      }
+    })
+
+    // console.log('Role Permissions are', rolePermissions)
+
+    await this.validateRolePermissionsAndPermissionExclusions(rolePermissions, permissionExclusions)
+  }
+
+  async validateRolePermissions (rolePermissions: RolePermissions[]) : Promise<void> {
+    // Get all the permission exclusions
+    let permissionExclusionCombos: PermissionExclusionCombos[] = []
+    const readPermissionExclusionsResponse = await this.oryKetoReadApi.getRelationTuples(
+      'permission',
+      undefined,
+      'excludes'
+    )
+    const readPermissionExclusionsRelationTuples = readPermissionExclusionsResponse.data?.relation_tuples || []
+    permissionExclusionCombos = readPermissionExclusionsRelationTuples.map(item => {
+      return {
+        permissionA: item.object,
+        permissionB: item.subject.replace(/permission:([^#.]*)(#.*)?/, '$1')
+      }
+    })
+    // console.log('GVK CHECK1', rolePermissions, permissionExclusionCombos)
+    await this.validateRolePermissionsAndPermissionExclusions(rolePermissions, permissionExclusionCombos)
   }
 }

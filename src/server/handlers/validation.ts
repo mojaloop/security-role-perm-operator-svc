@@ -75,7 +75,7 @@ const ValidateRolePermissions = async (_context: unknown, _request: Request, h: 
     const rolePermissions : RolePermissions[] = requestObject?.rolePermissions
     const permissionExclusions : PermissionExclusions[] = requestObject?.permissionExclusions
     try {
-      await permissionExclusionsValidator.validateRolePermissions(rolePermissions, permissionExclusions)
+      await permissionExclusionsValidator.validateRolePermissionsAndPermissionExclusions(rolePermissions, permissionExclusions)
     } catch (err) {
       if (err instanceof ValidationError) {
         const errorResponse: ValidationErrorResponse = {

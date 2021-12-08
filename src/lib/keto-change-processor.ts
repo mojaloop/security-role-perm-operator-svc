@@ -30,28 +30,31 @@
 import Config from '../shared/config'
 import { logger } from '../shared/logger'
 
+interface KetoQueueItem {
+  queueArgs: any;
+  updateFn: (fnArgs: any) => Promise<void>;
+}
+
 export class KetoChangeProcessor {
-  queue: string[][];
+  queue: KetoQueueItem[];
   timerOn: boolean;
   timeoutId: NodeJS.Timeout;
-  updateFn: (subjectObjectCombos: string[]) => Promise<void>;
 
-  constructor (updateFn: (subjectObjectCombos: string[]) => Promise<void>) {
+  constructor () {
     this.queue = []
     this.timerOn = true
     this.timeoutId = setTimeout(this._processQueue.bind(this))
-    this.updateFn = updateFn
   }
 
-  _pushQueue (subjectObjectCombos: string []) : void {
-    this.queue.push(subjectObjectCombos)
+  _pushQueue (qItem: KetoQueueItem) : void {
+    this.queue.push(qItem)
   }
 
-  _popQueue () : string[] | undefined {
+  _popQueue () : KetoQueueItem | undefined {
     return this.queue.shift()
   }
 
-  _getFirstItemInQueue () : string[] | null {
+  _getFirstItemInQueue () : KetoQueueItem | null {
     if (this.queue.length > 0) {
       return this.queue[0]
     } else {
@@ -61,10 +64,10 @@ export class KetoChangeProcessor {
 
   async _processQueue () : Promise<void> {
     if (this.timerOn) {
-      const subjectObjectCombos = this._getFirstItemInQueue()
-      if (subjectObjectCombos) {
+      const queueItem = this._getFirstItemInQueue()
+      if (queueItem) {
         try {
-          await this._updateRelationTuples(subjectObjectCombos)
+          await queueItem.updateFn(queueItem.queueArgs)
           this._popQueue()
         } catch (err: any) {
           logger.error(err.message)
@@ -74,17 +77,21 @@ export class KetoChangeProcessor {
     }
   }
 
-  async _updateRelationTuples (subjectObjectCombos: string[]) : Promise<void> {
-    await this.updateFn(subjectObjectCombos)
-    logger.info('Updated the relation tuples in Keto', subjectObjectCombos)
-  }
-
-  addToQueue (subjectObjectCombos: string[]) : void {
-    this._pushQueue(subjectObjectCombos)
+  addToQueue (queueArgs: any, updateFn: (fnArgs: any) => Promise<void>) : void {
+    this._pushQueue({
+      queueArgs,
+      updateFn
+    })
   }
 
   getQueue () : string[][] {
     return this.queue
+  }
+
+  async waitForQueueToBeProcessed () : Promise<void> {
+    if (this.queue.length > 0) {
+      setTimeout(this.waitForQueueToBeProcessed.bind(this), 100)
+    }
   }
 
   // Helper functions for unit tests
