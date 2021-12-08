@@ -84,7 +84,7 @@ export class KetoChangeProcessor {
     })
   }
 
-  getQueue () : string[][] {
+  getQueue () : KetoQueueItem[] {
     return this.queue
   }
 

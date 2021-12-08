@@ -48,9 +48,8 @@ const NAMESPACE = Config.WATCH_NAMESPACE
 
 const roleResourceStore = new RoleResources()
 const oryKeto = new KetoTuples()
-// const rolePermissionChangeProcessor = new KetoChangeProcessor(oryKeto.updateAllRolePermissions.bind(oryKeto))
 const rolePermissionChangeProcessor = new KetoChangeProcessor()
-const updateRolePerm = async (fnArgs: any) => {
+const updateKetoFn = async (fnArgs: any) => {
   const boundedFn = oryKeto.updateAllRolePermissions.bind(oryKeto)
   boundedFn(fnArgs.subjectObjectCombos)
   logger.info('Updated the relation tuples in Keto', fnArgs.subjectObjectCombos)
@@ -115,7 +114,10 @@ async function onEvent(phase: string, apiObj: any) {
     }
     const rolePermissionCombos = roleResourceStore.getUniqueRolePermissionCombos()
     logger.info('Current permissions in memory' + JSON.stringify(rolePermissionCombos))
-    rolePermissionChangeProcessor.addToQueue(rolePermissionCombos, updateRolePerm)
+    const queueArgs = {
+      subjectObjectCombos: rolePermissionCombos
+    }
+    rolePermissionChangeProcessor.addToQueue(queueArgs, updateKetoFn)
   }
 }
 

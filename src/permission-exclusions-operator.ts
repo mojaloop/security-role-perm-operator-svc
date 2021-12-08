@@ -48,8 +48,12 @@ const NAMESPACE = Config.WATCH_NAMESPACE
 
 const permissionExclusionResourceStore = new PermissionExclusionResources()
 const oryKeto = new KetoTuples()
-const permissionExclusionsChangeProcessor = new KetoChangeProcessor(oryKeto.updateAllPermissionExclusions.bind(oryKeto))
-
+const permissionExclusionsChangeProcessor = new KetoChangeProcessor()
+const updateKetoFn = async (fnArgs: any) => {
+  const boundedFn = oryKeto.updateAllPermissionExclusions.bind(oryKeto)
+  boundedFn(fnArgs.subjectObjectCombos)
+  logger.info('Updated the relation tuples in Keto', fnArgs.subjectObjectCombos)
+}
 const kc = new k8s.KubeConfig()
 kc.loadFromDefault()
 
@@ -108,7 +112,10 @@ async function onEvent(phase: string, apiObj: any) {
     const permissionExclusionCombos = permissionExclusionResourceStore.getUniquePermissionExclusionCombos()
 
     logger.info('Current permission exclusions in memory' + JSON.stringify(permissionExclusionCombos))
-    permissionExclusionsChangeProcessor.addToQueue(permissionExclusionCombos)
+    const queueArgs = {
+      subjectObjectCombos: permissionExclusionCombos
+    }
+    permissionExclusionsChangeProcessor.addToQueue(queueArgs, updateKetoFn)
   }
 }
 
