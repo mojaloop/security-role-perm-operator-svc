@@ -48,7 +48,7 @@ const NAMESPACE = Config.WATCH_NAMESPACE
 
 const roleResourceStore = new RoleResources()
 const oryKeto = new KetoTuples()
-const rolePermissionChangeProcessor = KetoChangeProcessor.getInstance()
+const ketoChangeProcessor = KetoChangeProcessor.getInstance()
 const updateKetoFn = async (fnArgs: any) => {
   const boundedFn = oryKeto.updateAllRolePermissions.bind(oryKeto)
   boundedFn(fnArgs.subjectObjectCombos)
@@ -90,7 +90,7 @@ async function onEvent(phase: string, apiObj: any) {
       })
       // Validate the resultant calculated permission exclusions with role permission assignments and user role mappings
       try {
-        await rolePermissionChangeProcessor.waitForQueueToBeProcessed()
+        await ketoChangeProcessor.waitForQueueToBeProcessed()
         await permissionExclusionsValidator.validateRolePermissions(rolePermissions)
         roleResourceStore.updateRoleResource(resourceName, role, permissions)
         // Set the status of our resource
@@ -117,7 +117,7 @@ async function onEvent(phase: string, apiObj: any) {
     const queueArgs = {
       subjectObjectCombos: rolePermissionCombos
     }
-    rolePermissionChangeProcessor.addToQueue(queueArgs, updateKetoFn)
+    ketoChangeProcessor.addToQueue(queueArgs, updateKetoFn)
   }
 }
 
@@ -189,8 +189,8 @@ export function getHealthStatus () : string {
 export function getRoleResourceStore () : RoleResources {
   return roleResourceStore
 }
-export function getRolePermissionChangeProcessor () : KetoChangeProcessor {
-  return rolePermissionChangeProcessor
+export function getketoChangeProcessor () : KetoChangeProcessor {
+  return ketoChangeProcessor
 }
 export function getWatch () : k8s.Watch {
   return watch
