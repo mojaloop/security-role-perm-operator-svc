@@ -34,7 +34,7 @@ import { logger } from './shared/logger'
 import Config from './shared/config'
 import { PermissionExclusionResources } from './lib/permission-exclusions-store'
 import { PermissionExclusions, PermissionExclusionsValidator } from './validation/permission-exclusions'
-import { KetoChangeProcessor } from "./lib/keto-change-processor"
+import KetoChangeProcessor from "./lib/keto-change-processor"
 import { KetoTuples } from './lib/permission-exclusions-keto-tuples'
 import { ValidationError } from "./validation/validation-error"
 
@@ -64,7 +64,7 @@ let healthStatus = "Unknown"
 // const k8sApiMC = kc.makeApiClient(k8s.CustomObjectsApi);
 // const k8sApiPods = kc.makeApiClient(k8s.CoreV1Api);
 const k8sApiCustomObjects = kc.makeApiClient(k8s.CustomObjectsApi)
-
+console.log(k8sApiCustomObjects)
 // Listen for events or notifications and act accordingly
 const watch = new k8s.Watch(kc)
 
@@ -79,6 +79,7 @@ async function onEvent(phase: string, apiObj: any) {
   const permissionsB = apiObj?.spec?.permissionsB
   if (resourceName && permissionsA && permissionsB) {
     if (phase === 'ADDED' || phase === 'MODIFIED') {
+
       // Get the temporary consolidated permissions based on already stored permissions
       const consolidatedPermissionExclusions = permissionExclusionResourceStore.getConsolidatedTempData(resourceName, permissionsA, permissionsB)
       const permissionExclusions: PermissionExclusions[] = Object.entries(consolidatedPermissionExclusions).map(item => {
@@ -87,6 +88,8 @@ async function onEvent(phase: string, apiObj: any) {
           permissionsB: (<any>item[1]).permissionsB
         }
       })
+
+
       // Validate the resultant calculated permission exclusions with role permission assignments and user role mappings
       try {
         await ketoChangeProcessor.waitForQueueToBeProcessed()
@@ -188,9 +191,6 @@ export function getHealthStatus () : string {
 export function getPermissionExclusionResourceStore () : PermissionExclusionResources {
   return permissionExclusionResourceStore
 }
-export function getketoChangeProcessor () : KetoChangeProcessor {
+export function getKetoChangeProcessor () : KetoChangeProcessor {
   return ketoChangeProcessor
-}
-export function getWatch () : k8s.Watch {
-  return watch
 }

@@ -34,7 +34,7 @@ import { logger } from './shared/logger'
 import Config from './shared/config'
 import { RoleResources } from "./lib/role-resources"
 import { RolePermissions, PermissionExclusionsValidator } from './validation/permission-exclusions'
-import { KetoChangeProcessor } from "./lib/keto-change-processor"
+import KetoChangeProcessor from "./lib/keto-change-processor"
 import { KetoTuples } from './lib/role-permission-keto-tuples'
 import { ValidationError } from "./validation/validation-error"
 

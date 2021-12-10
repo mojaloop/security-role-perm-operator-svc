@@ -35,7 +35,7 @@ interface KetoQueueItem {
   updateFn: (fnArgs: any) => Promise<void>;
 }
 
-export class KetoChangeProcessor {
+export default class KetoChangeProcessor {
   private static _instance: KetoChangeProcessor;
   private queue: KetoQueueItem[];
   private timerOn: boolean;
