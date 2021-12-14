@@ -64,11 +64,11 @@ let healthStatus = "Unknown"
 // const k8sApiMC = kc.makeApiClient(k8s.CustomObjectsApi);
 // const k8sApiPods = kc.makeApiClient(k8s.CoreV1Api);
 const k8sApiCustomObjects = kc.makeApiClient(k8s.CustomObjectsApi)
-console.log(k8sApiCustomObjects)
 // Listen for events or notifications and act accordingly
 const watch = new k8s.Watch(kc)
 
 async function onEvent(phase: string, apiObj: any) {
+
   // Ignore status updates
   if (phase === 'MODIFIED' && apiObj.status) {
     return
@@ -96,6 +96,7 @@ async function onEvent(phase: string, apiObj: any) {
         await permissionExclusionsValidator.validatePermissionExclusions(permissionExclusions)
         permissionExclusionResourceStore.updateResource(resourceName, permissionsA, permissionsB)
         // Set the status of our resource
+
         await _updateResourceStatus(apiObj, 'VALIDATED')
       } catch (err) {
         logger.error(`Validation failed for the permission exclusion resource: ${resourceName}`)
@@ -103,6 +104,7 @@ async function onEvent(phase: string, apiObj: any) {
           console.log(err.validationErrors)
           await _updateResourceStatus(apiObj, 'VALIDATION FAILED', err.validationErrors)
         } else {
+          console.log(err)
           await _updateResourceStatus(apiObj, 'UNKNOWN ERROR')
         }
         return
@@ -185,12 +187,4 @@ export async function startOperator (): Promise<void> {
 
 export function getHealthStatus () : string {
   return healthStatus
-}
-
-// functions for unit tests
-export function getPermissionExclusionResourceStore () : PermissionExclusionResources {
-  return permissionExclusionResourceStore
-}
-export function getKetoChangeProcessor () : KetoChangeProcessor {
-  return ketoChangeProcessor
 }

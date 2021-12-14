@@ -29,7 +29,7 @@
  ******/
 
 // eslint-disable-next-line max-len
-import { startOperator, getRoleResourceStore, getRolePermissionChangeProcessor, getWatch } from '../../src/role-permission-operator'
+import { startOperator, getRoleResourceStore, getketoChangeProcessor, getWatch } from '../../src/role-permission-operator'
 // import { RoleResources } from "./lib/role-resources"
 
 jest.mock('@kubernetes/client-node');
@@ -113,7 +113,7 @@ describe('Role Permission operator', (): void => {
   beforeAll(() => {
     spyUpdateRoleResource = (getRoleResourceStore().updateRoleResource as jest.Mock)
     spyDeleteRoleResource = (getRoleResourceStore().deleteRoleResource as jest.Mock)
-    spyAddToQueue = (getRolePermissionChangeProcessor().addToQueue as jest.Mock)
+    spyAddToQueue = (getketoChangeProcessor().addToQueue as jest.Mock)
     spyWatch = (getWatch().watch as jest.Mock)
   })
   describe('Positive Scenarios', (): void => {

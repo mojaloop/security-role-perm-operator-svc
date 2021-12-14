@@ -27,25 +27,25 @@
 
  --------------
  ******/
+/* eslint-disable import/first */
 
-// eslint-disable-next-line max-len
-import { startOperator, getPermissionExclusionResourceStore } from '../../src/permission-exclusions-operator'
-import KetoChangeProcessor from '../../src/lib/keto-change-processor'
-import * as k8s from "@kubernetes/client-node"
-// import { PermissionExclusionsValidator } from '../../src/validation/permission-exclusions'
-// import { PermissionExclusionResources } from '../../src/lib/permission-exclusions-store'
+// Mock functions for jest. Keep these functions at the top because jest.mock calls will be hoisted to below these lines
+const mockAddToQueue = jest.fn()
 
-jest.mock('@kubernetes/client-node')
+// Mock K8s client-node library
+import * as k8s from '@kubernetes/client-node'
+import { PermissionExclusionResources } from '../../src/lib/permission-exclusions-store'
+import { startOperator } from '../../src/permission-exclusions-operator'
+
 jest.mock('../../src/lib/permission-exclusions-store')
-jest.mock('../../src/lib/keto-change-processor')
 jest.mock('../../src/validation/permission-exclusions')
+jest.mock('@kubernetes/client-node');
 
-const spyAddToQueue: jest.Mock = jest.fn();
+const k8sWatchInstance = (<any>k8s.Watch).mock.instances[0]
 
-(KetoChangeProcessor.getInstance as jest.Mock).mockReturnValue({
-  addToQueue: spyAddToQueue
-});
-(getPermissionExclusionResourceStore().getConsolidatedTempData as jest.Mock).mockReturnValue({
+// PermissionExclusionResources
+const permissionExclusionResourceStoreObject = (<any>PermissionExclusionResources).mock.instances[0];
+(permissionExclusionResourceStoreObject.getConsolidatedTempData as jest.Mock).mockReturnValue({
   pe1: {
     permissionsA: [
       'PERM1'
@@ -54,24 +54,18 @@ const spyAddToQueue: jest.Mock = jest.fn();
       'PERM2'
     ]
   }
-});
-const k8sWatchInstance = (<any>k8s.Watch).mock.instances[0]
-// console.log((k8s.Watch as jest.Mock).mock.instances)
-const kubeConfigInstance = (<any>k8s.KubeConfig).mock.instances[0];
-// console.log(kubeConfigInstance.makeApiClient);
-kubeConfigInstance.makeApiClient = jest.fn().mockReturnValue({
-  replaceNamespacedCustomObjectStatus: jest.fn
 })
-// (kubeConfigInstance.makeApiClient as jest.Mock).mockImplementation(() => {
-//   console.log('GVK#1', test)
-//   return {
-//     replaceNamespacedCustomObjectStatus: jest.fn
-//   }
-// })
 
-// (kubeConfigInstance.makeApiClient as jest.Mock).mockReturnValue({
-//   replaceNamespacedCustomObjectStatus: jest.fn
-// })
+jest.mock('../../src/lib/keto-change-processor', () => {
+  return {
+    getInstance: jest.fn().mockImplementation(() => {
+      return {
+        addToQueue: mockAddToQueue,
+        waitForQueueToBeProcessed: jest.fn()
+      }
+    })
+  }
+})
 
 const sampleApiObj = {
   metadata: {
@@ -133,8 +127,8 @@ const wrongApiObjWithoutResourceName = {
 }
 
 const createWatchEventImplementation = (phase: string, apiObj: any) => {
-  return (_path: string, _queryParams: any, eventCallback: jest.Mock, _doneCallback: jest.Mock) => {
-    eventCallback(phase, apiObj)
+  return async (_path: string, _queryParams: any, eventCallback: jest.Mock, _doneCallback: jest.Mock) => {
+    await eventCallback(phase, apiObj)
   }
 }
 
@@ -147,12 +141,13 @@ const createWatchDoneImplementation = (error: string) => {
 describe('Permission Exclusion operator', (): void => {
   let spyUpdateResource: jest.Mock
   let spyDeleteResource: jest.Mock
-  // let spyAddToQueue: jest.Mock
+  let spyAddToQueue: jest.Mock
   let spyWatch: jest.Mock
   beforeAll(() => {
-    spyUpdateResource = (getPermissionExclusionResourceStore().updateResource as jest.Mock)
-    spyDeleteResource = (getPermissionExclusionResourceStore().deleteResource as jest.Mock)
-    spyWatch = (k8sWatchInstance.watch as jest.Mock)
+    spyUpdateResource = (permissionExclusionResourceStoreObject.updateResource as jest.Mock)
+    spyDeleteResource = (permissionExclusionResourceStoreObject.deleteResource as jest.Mock)
+    spyAddToQueue = mockAddToQueue
+    spyWatch = k8sWatchInstance.watch
   })
   describe('Positive Scenarios', (): void => {
     afterEach(() => {
@@ -172,27 +167,27 @@ describe('Permission Exclusion operator', (): void => {
       expect(spyUpdateResource).toHaveBeenCalledWith('sampleResource1', ['samplePermissionA1'], ['samplePermissionB1'])
       expect(spyAddToQueue).toHaveBeenCalledTimes(1)
     })
-    // it('MODIFIED phase event', async () => {
-    //   spyWatch.mockImplementation(createWatchEventImplementation('MODIFIED', sampleApiObj))
-    //   await startOperator()
-    //   expect(spyWatch).toHaveBeenCalledTimes(1)
-    //   expect(spyUpdateResource).toHaveBeenCalledWith('sampleResource1', ['samplePermissionA1'], ['samplePermissionB1'])
-    //   expect(spyAddToQueue).toHaveBeenCalledTimes(1)
-    // })
-    // it('DELETED phase event', async () => {
-    //   spyWatch.mockImplementation(createWatchEventImplementation('DELETED', sampleApiObj))
-    //   await startOperator()
-    //   expect(spyWatch).toHaveBeenCalledTimes(1)
-    //   expect(spyDeleteResource).toHaveBeenCalledWith('sampleResource1')
-    //   expect(spyAddToQueue).toHaveBeenCalledTimes(1)
-    // })
-    // it('Done callback from watch should start the loop again', async () => {
-    //   spyWatch.mockImplementation(createWatchDoneImplementation('Some Error'))
-    //   await startOperator()
-    //   expect(spyWatch).toHaveBeenCalledTimes(1)
-    // })
+    it('MODIFIED phase event', async () => {
+      spyWatch.mockImplementation(createWatchEventImplementation('MODIFIED', sampleApiObj))
+      await startOperator()
+      expect(spyWatch).toHaveBeenCalledTimes(1)
+      expect(spyUpdateResource).toHaveBeenCalledWith('sampleResource1', ['samplePermissionA1'], ['samplePermissionB1'])
+      expect(spyAddToQueue).toHaveBeenCalledTimes(1)
+    })
+    it('DELETED phase event', async () => {
+      spyWatch.mockImplementation(createWatchEventImplementation('DELETED', sampleApiObj))
+      await startOperator()
+      expect(spyWatch).toHaveBeenCalledTimes(1)
+      expect(spyDeleteResource).toHaveBeenCalledWith('sampleResource1')
+      expect(spyAddToQueue).toHaveBeenCalledTimes(1)
+    })
+    it('Done callback from watch should start the loop again', async () => {
+      spyWatch.mockImplementation(createWatchDoneImplementation('Some Error'))
+      await startOperator()
+      expect(spyWatch).toHaveBeenCalledTimes(1)
+    })
   })
-  xdescribe('Negative Scenarios', (): void => {
+  describe('Negative Scenarios', (): void => {
     beforeAll(() => {
       spyUpdateResource.mockReset()
       spyDeleteResource.mockReset()
