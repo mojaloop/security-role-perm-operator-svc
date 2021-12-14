@@ -27,20 +27,43 @@
 
  --------------
  ******/
+/* eslint-disable import/first */
 
-// eslint-disable-next-line max-len
-import { startOperator, getRoleResourceStore, getketoChangeProcessor, getWatch } from '../../src/role-permission-operator'
-// import { RoleResources } from "./lib/role-resources"
+// Mock functions for jest. Keep these functions at the top because jest.mock calls will be hoisted to below these lines
+const mockAddToQueue = jest.fn()
 
+// Mock K8s client-node library
+import * as k8s from '@kubernetes/client-node'
+import { RoleResources } from '../../src/lib/role-resources'
+import { startOperator } from '../../src/role-permission-operator'
+
+jest.mock('../../src/lib/role-resources')
+jest.mock('../../src/validation/permission-exclusions')
 jest.mock('@kubernetes/client-node');
-jest.mock('../../src/lib/role-resources');
-jest.mock('../../src/lib/keto-change-processor');
 
-// (KetoTuples as jest.Mock).mockImplementation(() => {
-//   return {
-//     updateAllRolePermissions: jest.fn()
-//   }
-// })
+const k8sWatchInstance = (<any>k8s.Watch).mock.instances[0]
+
+// RoleResources
+const roleResourcesObject = (<any>RoleResources).mock.instances[0];
+(roleResourcesObject.getConsolidatedTempData as jest.Mock).mockReturnValue({
+  role1: {
+    role: 'ROLE1',
+    permissions: [
+      'PERM1'
+    ]
+  }
+})
+
+jest.mock('../../src/lib/keto-change-processor', () => {
+  return {
+    getInstance: jest.fn().mockImplementation(() => {
+      return {
+        addToQueue: mockAddToQueue,
+        waitForQueueToBeProcessed: jest.fn()
+      }
+    })
+  }
+})
 
 const sampleApiObj = {
   metadata: {
@@ -94,8 +117,8 @@ const wrongApiObjWithoutResourceName = {
 }
 
 const createWatchEventImplementation = (phase: string, apiObj: any) => {
-  return (_path: string, _queryParams: any, eventCallback: jest.Mock, _doneCallback: jest.Mock) => {
-    eventCallback(phase, apiObj)
+  return async (_path: string, _queryParams: any, eventCallback: jest.Mock, _doneCallback: jest.Mock) => {
+    await eventCallback(phase, apiObj)
   }
 }
 
@@ -111,10 +134,10 @@ describe('Role Permission operator', (): void => {
   let spyAddToQueue: jest.Mock
   let spyWatch: jest.Mock
   beforeAll(() => {
-    spyUpdateRoleResource = (getRoleResourceStore().updateRoleResource as jest.Mock)
-    spyDeleteRoleResource = (getRoleResourceStore().deleteRoleResource as jest.Mock)
-    spyAddToQueue = (getketoChangeProcessor().addToQueue as jest.Mock)
-    spyWatch = (getWatch().watch as jest.Mock)
+    spyUpdateRoleResource = (roleResourcesObject.updateRoleResource as jest.Mock)
+    spyDeleteRoleResource = (roleResourcesObject.deleteRoleResource as jest.Mock)
+    spyAddToQueue = mockAddToQueue
+    spyWatch = k8sWatchInstance.watch
   })
   describe('Positive Scenarios', (): void => {
     afterEach(() => {
