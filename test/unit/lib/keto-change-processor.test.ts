@@ -28,25 +28,27 @@
  --------------
  ******/
 
-import { KetoChangeProcessor } from '../../../src/lib/keto-change-processor'
+import KetoChangeProcessor from '../../../src/lib/keto-change-processor'
 import Config from '../../../src/shared/config'
-
 
 // TODO: The following tests can be optimized to run fast by using jest fakeTimers
 
 describe('role-permission-change-processor', (): void => {
   describe('KetoChangeProcessor Add Queue', (): void => {
-    let rolePermissionChangeProcessor: KetoChangeProcessor
+    let ketoChangeProcessor: KetoChangeProcessor
     let spyUpdateAllRolePermissions: jest.Mock
 
-    it('Initialize rolePermissionChangeProcessor', async () => {
+    beforeAll(() => {
       spyUpdateAllRolePermissions = jest.fn()
-      rolePermissionChangeProcessor = new KetoChangeProcessor(spyUpdateAllRolePermissions)
-      expect(rolePermissionChangeProcessor).toHaveProperty('addToQueue')
-      expect(rolePermissionChangeProcessor).toHaveProperty('getQueue')
+    })
+
+    it('Initialize ketoChangeProcessor', async () => {
+      ketoChangeProcessor = KetoChangeProcessor.getInstance()
+      expect(ketoChangeProcessor).toHaveProperty('addToQueue')
+      expect(ketoChangeProcessor).toHaveProperty('getQueue')
     })
     it('getQueue should return empty array initially', async () => {
-      const currentQueue = rolePermissionChangeProcessor.getQueue()
+      const currentQueue = ketoChangeProcessor.getQueue()
       expect(Array.isArray(currentQueue)).toBe(true)
       expect(currentQueue.length).toEqual(0)
     })
@@ -54,20 +56,20 @@ describe('role-permission-change-processor', (): void => {
       const rolePermissionCombos = [
         'sampleRole1:samplePermission1'
       ]
-      rolePermissionChangeProcessor.addToQueue(rolePermissionCombos)
-      const currentQueue = rolePermissionChangeProcessor.getQueue()
+      ketoChangeProcessor.addToQueue(rolePermissionCombos, spyUpdateAllRolePermissions)
+      const currentQueue = ketoChangeProcessor.getQueue()
       expect(currentQueue.length).toEqual(1)
     })
     it('queued item should be processed after some time', async () => {
       spyUpdateAllRolePermissions.mockClear()
       await new Promise(resolve => setTimeout(resolve, Config.KETO_QUEUE_PROCESS_INTERVAL_MS))
-      const currentQueue = rolePermissionChangeProcessor.getQueue()
+      const currentQueue = ketoChangeProcessor.getQueue()
       expect(currentQueue.length).toEqual(0)
       expect(spyUpdateAllRolePermissions).toHaveBeenCalled()
     })
     it('empty queue should not throw an error', async () => {
       await new Promise(resolve => setTimeout(resolve, Config.KETO_QUEUE_PROCESS_INTERVAL_MS))
-      const currentQueue = rolePermissionChangeProcessor.getQueue()
+      const currentQueue = ketoChangeProcessor.getQueue()
       expect(currentQueue.length).toEqual(0)
     })
 
@@ -76,8 +78,8 @@ describe('role-permission-change-processor', (): void => {
       const rolePermissionCombos = [
         'sampleRole2:samplePermission2'
       ]
-      rolePermissionChangeProcessor.addToQueue(rolePermissionCombos)
-      const currentQueue = rolePermissionChangeProcessor.getQueue()
+      ketoChangeProcessor.addToQueue(rolePermissionCombos, spyUpdateAllRolePermissions)
+      const currentQueue = ketoChangeProcessor.getQueue()
       expect(currentQueue.length).toEqual(1)
     })
     it('queued item should be processed and throw an error this time', async () => {
@@ -86,12 +88,12 @@ describe('role-permission-change-processor', (): void => {
         new Error('Some Error')
       )
       await new Promise(resolve => setTimeout(resolve, Config.KETO_QUEUE_PROCESS_INTERVAL_MS))
-      const currentQueue = rolePermissionChangeProcessor.getQueue()
+      const currentQueue = ketoChangeProcessor.getQueue()
       expect(currentQueue.length).toEqual(1)
       expect(spyUpdateAllRolePermissions).toHaveBeenCalled()
     })
     it('stop processing', async () => {
-      rolePermissionChangeProcessor.destroy()
+      ketoChangeProcessor.destroy()
     })
   })
 })
