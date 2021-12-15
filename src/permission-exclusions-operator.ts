@@ -68,11 +68,14 @@ const k8sApiCustomObjects = kc.makeApiClient(k8s.CustomObjectsApi)
 const watch = new k8s.Watch(kc)
 
 async function onEvent(phase: string, apiObj: any) {
-
+  console.log(apiObj)
   // Ignore status updates
-  if (phase === 'MODIFIED' && apiObj.status) {
-    return
-  }
+  // TODO: the following condition is not working
+  // Store the param 'generation' in the apiObj in store and process the request only if its changed
+  ^^ See above
+  // if (phase === 'MODIFIED' && apiObj.status) {
+  //   return
+  // }
   logger.info(`Received event in phase ${phase} for the resource ${apiObj?.metadata?.name}`)
   const resourceName = apiObj?.metadata?.name
   const permissionsA = apiObj?.spec?.permissionsA
@@ -88,7 +91,6 @@ async function onEvent(phase: string, apiObj: any) {
           permissionsB: (<any>item[1]).permissionsB
         }
       })
-
 
       // Validate the resultant calculated permission exclusions with role permission assignments and user role mappings
       try {
