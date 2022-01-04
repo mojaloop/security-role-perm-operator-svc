@@ -32,6 +32,9 @@
 import { PermissionExclusionsValidator, UserRole, RolePermissions, PermissionExclusions } from '../../../src/validation/permission-exclusions'
 import Config from '../../../src/shared/config'
 import { ValidationError } from '../../../src/validation/validation-error'
+import * as keto from '@ory/keto-client'
+
+jest.mock('@ory/keto-client')
 
 const permissionExclusionsValidator = new PermissionExclusionsValidator(Config)
 
@@ -154,9 +157,194 @@ describe('permission-exclusions', (): void => {
         ]
         expect(() => permissionExclusionsValidator.validateUserRolePermissions(userRoles, rolePermissions, permissionExclusions)).toThrow(ValidationError)
       })
-      // it('When already existing permission is passed', async () => {
-      //   permissionExclusionsValidator.validateUserPermissions('user1', ['permissionB1'])
-      // })
+    })
+  })
+  describe('validateRolePermissionsAndPermissionExclusions', (): void => {
+    describe('Happy Path', (): void => {
+      let spyGetRelationTuples: jest.Mock
+      beforeAll(() => {
+        spyGetRelationTuples = permissionExclusionsValidator.oryKetoReadApi.getRelationTuples as jest.Mock
+        const sampleRelationTupleData = {
+          relation_tuples: [
+            {
+              namespace: 'role',
+              object: 'ROLE1',
+              relation: 'member',
+              subject: 'user1'
+            }
+          ]
+        }
+        spyGetRelationTuples.mockResolvedValue({
+          status: 200,
+          statusText: 'OK',
+          config: {},
+          headers: {},
+          data: sampleRelationTupleData
+        })
+      })
+      it('Validate the role permissions and permission exclusion', async () => {
+        const rolePermissions: RolePermissions[] = [
+          {
+            rolename: 'ROLE1',
+            permissions: [
+              'PERMA1',
+              'PERMA2'
+            ]
+          },
+          {
+            rolename: 'ROLE2',
+            permissions: [
+              'PERMB1',
+              'PERMB2'
+            ]
+          }
+        ]
+        const permissionExclusions: PermissionExclusions[] = [
+          {
+            permissionsA: [
+              'PERMA1'
+            ],
+            permissionsB: [
+              'PERMC1'
+            ]
+          }
+        ]
+        permissionExclusionsValidator.validateRolePermissionsAndPermissionExclusions(rolePermissions, permissionExclusions)
+      })
+    })
+  })
+  describe('validatePermissionExclusions', (): void => {
+    describe('Happy Path', (): void => {
+      let spyGetRelationTuples: jest.Mock
+      beforeAll(() => {
+        spyGetRelationTuples = permissionExclusionsValidator.oryKetoReadApi.getRelationTuples as jest.Mock
+        const sampleRelationTupleData1 = {
+          relation_tuples: [
+            {
+              namespace: 'permission',
+              object: 'PERMA1',
+              relation: 'granted',
+              subject: 'role:ROLE1'
+            },
+            {
+              namespace: 'permission',
+              object: 'PERMA2',
+              relation: 'granted',
+              subject: 'role:ROLE1'
+            },
+            {
+              namespace: 'permission',
+              object: 'PERMB1',
+              relation: 'granted',
+              subject: 'role:ROLE2'
+            },
+            {
+              namespace: 'permission',
+              object: 'PERMB2',
+              relation: 'granted',
+              subject: 'role:ROLE2'
+            }
+          ]
+        }
+        spyGetRelationTuples.mockResolvedValueOnce({
+          status: 200,
+          statusText: 'OK',
+          config: {},
+          headers: {},
+          data: sampleRelationTupleData1
+        })
+        const sampleRelationTupleData2 = {
+          relation_tuples: [
+            {
+              namespace: 'role',
+              object: 'ROLE1',
+              relation: 'member',
+              subject: 'user1'
+            }
+          ]
+        }
+        spyGetRelationTuples.mockResolvedValueOnce({
+          status: 200,
+          statusText: 'OK',
+          config: {},
+          headers: {},
+          data: sampleRelationTupleData2
+        })
+      })
+      it('Validate the role permissions and permission exclusion', async () => {
+        const permissionExclusions: PermissionExclusions[] = [
+          {
+            permissionsA: [
+              'PERMA1'
+            ],
+            permissionsB: [
+              'PERMC1'
+            ]
+          }
+        ]
+        permissionExclusionsValidator.validatePermissionExclusions(permissionExclusions)
+      })
+    })
+  })
+  describe('validateRolePermissions', (): void => {
+    describe('Happy Path', (): void => {
+      let spyGetRelationTuples: jest.Mock
+      beforeAll(() => {
+        spyGetRelationTuples = permissionExclusionsValidator.oryKetoReadApi.getRelationTuples as jest.Mock
+        const sampleRelationTupleData1 = {
+          relation_tuples: [
+            {
+              namespace: 'permission',
+              object: 'PERMA1',
+              relation: 'excludes',
+              subject: 'permission:PERMC1'
+            }
+          ]
+        }
+        spyGetRelationTuples.mockResolvedValueOnce({
+          status: 200,
+          statusText: 'OK',
+          config: {},
+          headers: {},
+          data: sampleRelationTupleData1
+        })
+        const sampleRelationTupleData2 = {
+          relation_tuples: [
+            {
+              namespace: 'role',
+              object: 'ROLE1',
+              relation: 'member',
+              subject: 'user1'
+            }
+          ]
+        }
+        spyGetRelationTuples.mockResolvedValueOnce({
+          status: 200,
+          statusText: 'OK',
+          config: {},
+          headers: {},
+          data: sampleRelationTupleData2
+        })
+      })
+      it('Validate the role permissions and permission exclusion', async () => {
+        const rolePermissions: RolePermissions[] = [
+          {
+            rolename: 'ROLE1',
+            permissions: [
+              'PERMA1',
+              'PERMA2'
+            ]
+          },
+          {
+            rolename: 'ROLE2',
+            permissions: [
+              'PERMB1',
+              'PERMB2'
+            ]
+          }
+        ]
+        permissionExclusionsValidator.validateRolePermissions(rolePermissions)
+      })
     })
   })
 })

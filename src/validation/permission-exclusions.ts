@@ -69,33 +69,36 @@ export class PermissionExclusionsValidator {
     )
   }
 
-  async validateUserPermissions (userId: string, permissionsToAssign: Set<string>) : Promise<void> {
-    const validationErrors : string[] = []
-    // Iterate though the list of new permissions and find out if it conflicts with other permissions of the user
-    // logger.info(JSON.stringify(newPermissions, null, 2))
-    const newPermissions = Array.from(permissionsToAssign.values())
-    let validationFailed = false
-    for (let i = 0; i < newPermissions.length; i++) {
-      try {
-        const checkPermissionsExclusionsResponse = await this.oryKetoReadApi.getCheck(
-          'permission',
-          newPermissions[i],
-          'excludes',
-          userId
-        )
-        const permissionExclusionClash = checkPermissionsExclusionsResponse.data?.allowed || false
-        if (permissionExclusionClash) {
-          validationErrors.push(`ERROR: permission '${newPermissions[i]}' can not be assigned`)
-          validationFailed = true
-        }
-      } catch (err) {}
-    }
-    logger.info(validationErrors)
-    if (validationFailed) {
-      throw new ValidationError(validationErrors)
-    }
-    // TODO: We can stop the validation when the first error occurs based on a config param like quickCheck
-  }
+  // // Commenting the following because this logic is not being used anywhere and user permission validation is done
+  // // a different way
+  // // -------------------
+  // async validateUserPermissions (userId: string, permissionsToAssign: Set<string>) : Promise<void> {
+  //   const validationErrors : string[] = []
+  //   // Iterate though the list of new permissions and find out if it conflicts with other permissions of the user
+  //   // logger.info(JSON.stringify(newPermissions, null, 2))
+  //   const newPermissions = Array.from(permissionsToAssign.values())
+  //   let validationFailed = false
+  //   for (let i = 0; i < newPermissions.length; i++) {
+  //     try {
+  //       const checkPermissionsExclusionsResponse = await this.oryKetoReadApi.getCheck(
+  //         'permission',
+  //         newPermissions[i],
+  //         'excludes',
+  //         userId
+  //       )
+  //       const permissionExclusionClash = checkPermissionsExclusionsResponse.data?.allowed || false
+  //       if (permissionExclusionClash) {
+  //         validationErrors.push(`ERROR: permission '${newPermissions[i]}' can not be assigned`)
+  //         validationFailed = true
+  //       }
+  //     } catch (err) {}
+  //   }
+  //   logger.info(validationErrors)
+  //   if (validationFailed) {
+  //     throw new ValidationError(validationErrors)
+  //   }
+  //   // TODO: We can stop the validation when the first error occurs based on a config param like quickCheck
+  // }
 
   _getPermissionExclusionsForPermission (
     permission: string,
