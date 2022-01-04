@@ -69,7 +69,8 @@ jest.mock('../../src/lib/keto-change-processor', () => {
 
 const sampleApiObj = {
   metadata: {
-    name: 'sampleResource1'
+    name: 'sampleResource1',
+    generation: 1
   },
   spec: {
     permissionsA: [
@@ -83,7 +84,8 @@ const sampleApiObj = {
 
 const wrongApiObjWithoutPermissionsB = {
   metadata: {
-    name: 'sampleResource1'
+    name: 'sampleResource1',
+    generation: 1
   },
   spec: {
     permissionsA: [
@@ -94,7 +96,8 @@ const wrongApiObjWithoutPermissionsB = {
 
 const wrongApiObjWithoutPermissionsA = {
   metadata: {
-    name: 'sampleResource1'
+    name: 'sampleResource1',
+    generation: 1
   },
   spec: {
     permissionsB: [
@@ -164,14 +167,14 @@ describe('Permission Exclusion operator', (): void => {
       spyWatch.mockImplementation(createWatchEventImplementation('ADDED', sampleApiObj))
       await startOperator()
       expect(spyWatch).toHaveBeenCalledTimes(1)
-      expect(spyUpdateResource).toHaveBeenCalledWith('sampleResource1', ['samplePermissionA1'], ['samplePermissionB1'])
+      expect(spyUpdateResource).toHaveBeenCalledWith('sampleResource1', '1', ['samplePermissionA1'], ['samplePermissionB1'])
       expect(spyAddToQueue).toHaveBeenCalledTimes(1)
     })
     it('MODIFIED phase event', async () => {
       spyWatch.mockImplementation(createWatchEventImplementation('MODIFIED', sampleApiObj))
       await startOperator()
       expect(spyWatch).toHaveBeenCalledTimes(1)
-      expect(spyUpdateResource).toHaveBeenCalledWith('sampleResource1', ['samplePermissionA1'], ['samplePermissionB1'])
+      expect(spyUpdateResource).toHaveBeenCalledWith('sampleResource1', '1', ['samplePermissionA1'], ['samplePermissionB1'])
       expect(spyAddToQueue).toHaveBeenCalledTimes(1)
     })
     it('DELETED phase event', async () => {

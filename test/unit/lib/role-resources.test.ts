@@ -43,7 +43,7 @@ describe('role-resources', (): void => {
     })
     // Add Resources
     it('update a new role resource', (): void => {
-      roleResourceStore.updateRoleResource('sampleResource1', 'sampleRole1', ['samplePermission1'])
+      roleResourceStore.updateRoleResource('sampleResource1', '1', 'sampleRole1', ['samplePermission1'])
       const data = roleResourceStore.getData()
       expect(data).toHaveProperty('sampleResource1')
       expect(data['sampleResource1']).toHaveProperty('role')
@@ -60,7 +60,7 @@ describe('role-resources', (): void => {
       expect(data[0]).toEqual('sampleRole1:samplePermission1')
     })
     it('update another new role resource with two permissions', (): void => {
-      roleResourceStore.updateRoleResource('sampleResource2', 'sampleRole2', ['samplePermission1', 'samplePermission2'])
+      roleResourceStore.updateRoleResource('sampleResource2', '1', 'sampleRole2', ['samplePermission1', 'samplePermission2'])
       const data = roleResourceStore.getData()
       expect(data).toHaveProperty('sampleResource2')
       expect(data['sampleResource2']).toHaveProperty('role')
@@ -80,7 +80,7 @@ describe('role-resources', (): void => {
       expect(data).toContain('sampleRole2:samplePermission2')
     })
     it('update third resource with same role and different permissions', (): void => {
-      roleResourceStore.updateRoleResource('sampleResource3', 'sampleRole2', ['samplePermission2', 'samplePermission3'])
+      roleResourceStore.updateRoleResource('sampleResource3', '1', 'sampleRole2', ['samplePermission2', 'samplePermission3'])
       const data = roleResourceStore.getData()
       expect(data).toHaveProperty('sampleResource3')
       expect(data['sampleResource3']).toHaveProperty('role')
@@ -124,7 +124,7 @@ describe('role-resources', (): void => {
       expect(data).not.toContain('sampleRole1:samplePermission1')
     })
     it('update existing resource with same role and different permissions', (): void => {
-      roleResourceStore.updateRoleResource('sampleResource2', 'sampleRole2', ['samplePermission4', 'samplePermission5'])
+      roleResourceStore.updateRoleResource('sampleResource2', '2', 'sampleRole2', ['samplePermission4', 'samplePermission5'])
       const data = roleResourceStore.getData()
       expect(data).toHaveProperty('sampleResource2')
       expect(data['sampleResource2']).toHaveProperty('role')
@@ -147,5 +147,4 @@ describe('role-resources', (): void => {
       expect(() => roleResourceStore.deleteRoleResource('sampleResource4')).not.toThrow()
     })
   })
-
 })

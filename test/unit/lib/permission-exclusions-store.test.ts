@@ -43,7 +43,7 @@ describe('permission-exclusions-store', (): void => {
     })
     // Add Resources
     it('update a new resource', (): void => {
-      permissionExclusionResources.updateResource('sampleResource1', ['samplePermissionA1'], ['samplePermissionB1'])
+      permissionExclusionResources.updateResource('sampleResource1', '1', ['samplePermissionA1'], ['samplePermissionB1'])
       const data = permissionExclusionResources.getData()
       expect(data).toHaveProperty('sampleResource1')
       expect(data['sampleResource1']).toHaveProperty('permissionsA')
@@ -63,7 +63,7 @@ describe('permission-exclusions-store', (): void => {
       expect(data).toContain('samplePermissionB1:samplePermissionA1')
     })
     it('update another new resource with two permissions', (): void => {
-      permissionExclusionResources.updateResource('sampleResource2', ['samplePermissionC1', 'samplePermissionC2'], ['samplePermissionD1', 'samplePermissionD2'])
+      permissionExclusionResources.updateResource('sampleResource2', '1', ['samplePermissionC1', 'samplePermissionC2'], ['samplePermissionD1', 'samplePermissionD2'])
       const data = permissionExclusionResources.getData()
       expect(data).toHaveProperty('sampleResource2')
       expect(data['sampleResource2']).toHaveProperty('permissionsA')
@@ -93,7 +93,7 @@ describe('permission-exclusions-store', (): void => {
       expect(data).toContain('samplePermissionD2:samplePermissionC2')
     })
     it('update third resource with different permission setB', (): void => {
-      permissionExclusionResources.updateResource('sampleResource3', ['samplePermissionA1'], ['samplePermissionE1'])
+      permissionExclusionResources.updateResource('sampleResource3', '1', ['samplePermissionA1'], ['samplePermissionE1'])
       const data = permissionExclusionResources.getData()
       expect(data).toHaveProperty('sampleResource1')
       expect(data['sampleResource3']).toHaveProperty('permissionsA')
@@ -148,7 +148,7 @@ describe('permission-exclusions-store', (): void => {
       expect(data).not.toContain('samplePermissionB1:samplePermissionA1')
     })
     it('update existing resource with same permission set A and different permission set B', (): void => {
-      permissionExclusionResources.updateResource('sampleResource2', ['samplePermissionC1', 'samplePermissionC2'], ['samplePermissionF1'])
+      permissionExclusionResources.updateResource('sampleResource2', '2', ['samplePermissionC1', 'samplePermissionC2'], ['samplePermissionF1'])
       const data = permissionExclusionResources.getData()
       expect(data).toHaveProperty('sampleResource2')
       expect(data['sampleResource2']).toHaveProperty('permissionsA')

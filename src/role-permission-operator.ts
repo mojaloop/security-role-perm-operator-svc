@@ -74,7 +74,7 @@ async function onEvent(phase: string, apiObj: any) {
   const resourceName = apiObj?.metadata?.name
   const role = apiObj?.spec?.role
   const permissions = apiObj?.spec?.permissions
-  const generation = apiObj?.metadata?.generation
+  const generation = apiObj?.metadata?.generation + ''
   // Ignore status updates by comparing generation number
   if (phase === 'MODIFIED' && roleResourceStore.checkHash(resourceName, generation)) {
     return

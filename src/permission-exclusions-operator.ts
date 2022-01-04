@@ -71,7 +71,7 @@ async function onEvent(phase: string, apiObj: any) {
   console.log(apiObj)
   logger.info(`Received event in phase ${phase} for the resource ${apiObj?.metadata?.name}`)
   const resourceName = apiObj?.metadata?.name
-  const generation = apiObj?.metadata?.generation
+  const generation = apiObj?.metadata?.generation + ''
   const permissionsA = apiObj?.spec?.permissionsA
   const permissionsB = apiObj?.spec?.permissionsB
   // Ignore status updates by comparing generation number
