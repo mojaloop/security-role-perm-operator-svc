@@ -87,64 +87,71 @@ const permissionExclusions: PermissionExclusions[] = [
   }
 ]
 
-describe('Permission Exclusion Validator', (): void => {
-  it('Clear all the K8S custom resources', async () => {
-    // Remove user role assignments
-    try {
-      const postData = {
-        username: 'user1',
-        roles: []
-      }
-      await axios.post(Config.PERMISSION_OPERATOR_API_URL + '/assignment/user-role', postData)
-    } catch (err) {}
+const cleanup = async () => {
+  // Remove user role assignments
+  try {
+    const postData = {
+      username: 'user1',
+      roles: []
+    }
+    await axios.post(Config.PERMISSION_OPERATOR_API_URL + '/assignment/user-role', postData)
+  } catch (err) {}
 
-    // Remove role permission mappings
-    try {
-      await k8sApiCustomObjects.deleteNamespacedCustomObject(
-        Config.WATCH_RESOURCE_GROUP,
-        Config.WATCH_RESOURCE_VERSION,
-        Config.WATCH_NAMESPACE,
-        Config.WATCH_ROLE_PERMISSIONS_RESOURCE_PLURAL,
-        role1Resource.metadata.name
-      )
-    } catch (err) {}
-    try {
-      await k8sApiCustomObjects.deleteNamespacedCustomObject(
-        Config.WATCH_RESOURCE_GROUP,
-        Config.WATCH_RESOURCE_VERSION,
-        Config.WATCH_NAMESPACE,
-        Config.WATCH_ROLE_PERMISSIONS_RESOURCE_PLURAL,
-        role2Resource.metadata.name
-      )
-    } catch (err) {}
-    try {
-      await k8sApiCustomObjects.deleteNamespacedCustomObject(
-        Config.WATCH_RESOURCE_GROUP,
-        Config.WATCH_RESOURCE_VERSION,
-        Config.WATCH_NAMESPACE,
-        Config.WATCH_ROLE_PERMISSIONS_RESOURCE_PLURAL,
-        role3Resource.metadata.name
-      )
-    } catch (err) {}
-    // Remove permission exclusions
-    try {
-      await k8sApiCustomObjects.deleteNamespacedCustomObject(
-        Config.WATCH_RESOURCE_GROUP,
-        Config.WATCH_RESOURCE_VERSION,
-        Config.WATCH_NAMESPACE,
-        Config.WATCH_PERMISSION_EXCLUSIONS_RESOURCE_PLURAL,
-        pe1Resource.metadata.name
-      )
-    } catch (err) {}
-    try {
-      await k8sApiCustomObjects.deleteNamespacedCustomObject(
-        Config.WATCH_RESOURCE_GROUP,
-        Config.WATCH_RESOURCE_VERSION,
-        Config.WATCH_NAMESPACE,
-        Config.WATCH_PERMISSION_EXCLUSIONS_RESOURCE_PLURAL,
-        pe2Resource.metadata.name
-      )
-    } catch (err) {}
+  // Remove role permission mappings
+  try {
+    await k8sApiCustomObjects.deleteNamespacedCustomObject(
+      Config.WATCH_RESOURCE_GROUP,
+      Config.WATCH_RESOURCE_VERSION,
+      Config.WATCH_NAMESPACE,
+      Config.WATCH_ROLE_PERMISSIONS_RESOURCE_PLURAL,
+      role1Resource.metadata.name
+    )
+  } catch (err) {}
+  try {
+    await k8sApiCustomObjects.deleteNamespacedCustomObject(
+      Config.WATCH_RESOURCE_GROUP,
+      Config.WATCH_RESOURCE_VERSION,
+      Config.WATCH_NAMESPACE,
+      Config.WATCH_ROLE_PERMISSIONS_RESOURCE_PLURAL,
+      role2Resource.metadata.name
+    )
+  } catch (err) {}
+  try {
+    await k8sApiCustomObjects.deleteNamespacedCustomObject(
+      Config.WATCH_RESOURCE_GROUP,
+      Config.WATCH_RESOURCE_VERSION,
+      Config.WATCH_NAMESPACE,
+      Config.WATCH_ROLE_PERMISSIONS_RESOURCE_PLURAL,
+      role3Resource.metadata.name
+    )
+  } catch (err) {}
+  // Remove permission exclusions
+  try {
+    await k8sApiCustomObjects.deleteNamespacedCustomObject(
+      Config.WATCH_RESOURCE_GROUP,
+      Config.WATCH_RESOURCE_VERSION,
+      Config.WATCH_NAMESPACE,
+      Config.WATCH_PERMISSION_EXCLUSIONS_RESOURCE_PLURAL,
+      pe1Resource.metadata.name
+    )
+  } catch (err) {}
+  try {
+    await k8sApiCustomObjects.deleteNamespacedCustomObject(
+      Config.WATCH_RESOURCE_GROUP,
+      Config.WATCH_RESOURCE_VERSION,
+      Config.WATCH_NAMESPACE,
+      Config.WATCH_PERMISSION_EXCLUSIONS_RESOURCE_PLURAL,
+      pe2Resource.metadata.name
+    )
+  } catch (err) {}
+}
+
+describe('Permission Exclusion Validator', (): void => {
+  beforeAll(async () => {
+    await cleanup()
+  })
+  afterAll(async () => {
+    await cleanup()
   })
   it('Wait for some time', async () => {
     await new Promise(resolve => setTimeout(resolve, 3 * Config.WAIT_TIME_MS_AFTER_K8S_RESOURCE_CHANGE))

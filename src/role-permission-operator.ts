@@ -70,14 +70,15 @@ const k8sApiCustomObjects = kc.makeApiClient(k8s.CustomObjectsApi)
 const watch = new k8s.Watch(kc)
 
 async function onEvent(phase: string, apiObj: any) {
-  // Ignore status updates
-  if (phase === 'MODIFIED' && apiObj.status) {
-    return
-  }
   logger.info(`Received event in phase ${phase} for the resource ${apiObj?.metadata?.name}`)
   const resourceName = apiObj?.metadata?.name
   const role = apiObj?.spec?.role
   const permissions = apiObj?.spec?.permissions
+  const generation = apiObj?.metadata?.generation
+  // Ignore status updates by comparing generation number
+  if (phase === 'MODIFIED' && roleResourceStore.checkHash(resourceName, generation)) {
+    return
+  }
   if (resourceName && role && permissions) {
     if (phase === 'ADDED' || phase === 'MODIFIED') {
       // Get the temporary consolidated role assignments based on already stored roles
@@ -92,7 +93,7 @@ async function onEvent(phase: string, apiObj: any) {
       try {
         await ketoChangeProcessor.waitForQueueToBeProcessed()
         await permissionExclusionsValidator.validateRolePermissions(rolePermissions)
-        roleResourceStore.updateRoleResource(resourceName, role, permissions)
+        roleResourceStore.updateRoleResource(resourceName, generation, role, permissions)
         // Set the status of our resource
         await _updateResourceStatus(apiObj, 'VALIDATED')
       } catch (err) {

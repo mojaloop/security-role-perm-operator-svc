@@ -51,10 +51,19 @@ class RoleResources {
     }
   }
 
-  updateRoleResource (resourceName: string, role: string, permissions: string[]) : void {
+  updateRoleResource (resourceName: string, hash: string, role: string, permissions: string[]) : void {
     this._checkResource(resourceName)
     this.roleResourceData[resourceName].role = role
     this.roleResourceData[resourceName].permissions = permissions
+    this.roleResourceData[resourceName].hash = hash
+  }
+
+  checkHash (resourceName: string, hash: string) : boolean {
+    if (this.roleResourceData[resourceName] && this.roleResourceData[resourceName].hash === hash) {
+      return true
+    } else {
+      return false
+    }
   }
 
   deleteRoleResource (resourceName: string) : void {

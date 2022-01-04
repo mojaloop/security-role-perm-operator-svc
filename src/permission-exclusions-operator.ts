@@ -69,20 +69,18 @@ const watch = new k8s.Watch(kc)
 
 async function onEvent(phase: string, apiObj: any) {
   console.log(apiObj)
-  // Ignore status updates
-  // TODO: the following condition is not working
-  // Store the param 'generation' in the apiObj in store and process the request only if its changed
-  ^^ See above
-  // if (phase === 'MODIFIED' && apiObj.status) {
-  //   return
-  // }
   logger.info(`Received event in phase ${phase} for the resource ${apiObj?.metadata?.name}`)
   const resourceName = apiObj?.metadata?.name
+  const generation = apiObj?.metadata?.generation
   const permissionsA = apiObj?.spec?.permissionsA
   const permissionsB = apiObj?.spec?.permissionsB
+  // Ignore status updates by comparing generation number
+  if (phase === 'MODIFIED' && permissionExclusionResourceStore.checkHash(resourceName, generation)) {
+    return
+  }
+
   if (resourceName && permissionsA && permissionsB) {
     if (phase === 'ADDED' || phase === 'MODIFIED') {
-
       // Get the temporary consolidated permissions based on already stored permissions
       const consolidatedPermissionExclusions = permissionExclusionResourceStore.getConsolidatedTempData(resourceName, permissionsA, permissionsB)
       const permissionExclusions: PermissionExclusions[] = Object.entries(consolidatedPermissionExclusions).map(item => {
@@ -96,7 +94,7 @@ async function onEvent(phase: string, apiObj: any) {
       try {
         await ketoChangeProcessor.waitForQueueToBeProcessed()
         await permissionExclusionsValidator.validatePermissionExclusions(permissionExclusions)
-        permissionExclusionResourceStore.updateResource(resourceName, permissionsA, permissionsB)
+        permissionExclusionResourceStore.updateResource(resourceName, generation, permissionsA, permissionsB)
         // Set the status of our resource
 
         await _updateResourceStatus(apiObj, 'VALIDATED')

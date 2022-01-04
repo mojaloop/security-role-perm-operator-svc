@@ -34,6 +34,7 @@ const mockStartServer = jest.fn()
 
 import Config from '../../../src/shared/config'
 import ServiceServer from '../../../src/server'
+jest.mock('@kubernetes/client-node')
 
 jest.mock('@hapi/hapi', () => {
   return {

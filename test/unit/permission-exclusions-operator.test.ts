@@ -39,7 +39,7 @@ import { startOperator } from '../../src/permission-exclusions-operator'
 
 jest.mock('../../src/lib/permission-exclusions-store')
 jest.mock('../../src/validation/permission-exclusions')
-jest.mock('@kubernetes/client-node');
+jest.mock('@kubernetes/client-node')
 
 const k8sWatchInstance = (<any>k8s.Watch).mock.instances[0]
 

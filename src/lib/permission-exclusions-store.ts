@@ -51,10 +51,19 @@ class PermissionExclusionResources {
     }
   }
 
-  updateResource (resourceName: string, permissionsA: string[], permissionsB: string[]) : void {
+  updateResource (resourceName: string, hash: string, permissionsA: string[], permissionsB: string[]) : void {
     this._checkResource(resourceName)
     this.permissionExclusionResourceData[resourceName].permissionsA = permissionsA
     this.permissionExclusionResourceData[resourceName].permissionsB = permissionsB
+    this.permissionExclusionResourceData[resourceName].hash = hash
+  }
+
+  checkHash (resourceName: string, hash: string) : boolean {
+    if (this.permissionExclusionResourceData[resourceName] && this.permissionExclusionResourceData[resourceName].hash === hash) {
+      return true
+    } else {
+      return false
+    }
   }
 
   deleteResource (resourceName: string) : void {
