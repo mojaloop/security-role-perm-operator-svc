@@ -61,6 +61,7 @@ describe('start', () => {
     spyStartServer.mockClear()
   })
   it('should call server.start method', async () => {
+    jest.useFakeTimers()
     const result = await ServiceServer.run(Config)
     expect(spyStartServer).toHaveBeenCalledTimes(1)
     expect(result).toHaveProperty('info')

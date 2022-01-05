@@ -163,6 +163,7 @@ describe('Permission Exclusion operator', (): void => {
       spyWatch.mockClear()
     })
     it('startOperator should call the function watch', async () => {
+      jest.useFakeTimers()
       await startOperator()
       expect(spyWatch).toHaveBeenCalledTimes(1)
     })

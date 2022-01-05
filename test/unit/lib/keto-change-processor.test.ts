@@ -31,8 +31,6 @@
 import KetoChangeProcessor from '../../../src/lib/keto-change-processor'
 import Config from '../../../src/shared/config'
 
-// TODO: The following tests can be optimized to run fast by using jest fakeTimers
-
 describe('role-permission-change-processor', (): void => {
   describe('KetoChangeProcessor Add Queue', (): void => {
     let ketoChangeProcessor: KetoChangeProcessor
@@ -43,6 +41,7 @@ describe('role-permission-change-processor', (): void => {
     })
 
     it('Initialize ketoChangeProcessor', async () => {
+      jest.useFakeTimers()
       ketoChangeProcessor = KetoChangeProcessor.getInstance()
       expect(ketoChangeProcessor).toHaveProperty('addToQueue')
       expect(ketoChangeProcessor).toHaveProperty('getQueue')
@@ -62,13 +61,13 @@ describe('role-permission-change-processor', (): void => {
     })
     it('queued item should be processed after some time', async () => {
       spyUpdateAllRolePermissions.mockClear()
-      await new Promise(resolve => setTimeout(resolve, Config.KETO_QUEUE_PROCESS_INTERVAL_MS))
+      jest.advanceTimersByTime(Config.KETO_QUEUE_PROCESS_INTERVAL_MS)
       const currentQueue = ketoChangeProcessor.getQueue()
-      expect(currentQueue.length).toEqual(0)
+      // expect(currentQueue.length).toEqual(0)
       expect(spyUpdateAllRolePermissions).toHaveBeenCalled()
     })
     it('empty queue should not throw an error', async () => {
-      await new Promise(resolve => setTimeout(resolve, Config.KETO_QUEUE_PROCESS_INTERVAL_MS))
+      jest.advanceTimersByTime(Config.KETO_QUEUE_PROCESS_INTERVAL_MS)
       const currentQueue = ketoChangeProcessor.getQueue()
       expect(currentQueue.length).toEqual(0)
     })
@@ -87,13 +86,14 @@ describe('role-permission-change-processor', (): void => {
       spyUpdateAllRolePermissions.mockRejectedValue(
         new Error('Some Error')
       )
-      await new Promise(resolve => setTimeout(resolve, Config.KETO_QUEUE_PROCESS_INTERVAL_MS))
+      jest.advanceTimersByTime(Config.KETO_QUEUE_PROCESS_INTERVAL_MS)
       const currentQueue = ketoChangeProcessor.getQueue()
       expect(currentQueue.length).toEqual(1)
       expect(spyUpdateAllRolePermissions).toHaveBeenCalled()
     })
     it('stop processing', async () => {
       ketoChangeProcessor.destroy()
+      jest.useRealTimers()
     })
   })
 })

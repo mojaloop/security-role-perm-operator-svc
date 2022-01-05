@@ -176,6 +176,7 @@ describe('Role Permission operator', (): void => {
     })
     it('Done callback from watch should start the loop again', async () => {
       spyWatch.mockImplementation(createWatchDoneImplementation('Some Error'))
+      jest.useFakeTimers()
       await startOperator()
       expect(spyWatch).toHaveBeenCalledTimes(1)
     })
@@ -239,6 +240,9 @@ describe('Role Permission operator', (): void => {
       await startOperator()
       expect(spyUpdateRoleResource).not.toHaveBeenCalled()
       expect(spyAddToQueue).not.toHaveBeenCalled()
+    })
+    it('Use real timers', async () => {
+      jest.useRealTimers()
     })
   })
   // describe('onEvent', (): void => {
