@@ -36,6 +36,7 @@ const mockAddToQueue = jest.fn()
 import * as k8s from '@kubernetes/client-node'
 import { PermissionExclusionResources } from '../../src/lib/permission-exclusions-store'
 import { startOperator } from '../../src/permission-exclusions-operator'
+import { PermissionExclusionsValidator, UserRole, RolePermissions, PermissionExclusions } from '../../src/validation/permission-exclusions'
 
 jest.mock('../../src/lib/permission-exclusions-store')
 jest.mock('../../src/validation/permission-exclusions')
@@ -146,9 +147,11 @@ describe('Permission Exclusion operator', (): void => {
   let spyDeleteResource: jest.Mock
   let spyAddToQueue: jest.Mock
   let spyWatch: jest.Mock
+  let peValidatorInstance: any
   beforeAll(() => {
     spyUpdateResource = (permissionExclusionResourceStoreObject.updateResource as jest.Mock)
     spyDeleteResource = (permissionExclusionResourceStoreObject.deleteResource as jest.Mock)
+    peValidatorInstance = (PermissionExclusionsValidator as jest.Mock).mock.instances[0]
     spyAddToQueue = mockAddToQueue
     spyWatch = k8sWatchInstance.watch
   })
@@ -210,6 +213,11 @@ describe('Permission Exclusion operator', (): void => {
     })
     it('startOperator should catch the error thrown by K8S watch', async () => {
       spyWatch.mockRejectedValue(new Error('Some K8S watch error'))
+      await expect(startOperator).not.toThrowError()
+      expect(spyWatch).toHaveBeenCalledTimes(1)
+    })
+    it('startOperator should catch the error thrown by K8S watch', async () => {
+      (peValidatorInstance.validatePermissionExclusions as jest.Mock).mockRejectedValue(new Error('Some error'))
       await expect(startOperator).not.toThrowError()
       expect(spyWatch).toHaveBeenCalledTimes(1)
     })

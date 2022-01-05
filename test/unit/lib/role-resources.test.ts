@@ -28,7 +28,7 @@
  --------------
  ******/
 
- import { RoleResources } from "../../../src/lib/role-resources";
+import { RoleResources } from "../../../src/lib/role-resources";
 
 describe('role-resources', (): void => {
   describe('Add / Update role resources', (): void => {
@@ -58,6 +58,11 @@ describe('role-resources', (): void => {
       expect(Array.isArray(data)).toBe(true)
       expect(data.length).toEqual(1)
       expect(data[0]).toEqual('sampleRole1:samplePermission1')
+    })
+    it('getConsolidatedTempData', (): void => {
+      const tempData = roleResourceStore.getConsolidatedTempData('sampleResourceTemp', 'sampleRoleTemp', ['samplePermissionTemp'])
+      expect(tempData).toHaveProperty('sampleResource1')
+      expect(tempData).toHaveProperty('sampleResourceTemp')
     })
     it('update another new role resource with two permissions', (): void => {
       roleResourceStore.updateRoleResource('sampleResource2', '1', 'sampleRole2', ['samplePermission1', 'samplePermission2'])

@@ -34,7 +34,7 @@ describe('permission-exclusions-store', (): void => {
   describe('Add / Update permission exclusion resources', (): void => {
     var permissionExclusionResources: PermissionExclusionResources
     beforeAll(() => {
-      permissionExclusionResources = new PermissionExclusionResources();
+      permissionExclusionResources = new PermissionExclusionResources()
     })
 
     it('getData should be empty initially', (): void => {
@@ -61,6 +61,11 @@ describe('permission-exclusions-store', (): void => {
       expect(data.length).toEqual(2)
       expect(data).toContain('samplePermissionA1:samplePermissionB1')
       expect(data).toContain('samplePermissionB1:samplePermissionA1')
+    })
+    it('getConsolidatedTempData', (): void => {
+      const tempData = permissionExclusionResources.getConsolidatedTempData('sampleResourceTemp', ['samplePermissionATemp'], ['samplePermissionBTemp'])
+      expect(tempData).toHaveProperty('sampleResource1')
+      expect(tempData).toHaveProperty('sampleResourceTemp')
     })
     it('update another new resource with two permissions', (): void => {
       permissionExclusionResources.updateResource('sampleResource2', '1', ['samplePermissionC1', 'samplePermissionC2'], ['samplePermissionD1', 'samplePermissionD2'])
