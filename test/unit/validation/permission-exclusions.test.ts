@@ -77,7 +77,7 @@ describe('permission-exclusions', (): void => {
             ]
           }
         ]
-        permissionExclusionsValidator.validateUserRolePermissions(userRoles, rolePermissions, permissionExclusions)
+        expect(() => permissionExclusionsValidator.validateUserRolePermissions(userRoles, rolePermissions, permissionExclusions)).not.toThrowError()
       })
       it('Validate the permission exclusion', async () => {
         const userRoles: UserRole[] = [
@@ -114,7 +114,7 @@ describe('permission-exclusions', (): void => {
             ]
           }
         ]
-        permissionExclusionsValidator.validateUserRolePermissions(userRoles, rolePermissions, permissionExclusions)
+        expect(() => permissionExclusionsValidator.validateUserRolePermissions(userRoles, rolePermissions, permissionExclusions)).not.toThrowError()
       })
     })
     describe('Unhappy Path', (): void => {
@@ -286,6 +286,76 @@ describe('permission-exclusions', (): void => {
       })
     })
   })
+  describe('validateUserRole', (): void => {
+    describe('Happy Path', (): void => {
+      let spyGetRelationTuples: jest.Mock
+      beforeAll(() => {
+        spyGetRelationTuples = permissionExclusionsValidator.oryKetoReadApi.getRelationTuples as jest.Mock
+        const sampleRelationTupleData1 = {
+          relation_tuples: [
+            {
+              namespace: 'permission',
+              object: 'PERMA1',
+              relation: 'granted',
+              subject: 'role:ROLE1'
+            },
+            {
+              namespace: 'permission',
+              object: 'PERMA2',
+              relation: 'granted',
+              subject: 'role:ROLE1'
+            },
+            {
+              namespace: 'permission',
+              object: 'PERMB1',
+              relation: 'granted',
+              subject: 'role:ROLE2'
+            },
+            {
+              namespace: 'permission',
+              object: 'PERMB2',
+              relation: 'granted',
+              subject: 'role:ROLE2'
+            }
+          ]
+        }
+        spyGetRelationTuples.mockResolvedValueOnce({
+          status: 200,
+          statusText: 'OK',
+          config: {},
+          headers: {},
+          data: sampleRelationTupleData1
+        })
+        const sampleRelationTupleData2 = {
+          relation_tuples: [
+            {
+              namespace: 'permission',
+              object: 'PERMA1',
+              relation: 'excludes',
+              subject: 'permission:PERMC1'
+            }
+          ]
+        }
+        spyGetRelationTuples.mockResolvedValueOnce({
+          status: 200,
+          statusText: 'OK',
+          config: {},
+          headers: {},
+          data: sampleRelationTupleData2
+        })
+      })
+      it('Validate the role permissions and permission exclusion', async () => {
+        const userRole = {
+          username: 'user1',
+          roles: [
+            'ROLE1',
+            'ROLE2'
+          ]
+        }
+        await expect(permissionExclusionsValidator.validateUserRole(userRole)).resolves.toBe(undefined)
+      })
+    })
+  })
   describe('validateRolePermissions', (): void => {
     describe('Happy Path', (): void => {
       let spyGetRelationTuples: jest.Mock
@@ -343,7 +413,7 @@ describe('permission-exclusions', (): void => {
             ]
           }
         ]
-        permissionExclusionsValidator.validateRolePermissions(rolePermissions)
+        await expect(permissionExclusionsValidator.validateRolePermissions(rolePermissions)).resolves.toBe(undefined)
       })
     })
   })
