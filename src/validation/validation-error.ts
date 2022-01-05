@@ -29,7 +29,7 @@
 
 export class ValidationError extends Error {
   validationErrors: string[]
-  constructor(errorMessages: string[]) {
+  constructor (errorMessages: string[]) {
     super(JSON.stringify(errorMessages))
     this.validationErrors = errorMessages
     this.name = 'ValidationError'

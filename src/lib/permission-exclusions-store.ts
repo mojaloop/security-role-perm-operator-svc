@@ -59,6 +59,7 @@ class PermissionExclusionResources {
   }
 
   checkHash (resourceName: string, hash: string) : boolean {
+    // eslint-disable-next-line max-len
     if (this.permissionExclusionResourceData[resourceName] && this.permissionExclusionResourceData[resourceName].hash === hash) {
       return true
     } else {

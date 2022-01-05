@@ -78,6 +78,7 @@ export default class KetoChangeProcessor {
     }
   }
 
+  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
   public addToQueue (queueArgs: any, updateFn: (fnArgs: any) => Promise<void>) : void {
     this._pushQueue({
       queueArgs,

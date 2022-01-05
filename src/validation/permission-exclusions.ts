@@ -118,7 +118,9 @@ export class PermissionExclusionsValidator {
         .forEach(perm => permissionExclusionsSet.add(perm.permissionA))
     } else {
       const castedPermissionExclusions = <PermissionExclusions[]>permissionExclusions
+      // eslint-disable-next-line max-len
       const permissionExclusionsFoundInSetA = castedPermissionExclusions.filter(item => item.permissionsA.includes(permission))
+      // eslint-disable-next-line max-len
       const permissionExclusionsFoundInSetB = castedPermissionExclusions.filter(item => item.permissionsB.includes(permission))
       permissionExclusionsFoundInSetA.forEach(item => {
         item.permissionsB.forEach(perm => permissionExclusionsSet.add(perm))
