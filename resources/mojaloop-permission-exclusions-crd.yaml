@@ -74,5 +74,9 @@ spec:
       subresources:
         status: {}
       additionalPrinterColumns:
+        - name: Status
+          type: string
+          description: Validation Status
+          jsonPath: .status.state
   conversion:
     strategy: None
