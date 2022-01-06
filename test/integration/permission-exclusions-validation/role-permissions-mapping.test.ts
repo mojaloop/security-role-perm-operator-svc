@@ -44,7 +44,6 @@ import axios from 'axios'
 jest.setTimeout(50000)
 
 ServiceConfig.ORY_KETO_READ_SERVICE_URL = Config.ORY_KETO_READ_SERVICE_URL
-ServiceConfig.ORY_KETO_WRITE_SERVICE_URL = Config.ORY_KETO_WRITE_SERVICE_URL
 
 const kc = new k8s.KubeConfig()
 kc.loadFromDefault()
