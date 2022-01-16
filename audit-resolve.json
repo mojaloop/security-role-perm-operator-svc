@@ -1,0 +1,18 @@
+{
+  "decisions": {
+    "1006724|@kubernetes/client-node>request>http-signature>jsprim>json-schema": {
+      "decision": "postpone",
+      "madeAt": 1642353486577
+    },
+    "1006865|@ory/keto-client>axios>follow-redirects": {
+      "decision": "postpone",
+      "madeAt": 1642353487108
+    },
+    "1006882|@kubernetes/client-node>shelljs": {
+      "decision": "postpone",
+      "madeAt": 1642353487574
+    }
+  },
+  "rules": {},
+  "version": 1
+}
