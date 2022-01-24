@@ -80,45 +80,46 @@ async function onEvent(phase: string, apiObj: any) {
     return
   }
   if (resourceName && role && permissions) {
-    if (phase === 'ADDED' || phase === 'MODIFIED') {
-      // Get the temporary consolidated role assignments based on already stored roles
-      const consolidatedRolePermissions = roleResourceStore.getConsolidatedTempData(resourceName, role, permissions)
-      const rolePermissions: RolePermissions[] = Object.entries(consolidatedRolePermissions).map(item => {
-        return {
-          rolename: (<any>item[1]).role,
-          permissions: (<any>item[1]).permissions
+    ketoChangeProcessor.queue.add(async () => {
+      if (phase === 'ADDED' || phase === 'MODIFIED') {
+        // Get the temporary consolidated role assignments based on already stored roles
+        const consolidatedRolePermissions = roleResourceStore.getConsolidatedTempData(resourceName, role, permissions)
+        const rolePermissions: RolePermissions[] = Object.entries(consolidatedRolePermissions).map(item => {
+          return {
+            rolename: (<any>item[1]).role,
+            permissions: (<any>item[1]).permissions
+          }
+        })
+        // Validate the resultant calculated permission exclusions with role permission assignments and user role mappings
+        try {
+          await permissionExclusionsValidator.validateRolePermissions(rolePermissions)
+          roleResourceStore.updateRoleResource(resourceName, generation, role, permissions)
+          // Set the status of our resource
+          await _updateResourceStatus(apiObj, 'VALIDATED')
+        } catch (err) {
+          logger.error(`Validation failed for the role permission resource: ${resourceName}`)
+          if (err instanceof ValidationError) {
+            console.log(err.validationErrors)
+            await _updateResourceStatus(apiObj, 'VALIDATION FAILED', err.validationErrors)
+          } else {
+            await _updateResourceStatus(apiObj, 'UNKNOWN ERROR')
+          }
+          return
         }
-      })
-      // Validate the resultant calculated permission exclusions with role permission assignments and user role mappings
-      try {
-        await ketoChangeProcessor.waitForQueueToBeProcessed()
-        await permissionExclusionsValidator.validateRolePermissions(rolePermissions)
-        roleResourceStore.updateRoleResource(resourceName, generation, role, permissions)
-        // Set the status of our resource
-        await _updateResourceStatus(apiObj, 'VALIDATED')
-      } catch (err) {
-        logger.error(`Validation failed for the role permission resource: ${resourceName}`)
-        if (err instanceof ValidationError) {
-          console.log(err.validationErrors)
-          await _updateResourceStatus(apiObj, 'VALIDATION FAILED', err.validationErrors)
-        } else {
-          await _updateResourceStatus(apiObj, 'UNKNOWN ERROR')
-        }
+        // roleResourceStore.updateRoleResource(resourceName, role, permissions)
+      } else if (phase === 'DELETED') {
+        roleResourceStore.deleteRoleResource(resourceName)
+      } else {
+        logger.warn(`Unknown event type: ${phase}`)
         return
       }
-      // roleResourceStore.updateRoleResource(resourceName, role, permissions)
-    } else if (phase === 'DELETED') {
-      roleResourceStore.deleteRoleResource(resourceName)
-    } else {
-      logger.warn(`Unknown event type: ${phase}`)
-      return
-    }
-    const rolePermissionCombos = roleResourceStore.getUniqueRolePermissionCombos()
-    logger.info('Current permissions in memory' + JSON.stringify(rolePermissionCombos))
-    const queueArgs = {
-      subjectObjectCombos: rolePermissionCombos
-    }
-    ketoChangeProcessor.addToQueue(queueArgs, updateKetoFn)
+      const rolePermissionCombos = roleResourceStore.getUniqueRolePermissionCombos()
+      logger.info('Current permissions in memory' + JSON.stringify(rolePermissionCombos))
+      const queueArgs = {
+        subjectObjectCombos: rolePermissionCombos
+      }
+      await updateKetoFn(queueArgs)
+    })
   }
 }
 

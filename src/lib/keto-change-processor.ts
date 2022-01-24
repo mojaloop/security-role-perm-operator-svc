@@ -27,79 +27,14 @@
  --------------
  ******/
 
-import Config from '../shared/config'
-import { logger } from '../shared/logger'
-
-interface KetoQueueItem {
-  queueArgs: any;
-  updateFn: (fnArgs: any) => Promise<void>;
-}
+import PQueue from 'p-queue'
 
 export default class KetoChangeProcessor {
   private static _instance: KetoChangeProcessor;
-  private queue: KetoQueueItem[];
-  private timerOn: boolean;
-  private timeoutId: NodeJS.Timeout;
+  public queue: PQueue;
 
   private constructor () {
-    this.queue = []
-    this.timerOn = true
-    this.timeoutId = setTimeout(this._processQueue.bind(this))
-  }
-
-  private _pushQueue (qItem: KetoQueueItem) : void {
-    this.queue.push(qItem)
-  }
-
-  private _popQueue () : KetoQueueItem | undefined {
-    return this.queue.shift()
-  }
-
-  private _getFirstItemInQueue () : KetoQueueItem | null {
-    if (this.queue.length > 0) {
-      return this.queue[0]
-    } else {
-      return null
-    }
-  }
-
-  private async _processQueue () : Promise<void> {
-    if (this.timerOn) {
-      const queueItem = this._getFirstItemInQueue()
-      if (queueItem) {
-        try {
-          await queueItem.updateFn(queueItem.queueArgs)
-          this._popQueue()
-        } catch (err: any) {
-          logger.error(err.message)
-        }
-      }
-      this.timeoutId = setTimeout(this._processQueue.bind(this), Config.KETO_QUEUE_PROCESS_INTERVAL_MS)
-    }
-  }
-
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
-  public addToQueue (queueArgs: any, updateFn: (fnArgs: any) => Promise<void>) : void {
-    this._pushQueue({
-      queueArgs,
-      updateFn
-    })
-  }
-
-  public getQueue () : KetoQueueItem[] {
-    return this.queue
-  }
-
-  public async waitForQueueToBeProcessed () : Promise<void> {
-    if (this.queue.length > 0) {
-      setTimeout(this.waitForQueueToBeProcessed.bind(this), 100)
-    }
-  }
-
-  // Helper functions for unit tests
-  public destroy () : void {
-    this.timerOn = false
-    clearTimeout(this.timeoutId)
+    this.queue = new PQueue({ concurrency: 1 })
   }
 
   public static getInstance (): KetoChangeProcessor {

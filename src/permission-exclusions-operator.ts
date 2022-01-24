@@ -80,48 +80,48 @@ async function onEvent(phase: string, apiObj: any) {
   }
 
   if (resourceName && permissionsA && permissionsB) {
-    if (phase === 'ADDED' || phase === 'MODIFIED') {
-      // Get the temporary consolidated permissions based on already stored permissions
-      const consolidatedPermissionExclusions = permissionExclusionResourceStore.getConsolidatedTempData(resourceName, permissionsA, permissionsB)
-      const permissionExclusions: PermissionExclusions[] = Object.entries(consolidatedPermissionExclusions).map(item => {
-        return {
-          permissionsA: (<any>item[1]).permissionsA,
-          permissionsB: (<any>item[1]).permissionsB
-        }
-      })
+    ketoChangeProcessor.queue.add(async () => {
+      if (phase === 'ADDED' || phase === 'MODIFIED') {
+        // Get the temporary consolidated permissions based on already stored permissions
+        const consolidatedPermissionExclusions = permissionExclusionResourceStore.getConsolidatedTempData(resourceName, permissionsA, permissionsB)
+        const permissionExclusions: PermissionExclusions[] = Object.entries(consolidatedPermissionExclusions).map(item => {
+          return {
+            permissionsA: (<any>item[1]).permissionsA,
+            permissionsB: (<any>item[1]).permissionsB
+          }
+        })
 
-      // Validate the resultant calculated permission exclusions with role permission assignments and user role mappings
-      try {
-        await ketoChangeProcessor.waitForQueueToBeProcessed()
-        await permissionExclusionsValidator.validatePermissionExclusions(permissionExclusions)
-        permissionExclusionResourceStore.updateResource(resourceName, generation, permissionsA, permissionsB)
-        // Set the status of our resource
-
-        await _updateResourceStatus(apiObj, 'VALIDATED')
-      } catch (err) {
-        logger.error(`Validation failed for the permission exclusion resource: ${resourceName}`)
-        if (err instanceof ValidationError) {
-          console.log(err.validationErrors)
-          await _updateResourceStatus(apiObj, 'VALIDATION FAILED', err.validationErrors)
-        } else {
-          console.log(err)
-          await _updateResourceStatus(apiObj, 'UNKNOWN ERROR')
+        // Validate the resultant calculated permission exclusions with role permission assignments and user role mappings
+        try {
+          await permissionExclusionsValidator.validatePermissionExclusions(permissionExclusions)
+          permissionExclusionResourceStore.updateResource(resourceName, generation, permissionsA, permissionsB)
+          // Set the status of our resource
+          await _updateResourceStatus(apiObj, 'VALIDATED')
+        } catch (err) {
+          logger.error(`Validation failed for the permission exclusion resource: ${resourceName}`)
+          if (err instanceof ValidationError) {
+            console.log(err.validationErrors)
+            await _updateResourceStatus(apiObj, 'VALIDATION FAILED', err.validationErrors)
+          } else {
+            console.log(err)
+            await _updateResourceStatus(apiObj, 'UNKNOWN ERROR')
+          }
+          return
         }
+      } else if (phase === 'DELETED') {
+        permissionExclusionResourceStore.deleteResource(resourceName)
+      } else {
+        logger.warn(`Unknown event type: ${phase}`)
         return
       }
-    } else if (phase === 'DELETED') {
-      permissionExclusionResourceStore.deleteResource(resourceName)
-    } else {
-      logger.warn(`Unknown event type: ${phase}`)
-      return
-    }
-    const permissionExclusionCombos = permissionExclusionResourceStore.getUniquePermissionExclusionCombos()
+      const permissionExclusionCombos = permissionExclusionResourceStore.getUniquePermissionExclusionCombos()
 
-    logger.info('Current permission exclusions in memory' + JSON.stringify(permissionExclusionCombos))
-    const queueArgs = {
-      subjectObjectCombos: permissionExclusionCombos
-    }
-    ketoChangeProcessor.addToQueue(queueArgs, updateKetoFn)
+      logger.info('Current permission exclusions in memory' + JSON.stringify(permissionExclusionCombos))
+      const queueArgs = {
+        subjectObjectCombos: permissionExclusionCombos
+      }
+      await updateKetoFn(queueArgs)
+    })
   }
 }
 

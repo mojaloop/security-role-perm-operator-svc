@@ -37,9 +37,10 @@
     "@mojaloop/central-services-metrics": "11.0.0",
     "@mojaloop/central-services-shared": "^15.1.0",
     "@mojaloop/event-sdk": "10.7.1",
+    "@ory/keto-client": "^0.6.0-alpha.6",
     "ajv": "8.6.3",
     "ajv-keywords": "5.0.0",
-    "@ory/keto-client": "^0.6.0-alpha.6",
+    "p-queue": "^6.6.2",
     "parse-strings-in-object": "^1.4.0",
     "rc": "^1.2.8",
     "typescript": "^4.2.3"
