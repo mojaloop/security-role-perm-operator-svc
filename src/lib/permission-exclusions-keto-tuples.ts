@@ -54,7 +54,10 @@ class KetoTuples {
     const response = await this.oryKetoReadApi.getRelationTuples(
       'permission',
       undefined,
-      'excludes'
+      'excludes',
+      undefined,
+      undefined,
+      1000000
     )
     const relationTuples = response.data?.relation_tuples || []
     return relationTuples.map(tuple => {

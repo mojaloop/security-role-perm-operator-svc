@@ -196,7 +196,10 @@ export class PermissionExclusionsValidator {
         const readRolesResponse = await this.oryKetoReadApi.getRelationTuples(
           'role',
           rolePermissions[i].rolename,
-          'member'
+          'member',
+          undefined,
+          undefined,
+          1000000
         )
         const readRolesRelationTuples = readRolesResponse.data?.relation_tuples || []
         readRolesRelationTuples.forEach(relationTuple => {
@@ -223,7 +226,9 @@ export class PermissionExclusionsValidator {
         'permission',
         undefined,
         'granted',
-        'role:' + userRole.roles[i] + '#member'
+        'role:' + userRole.roles[i] + '#member',
+        undefined,
+        1000000
       )
       const readRolePermissionsRelationTuples = readRolePermissionsResponse.data?.relation_tuples || []
       const permissions = readRolePermissionsRelationTuples.map(item => item.object)
@@ -239,7 +244,10 @@ export class PermissionExclusionsValidator {
     const readPermissionExclusionsResponse = await this.oryKetoReadApi.getRelationTuples(
       'permission',
       undefined,
-      'excludes'
+      'excludes',
+      undefined,
+      undefined,
+      1000000
     )
     const readPermissionExclusionsRelationTuples = readPermissionExclusionsResponse.data?.relation_tuples || []
     permissionExclusionCombos = readPermissionExclusionsRelationTuples.map(item => {
@@ -259,7 +267,10 @@ export class PermissionExclusionsValidator {
     const readRolePermissionsResponse = await this.oryKetoReadApi.getRelationTuples(
       'permission',
       undefined,
-      'granted'
+      'granted',
+      undefined,
+      undefined,
+      1000000
     )
     const readRolePermissionsRelationTuples = readRolePermissionsResponse.data?.relation_tuples || []
     readRolePermissionsRelationTuples.forEach(rolePermission => {
@@ -288,7 +299,10 @@ export class PermissionExclusionsValidator {
     const readPermissionExclusionsResponse = await this.oryKetoReadApi.getRelationTuples(
       'permission',
       undefined,
-      'excludes'
+      'excludes',
+      undefined,
+      undefined,
+      1000000
     )
     const readPermissionExclusionsRelationTuples = readPermissionExclusionsResponse.data?.relation_tuples || []
     permissionExclusionCombos = readPermissionExclusionsRelationTuples.map(item => {

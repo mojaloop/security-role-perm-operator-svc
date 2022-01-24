@@ -66,7 +66,9 @@ const AssignUserRole = async (_context: unknown, _request: Request, h: StateResp
         'role',
         undefined,
         'member',
-        userRole.username
+        userRole.username,
+        undefined,
+        1000000
       )
       const currentRoles = responseGetCurrentRoles.data?.relation_tuples?.map(({ object }) => object) || []
       // Get the difference
