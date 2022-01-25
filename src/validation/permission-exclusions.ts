@@ -52,9 +52,8 @@ export interface PermissionExclusionCombos {
   permissionB: string;
 }
 
-// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
-export function isPermissionExclusionCombos (object: PermissionExclusions | PermissionExclusionCombos): boolean {
-  return 'permissionA' in object
+export function isPermissionExclusionCombos (obj: PermissionExclusions | PermissionExclusionCombos): boolean {
+  return 'permissionA' in obj
 }
 
 export class PermissionExclusionsValidator {
@@ -68,37 +67,6 @@ export class PermissionExclusionsValidator {
       serviceConfig.ORY_KETO_READ_SERVICE_URL
     )
   }
-
-  // // Commenting the following because this logic is not being used anywhere and user permission validation is done
-  // // a different way
-  // // -------------------
-  // async validateUserPermissions (userId: string, permissionsToAssign: Set<string>) : Promise<void> {
-  //   const validationErrors : string[] = []
-  //   // Iterate though the list of new permissions and find out if it conflicts with other permissions of the user
-  //   // logger.info(JSON.stringify(newPermissions, null, 2))
-  //   const newPermissions = Array.from(permissionsToAssign.values())
-  //   let validationFailed = false
-  //   for (let i = 0; i < newPermissions.length; i++) {
-  //     try {
-  //       const checkPermissionsExclusionsResponse = await this.oryKetoReadApi.getCheck(
-  //         'permission',
-  //         newPermissions[i],
-  //         'excludes',
-  //         userId
-  //       )
-  //       const permissionExclusionClash = checkPermissionsExclusionsResponse.data?.allowed || false
-  //       if (permissionExclusionClash) {
-  //         validationErrors.push(`ERROR: permission '${newPermissions[i]}' can not be assigned`)
-  //         validationFailed = true
-  //       }
-  //     } catch (err) {}
-  //   }
-  //   logger.info(validationErrors)
-  //   if (validationFailed) {
-  //     throw new ValidationError(validationErrors)
-  //   }
-  //   // TODO: We can stop the validation when the first error occurs based on a config param like quickCheck
-  // }
 
   _getPermissionExclusionsForPermission (
     permission: string,
@@ -118,10 +86,10 @@ export class PermissionExclusionsValidator {
         .forEach(perm => permissionExclusionsSet.add(perm.permissionA))
     } else {
       const castedPermissionExclusions = <PermissionExclusions[]>permissionExclusions
-      // eslint-disable-next-line max-len
-      const permissionExclusionsFoundInSetA = castedPermissionExclusions.filter(item => item.permissionsA.includes(permission))
-      // eslint-disable-next-line max-len
-      const permissionExclusionsFoundInSetB = castedPermissionExclusions.filter(item => item.permissionsB.includes(permission))
+      const permissionExclusionsFoundInSetA = castedPermissionExclusions
+        .filter(item => item.permissionsA.includes(permission))
+      const permissionExclusionsFoundInSetB = castedPermissionExclusions
+        .filter(item => item.permissionsB.includes(permission))
       permissionExclusionsFoundInSetA.forEach(item => {
         item.permissionsB.forEach(perm => permissionExclusionsSet.add(perm))
       })
@@ -143,11 +111,12 @@ export class PermissionExclusionsValidator {
     rolePermissions.forEach(role => {
       // Iterate through permissions and get the set of excluded permissions
       const permissionExclusionsSet: Set<string> = new Set()
-      // for (let i = 0; i < totalGrantedPermissions.size; i++) {
       role.permissions.forEach(grantedPerm => {
         try {
-          // eslint-disable-next-line max-len
-          const permissionExclusionsForPermission = this._getPermissionExclusionsForPermission(grantedPerm, permissionExclusions)
+          const permissionExclusionsForPermission = this._getPermissionExclusionsForPermission(
+            grantedPerm,
+            permissionExclusions
+          )
           permissionExclusionsForPermission.forEach(perm => permissionExclusionsSet.add(perm))
         } catch (err) {}
       })
@@ -170,7 +139,6 @@ export class PermissionExclusionsValidator {
       }
       // Check the new permissions permissions with the excluded permissions using set intersection
       const intersect = new Set([...totalGrantedPermissions].filter(i => totalExcludedPermissions.has(i)))
-      console.log('Intersection is', intersect)
       if (intersect.size > 0) {
         validationErrors.push(
           'ERROR: permissions ' +
@@ -188,7 +156,6 @@ export class PermissionExclusionsValidator {
     rolePermissions: RolePermissions [],
     permissionExclusions: PermissionExclusions[] | PermissionExclusionCombos[]
   ) : Promise<void> {
-    // const validationErrors : string[] = []
     // Iterate through all the role permissions and get the user list
     const userRoles : Map<string, string[]> = new Map()
     for (let i = 0; i < rolePermissions.length; i++) {
@@ -237,7 +204,6 @@ export class PermissionExclusionsValidator {
         permissions
       })
     }
-    // console.log('Role Permissions are', rolePermissions)
 
     // Get all the permission exclusions
     let permissionExclusionCombos: PermissionExclusionCombos[] = []
@@ -256,12 +222,10 @@ export class PermissionExclusionsValidator {
         permissionB: item.subject.replace(/permission:([^#.]*)(#.*)?/, '$1')
       }
     })
-    // console.log('Permission Exclusions are', permissionExclusionCombos)
     this.validateUserRolePermissions([userRole], rolePermissions, permissionExclusionCombos)
   }
 
   async validatePermissionExclusions (permissionExclusions: PermissionExclusions[]) : Promise<void> {
-    // const validationErrors : string[] = []
     // Get all the role permission mappings
     const roles: any = {}
     const readRolePermissionsResponse = await this.oryKetoReadApi.getRelationTuples(
@@ -288,8 +252,6 @@ export class PermissionExclusionsValidator {
       }
     })
 
-    // console.log('Role Permissions are', rolePermissions)
-
     await this.validateRolePermissionsAndPermissionExclusions(rolePermissions, permissionExclusions)
   }
 
@@ -311,7 +273,6 @@ export class PermissionExclusionsValidator {
         permissionB: item.subject.replace(/permission:([^#.]*)(#.*)?/, '$1')
       }
     })
-    // console.log('GVK CHECK1', rolePermissions, permissionExclusionCombos)
     await this.validateRolePermissionsAndPermissionExclusions(rolePermissions, permissionExclusionCombos)
   }
 }

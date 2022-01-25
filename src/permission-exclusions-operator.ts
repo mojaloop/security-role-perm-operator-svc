@@ -68,7 +68,6 @@ const k8sApiCustomObjects = kc.makeApiClient(k8s.CustomObjectsApi)
 const watch = new k8s.Watch(kc)
 
 async function onEvent(phase: string, apiObj: any) {
-  console.log(apiObj)
   logger.info(`Received event in phase ${phase} for the resource ${apiObj?.metadata?.name}`)
   const resourceName = apiObj?.metadata?.name
   const generation = apiObj?.metadata?.generation + ''
@@ -100,10 +99,9 @@ async function onEvent(phase: string, apiObj: any) {
         } catch (err) {
           logger.error(`Validation failed for the permission exclusion resource: ${resourceName}`)
           if (err instanceof ValidationError) {
-            console.log(err.validationErrors)
+            logger.error(JSON.stringify(err.validationErrors))
             await _updateResourceStatus(apiObj, 'VALIDATION FAILED', err.validationErrors)
           } else {
-            console.log(err)
             await _updateResourceStatus(apiObj, 'UNKNOWN ERROR')
           }
           return

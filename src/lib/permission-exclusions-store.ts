@@ -59,12 +59,7 @@ class PermissionExclusionResources {
   }
 
   checkHash (resourceName: string, hash: string) : boolean {
-    // eslint-disable-next-line max-len
-    if (this.permissionExclusionResourceData[resourceName] && this.permissionExclusionResourceData[resourceName].hash === hash) {
-      return true
-    } else {
-      return false
-    }
+    return this.permissionExclusionResourceData?.[resourceName]?.hash === hash
   }
 
   deleteResource (resourceName: string) : void {
@@ -82,12 +77,6 @@ class PermissionExclusionResources {
     const tempPermissionExclusionResourceData = JSON.parse(JSON.stringify(this.permissionExclusionResourceData))
     if (!tempPermissionExclusionResourceData[resourceName]) {
       tempPermissionExclusionResourceData[resourceName] = {}
-    }
-    if (!tempPermissionExclusionResourceData[resourceName].permissionsA) {
-      tempPermissionExclusionResourceData[resourceName].permissionsA = []
-    }
-    if (!tempPermissionExclusionResourceData[resourceName].permissionsB) {
-      tempPermissionExclusionResourceData[resourceName].permissionsB = []
     }
     tempPermissionExclusionResourceData[resourceName].permissionsA = permissionsA
     tempPermissionExclusionResourceData[resourceName].permissionsB = permissionsB

@@ -28,7 +28,6 @@
  --------------
  ******/
 
-// import btoa from 'btoa'
 import { StateResponseToolkit } from '~/server/plugins/state'
 import { Request, ResponseObject } from '@hapi/hapi'
 import { PermissionExclusionsValidator, UserRole } from '../../validation/permission-exclusions'
@@ -53,8 +52,11 @@ const oryKetoWriteApi: keto.WriteApi = new keto.WriteApi(
 
 const permissionExclusionsValidator = new PermissionExclusionsValidator(Config)
 
-// eslint-disable-next-line max-len
-const AssignUserRole = async (_context: unknown, _request: Request, h: StateResponseToolkit): Promise<ResponseObject> => {
+const AssignUserRole = async (
+  _context: unknown,
+  _request: Request,
+  h: StateResponseToolkit
+): Promise<ResponseObject> => {
   try {
     const response = {}
     const userRole : UserRole = <UserRole>_request.payload
@@ -82,10 +84,8 @@ const AssignUserRole = async (_context: unknown, _request: Request, h: StateResp
           isCreated: false,
           errors: err.validationErrors
         }
-        console.log(errorResponse)
         return h.response(errorResponse).code(406)
       } else {
-        console.log(err)
         throw err
       }
     }
@@ -100,9 +100,9 @@ const _generateUserRolesPatchDeltaArray = (
   currentRoles: string[], newRoles: string[], username: string
 ): keto.PatchDelta[] => {
   // Calculate the roles to be deleted
-  const deleteRoles = currentRoles?.filter(item => !newRoles.includes(item))
+  const deleteRoles = currentRoles?.filter(item => !newRoles.includes(item)) || []
   // Calculate the permissions to be added
-  const addRoles = newRoles?.filter(item => !currentRoles.includes(item))
+  const addRoles = newRoles?.filter(item => !currentRoles.includes(item)) || []
   let patchDeltaArray: keto.PatchDelta[] = []
   patchDeltaArray = patchDeltaArray.concat(addRoles.map(role => {
     return {

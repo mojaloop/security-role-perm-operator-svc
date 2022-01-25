@@ -82,12 +82,6 @@ class RoleResources {
     if (!tempRoleResourceData[resourceName]) {
       tempRoleResourceData[resourceName] = {}
     }
-    if (!tempRoleResourceData[resourceName].role) {
-      tempRoleResourceData[resourceName].role = null
-    }
-    if (!tempRoleResourceData[resourceName].permissions) {
-      tempRoleResourceData[resourceName].permissions = []
-    }
     tempRoleResourceData[resourceName].role = role
     tempRoleResourceData[resourceName].permissions = permissions
     return tempRoleResourceData

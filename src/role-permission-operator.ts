@@ -99,7 +99,7 @@ async function onEvent(phase: string, apiObj: any) {
         } catch (err) {
           logger.error(`Validation failed for the role permission resource: ${resourceName}`)
           if (err instanceof ValidationError) {
-            console.log(err.validationErrors)
+            logger.error(JSON.stringify(err.validationErrors))
             await _updateResourceStatus(apiObj, 'VALIDATION FAILED', err.validationErrors)
           } else {
             await _updateResourceStatus(apiObj, 'UNKNOWN ERROR')
