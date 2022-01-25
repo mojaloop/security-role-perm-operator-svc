@@ -29,9 +29,8 @@
  ******/
 
 import KetoChangeProcessor from '../../../src/lib/keto-change-processor'
-import Config from '../../../src/shared/config'
 
-describe('role-permission-change-processor', (): void => {
+describe('keto-change-processor', (): void => {
   describe('KetoChangeProcessor Add Queue', (): void => {
     let ketoChangeProcessor: KetoChangeProcessor
     let spyUpdateAllRolePermissions: jest.Mock
@@ -41,59 +40,24 @@ describe('role-permission-change-processor', (): void => {
     })
 
     it('Initialize ketoChangeProcessor', async () => {
-      jest.useFakeTimers()
       ketoChangeProcessor = KetoChangeProcessor.getInstance()
-      expect(ketoChangeProcessor).toHaveProperty('addToQueue')
-      expect(ketoChangeProcessor).toHaveProperty('getQueue')
+      expect(ketoChangeProcessor).toHaveProperty('queue')
     })
-    it('getQueue should return empty array initially', async () => {
-      const currentQueue = ketoChangeProcessor.getQueue()
-      expect(Array.isArray(currentQueue)).toBe(true)
-      expect(currentQueue.length).toEqual(0)
+    it('getQueue should return empty queue initially', async () => {
+      const currentQueue = ketoChangeProcessor.queue
+      expect(currentQueue.size).toEqual(0)
+      expect(currentQueue.pending).toEqual(0)
     })
     it('addToQueue: queue the first role permission combo', async () => {
       const rolePermissionCombos = [
         'sampleRole1:samplePermission1'
       ]
-      ketoChangeProcessor.addToQueue(rolePermissionCombos, spyUpdateAllRolePermissions)
-      const currentQueue = ketoChangeProcessor.getQueue()
-      expect(currentQueue.length).toEqual(1)
-    })
-    it('queued item should be processed after some time', async () => {
       spyUpdateAllRolePermissions.mockClear()
-      jest.advanceTimersByTime(Config.KETO_QUEUE_PROCESS_INTERVAL_MS)
-      const currentQueue = ketoChangeProcessor.getQueue()
-      // expect(currentQueue.length).toEqual(0)
+      await ketoChangeProcessor.queue.add(async () => {
+        spyUpdateAllRolePermissions(rolePermissionCombos)
+      })
+      expect(ketoChangeProcessor.queue.pending).toEqual(0)
       expect(spyUpdateAllRolePermissions).toHaveBeenCalled()
-    })
-    it('empty queue should not throw an error', async () => {
-      jest.advanceTimersByTime(Config.KETO_QUEUE_PROCESS_INTERVAL_MS)
-      const currentQueue = ketoChangeProcessor.getQueue()
-      expect(currentQueue.length).toEqual(0)
-    })
-
-    // Negative scenarios
-    it('addToQueue: queue the second role permission combo', async () => {
-      const rolePermissionCombos = [
-        'sampleRole2:samplePermission2'
-      ]
-      ketoChangeProcessor.addToQueue(rolePermissionCombos, spyUpdateAllRolePermissions)
-      const currentQueue = ketoChangeProcessor.getQueue()
-      expect(currentQueue.length).toEqual(1)
-    })
-    it('queued item should be processed and throw an error this time', async () => {
-      spyUpdateAllRolePermissions.mockClear()
-      spyUpdateAllRolePermissions.mockRejectedValue(
-        new Error('Some Error')
-      )
-      jest.advanceTimersByTime(Config.KETO_QUEUE_PROCESS_INTERVAL_MS)
-      const currentQueue = ketoChangeProcessor.getQueue()
-      expect(currentQueue.length).toEqual(1)
-      expect(spyUpdateAllRolePermissions).toHaveBeenCalled()
-    })
-    it('stop processing', async () => {
-      ketoChangeProcessor.destroy()
-      jest.useRealTimers()
     })
   })
 })

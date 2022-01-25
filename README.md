@@ -60,7 +60,6 @@ See [`src/shared/config.ts`](src/shared/config.ts) to understand how these varia
 | WATCH_NAMESPACE | K8S namespace | mojaloop
 | ORY_KETO_READ_SERVICE_URL | Keto service read URL | http://localhost:4466
 | ORY_KETO_WRITE_SERVICE_URL | Keto service write URL | http://localhost:4467
-| KETO_QUEUE_PROCESS_INTERVAL_MS | Frequency to check the messages to be updated to Keto | 1000
 
 > ***Note:** See [`./config/default.json`](./config/default.json) for all available config options, and their default values.*
 

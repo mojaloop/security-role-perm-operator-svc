@@ -30,7 +30,9 @@
 /* eslint-disable import/first */
 
 // Mock functions for jest. Keep these functions at the top because jest.mock calls will be hoisted to below these lines
-const mockAddToQueue = jest.fn()
+const mockAddToQueue = jest.fn().mockImplementation(async (inputFn) => {
+  await inputFn()
+})
 
 // Mock K8s client-node library
 import * as k8s from '@kubernetes/client-node'
@@ -58,8 +60,9 @@ jest.mock('../../src/lib/keto-change-processor', () => {
   return {
     getInstance: jest.fn().mockImplementation(() => {
       return {
-        addToQueue: mockAddToQueue,
-        waitForQueueToBeProcessed: jest.fn()
+        queue: {
+          add: mockAddToQueue
+        }
       }
     })
   }
@@ -209,7 +212,6 @@ describe('Role Permission operator', (): void => {
       await startOperator()
       expect(spyUpdateRoleResource).not.toHaveBeenCalled()
       expect(spyDeleteRoleResource).not.toHaveBeenCalled()
-      expect(spyAddToQueue).not.toHaveBeenCalled()
     })
     it('Event with wrong api object 1', async () => {
       spyWatch.mockImplementation(createWatchEventImplementation('ADDED', wrongApiObjWithoutMetadata))

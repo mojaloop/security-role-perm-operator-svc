@@ -54,7 +54,6 @@ export interface ServiceConfig {
   WATCH_NAMESPACE: string;
   ORY_KETO_READ_SERVICE_URL: string;
   ORY_KETO_WRITE_SERVICE_URL: string;
-  KETO_QUEUE_PROCESS_INTERVAL_MS: number;
 }
 
 const RC = parse(rc('ROLE_PERM_OPERATOR', Config)) as ServiceConfig
