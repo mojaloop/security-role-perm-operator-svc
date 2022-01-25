@@ -1,0 +1,10 @@
+{
+  "WATCH_RESOURCE_GROUP": "mojaloop.io",
+  "WATCH_RESOURCE_VERSION": "v1",
+  "WATCH_ROLE_PERMISSIONS_RESOURCE_PLURAL": "mojalooproles",
+  "WATCH_PERMISSION_EXCLUSIONS_RESOURCE_PLURAL": "mojaloop-permission-exclusions",
+  "WATCH_NAMESPACE": "mojaloop",
+  "ORY_KETO_READ_SERVICE_URL": "http://localhost:4466",
+  "PERMISSION_OPERATOR_API_URL": "http://localhost:3001",
+  "WAIT_TIME_MS_AFTER_K8S_RESOURCE_CHANGE": 2000
+}

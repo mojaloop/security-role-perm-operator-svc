@@ -1,6 +1,7 @@
 {
   "include": [
     "src",
+    "ambient.d.ts",
     "test",
     "jest.config.js",
     "jest.integration.config.js"

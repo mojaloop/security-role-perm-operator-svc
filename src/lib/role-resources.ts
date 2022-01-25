@@ -51,10 +51,19 @@ class RoleResources {
     }
   }
 
-  updateRoleResource (resourceName: string, role: string, permissions: string[]) : void {
+  updateRoleResource (resourceName: string, hash: string, role: string, permissions: string[]) : void {
     this._checkResource(resourceName)
     this.roleResourceData[resourceName].role = role
     this.roleResourceData[resourceName].permissions = permissions
+    this.roleResourceData[resourceName].hash = hash
+  }
+
+  checkHash (resourceName: string, hash: string) : boolean {
+    if (this.roleResourceData[resourceName] && this.roleResourceData[resourceName].hash === hash) {
+      return true
+    } else {
+      return false
+    }
   }
 
   deleteRoleResource (resourceName: string) : void {
@@ -65,6 +74,17 @@ class RoleResources {
 
   getData () : any {
     return this.roleResourceData
+  }
+
+  getConsolidatedTempData (resourceName: string, role: string, permissions: string[]) : any {
+    // Create a deep clone of existing data
+    const tempRoleResourceData = JSON.parse(JSON.stringify(this.roleResourceData))
+    if (!tempRoleResourceData[resourceName]) {
+      tempRoleResourceData[resourceName] = {}
+    }
+    tempRoleResourceData[resourceName].role = role
+    tempRoleResourceData[resourceName].permissions = permissions
+    return tempRoleResourceData
   }
 
   getUniqueRolePermissionCombos () : string[] {

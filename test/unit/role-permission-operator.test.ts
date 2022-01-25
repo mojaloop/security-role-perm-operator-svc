@@ -27,24 +27,51 @@
 
  --------------
  ******/
+/* eslint-disable import/first */
 
-// eslint-disable-next-line max-len
-import { startOperator, getRoleResourceStore, getRolePermissionChangeProcessor, getWatch } from '../../src/role-permission-operator'
-// import { RoleResources } from "./lib/role-resources"
+// Mock functions for jest. Keep these functions at the top because jest.mock calls will be hoisted to below these lines
+const mockAddToQueue = jest.fn().mockImplementation(async (inputFn) => {
+  await inputFn()
+})
 
+// Mock K8s client-node library
+import * as k8s from '@kubernetes/client-node'
+import { RoleResources } from '../../src/lib/role-resources'
+import { startOperator } from '../../src/role-permission-operator'
+
+jest.mock('../../src/lib/role-resources')
+jest.mock('../../src/validation/permission-exclusions')
 jest.mock('@kubernetes/client-node');
-jest.mock('../../src/lib/role-resources');
-jest.mock('../../src/lib/keto-change-processor');
 
-// (KetoTuples as jest.Mock).mockImplementation(() => {
-//   return {
-//     updateAllRolePermissions: jest.fn()
-//   }
-// })
+const k8sWatchInstance = (<any>k8s.Watch).mock.instances[0]
+
+// RoleResources
+const roleResourcesObject = (<any>RoleResources).mock.instances[0];
+(roleResourcesObject.getConsolidatedTempData as jest.Mock).mockReturnValue({
+  role1: {
+    role: 'ROLE1',
+    permissions: [
+      'PERM1'
+    ]
+  }
+})
+
+jest.mock('../../src/lib/keto-change-processor', () => {
+  return {
+    getInstance: jest.fn().mockImplementation(() => {
+      return {
+        queue: {
+          add: mockAddToQueue
+        }
+      }
+    })
+  }
+})
 
 const sampleApiObj = {
   metadata: {
-    name: 'sampleResource1'
+    name: 'sampleResource1',
+    generation: 1
   },
   spec: {
     role: 'sampoleRole1',
@@ -56,7 +83,8 @@ const sampleApiObj = {
 
 const wrongApiObjWithoutPermissions = {
   metadata: {
-    name: 'sampleResource1'
+    name: 'sampleResource1',
+    generation: 1
   },
   spec: {
     role: 'sampoleRole1'
@@ -65,7 +93,8 @@ const wrongApiObjWithoutPermissions = {
 
 const wrongApiObjWithoutRole = {
   metadata: {
-    name: 'sampleResource1'
+    name: 'sampleResource1',
+    generation: 1
   },
   spec: {
     permissions: [
@@ -94,8 +123,8 @@ const wrongApiObjWithoutResourceName = {
 }
 
 const createWatchEventImplementation = (phase: string, apiObj: any) => {
-  return (_path: string, _queryParams: any, eventCallback: jest.Mock, _doneCallback: jest.Mock) => {
-    eventCallback(phase, apiObj)
+  return async (_path: string, _queryParams: any, eventCallback: jest.Mock, _doneCallback: jest.Mock) => {
+    await eventCallback(phase, apiObj)
   }
 }
 
@@ -111,10 +140,10 @@ describe('Role Permission operator', (): void => {
   let spyAddToQueue: jest.Mock
   let spyWatch: jest.Mock
   beforeAll(() => {
-    spyUpdateRoleResource = (getRoleResourceStore().updateRoleResource as jest.Mock)
-    spyDeleteRoleResource = (getRoleResourceStore().deleteRoleResource as jest.Mock)
-    spyAddToQueue = (getRolePermissionChangeProcessor().addToQueue as jest.Mock)
-    spyWatch = (getWatch().watch as jest.Mock)
+    spyUpdateRoleResource = (roleResourcesObject.updateRoleResource as jest.Mock)
+    spyDeleteRoleResource = (roleResourcesObject.deleteRoleResource as jest.Mock)
+    spyAddToQueue = mockAddToQueue
+    spyWatch = k8sWatchInstance.watch
   })
   describe('Positive Scenarios', (): void => {
     afterEach(() => {
@@ -131,14 +160,14 @@ describe('Role Permission operator', (): void => {
       spyWatch.mockImplementation(createWatchEventImplementation('ADDED', sampleApiObj))
       await startOperator()
       expect(spyWatch).toHaveBeenCalledTimes(1)
-      expect(spyUpdateRoleResource).toHaveBeenCalledWith('sampleResource1', 'sampoleRole1', ['samplePermission1'])
+      expect(spyUpdateRoleResource).toHaveBeenCalledWith('sampleResource1', '1', 'sampoleRole1', ['samplePermission1'])
       expect(spyAddToQueue).toHaveBeenCalledTimes(1)
     })
     it('MODIFIED phase event', async () => {
       spyWatch.mockImplementation(createWatchEventImplementation('MODIFIED', sampleApiObj))
       await startOperator()
       expect(spyWatch).toHaveBeenCalledTimes(1)
-      expect(spyUpdateRoleResource).toHaveBeenCalledWith('sampleResource1', 'sampoleRole1', ['samplePermission1'])
+      expect(spyUpdateRoleResource).toHaveBeenCalledWith('sampleResource1', '1', 'sampoleRole1', ['samplePermission1'])
       expect(spyAddToQueue).toHaveBeenCalledTimes(1)
     })
     it('DELETED phase event', async () => {
@@ -150,6 +179,7 @@ describe('Role Permission operator', (): void => {
     })
     it('Done callback from watch should start the loop again', async () => {
       spyWatch.mockImplementation(createWatchDoneImplementation('Some Error'))
+      jest.useFakeTimers()
       await startOperator()
       expect(spyWatch).toHaveBeenCalledTimes(1)
     })
@@ -182,7 +212,6 @@ describe('Role Permission operator', (): void => {
       await startOperator()
       expect(spyUpdateRoleResource).not.toHaveBeenCalled()
       expect(spyDeleteRoleResource).not.toHaveBeenCalled()
-      expect(spyAddToQueue).not.toHaveBeenCalled()
     })
     it('Event with wrong api object 1', async () => {
       spyWatch.mockImplementation(createWatchEventImplementation('ADDED', wrongApiObjWithoutMetadata))
@@ -213,6 +242,9 @@ describe('Role Permission operator', (): void => {
       await startOperator()
       expect(spyUpdateRoleResource).not.toHaveBeenCalled()
       expect(spyAddToQueue).not.toHaveBeenCalled()
+    })
+    it('Use real timers', async () => {
+      jest.useRealTimers()
     })
   })
   // describe('onEvent', (): void => {

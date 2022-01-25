@@ -51,10 +51,15 @@ class PermissionExclusionResources {
     }
   }
 
-  updateResource (resourceName: string, permissionsA: string[], permissionsB: string[]) : void {
+  updateResource (resourceName: string, hash: string, permissionsA: string[], permissionsB: string[]) : void {
     this._checkResource(resourceName)
     this.permissionExclusionResourceData[resourceName].permissionsA = permissionsA
     this.permissionExclusionResourceData[resourceName].permissionsB = permissionsB
+    this.permissionExclusionResourceData[resourceName].hash = hash
+  }
+
+  checkHash (resourceName: string, hash: string) : boolean {
+    return this.permissionExclusionResourceData?.[resourceName]?.hash === hash
   }
 
   deleteResource (resourceName: string) : void {
@@ -65,6 +70,17 @@ class PermissionExclusionResources {
 
   getData () : any {
     return this.permissionExclusionResourceData
+  }
+
+  getConsolidatedTempData (resourceName: string, permissionsA: string[], permissionsB: string[]) : any {
+    // Create a deep clone of existing data
+    const tempPermissionExclusionResourceData = JSON.parse(JSON.stringify(this.permissionExclusionResourceData))
+    if (!tempPermissionExclusionResourceData[resourceName]) {
+      tempPermissionExclusionResourceData[resourceName] = {}
+    }
+    tempPermissionExclusionResourceData[resourceName].permissionsA = permissionsA
+    tempPermissionExclusionResourceData[resourceName].permissionsB = permissionsB
+    return tempPermissionExclusionResourceData
   }
 
   getUniquePermissionExclusionCombos () : string[] {

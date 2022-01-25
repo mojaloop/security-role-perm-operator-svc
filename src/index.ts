@@ -29,5 +29,12 @@
 
 import { startOperator as startRolePermissionOperator } from './role-permission-operator'
 import { startOperator as startPermissionExclusionsOperator } from './permission-exclusions-operator'
+import ServiceServer from './server'
+import Config from './shared/config'
+
+// Setup & start API server
+ServiceServer.run(Config)
+
+// Start K8S operators
 startRolePermissionOperator()
 startPermissionExclusionsOperator()

@@ -54,11 +54,14 @@ class KetoTuples {
     const response = await this.oryKetoReadApi.getRelationTuples(
       'permission',
       undefined,
-      'excludes'
+      'excludes',
+      undefined,
+      undefined,
+      1000000
     )
     const relationTuples = response.data?.relation_tuples || []
     return relationTuples.map(tuple => {
-      const permissionA = tuple.subject.replace(/permission:(.*)(#.*)?/, '$1')
+      const permissionA = tuple.subject.replace(/permission:([^#.]*)(#.*)?/, '$1')
       return permissionA + ':' + tuple.object
     })
   }
@@ -112,7 +115,7 @@ class KetoTuples {
       namespace: 'permission',
       object: permissionY,
       relation: 'excludes',
-      subject: 'permission:' + permissionX
+      subject: 'permission:' + permissionX + '#granted'
     }
   }
 }

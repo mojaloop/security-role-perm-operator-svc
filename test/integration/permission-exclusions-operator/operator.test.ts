@@ -45,13 +45,12 @@ const k8sApiCustomObjects = kc.makeApiClient(k8s.CustomObjectsApi)
 // const k8sApiPods = kc.makeApiClient(k8s.CoreV1Api)
 
 const _relationTuplesToPermissionCombos = (relationTuples: Array<any>) => {
-  return relationTuples?.map(item => item.object + ':' + item.subject.replace(/permission:(.*)(#.*)?/, '$1'))
+  return relationTuples?.map(item => item.object + ':' + item.subject.replace(/permission:([^#.]*)(#.*)?/, '$1'))
 }
 
 describe('K8S operator', (): void => {
   let oryKetoReadApi : keto.ReadApi
   beforeAll(async () => {
-    console.log('Connecting to Keto...', Config.ORY_KETO_READ_SERVICE_URL)
     oryKetoReadApi = new keto.ReadApi(
       undefined,
       Config.ORY_KETO_READ_SERVICE_URL

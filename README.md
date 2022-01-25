@@ -60,7 +60,6 @@ See [`src/shared/config.ts`](src/shared/config.ts) to understand how these varia
 | WATCH_NAMESPACE | K8S namespace | mojaloop
 | ORY_KETO_READ_SERVICE_URL | Keto service read URL | http://localhost:4466
 | ORY_KETO_WRITE_SERVICE_URL | Keto service write URL | http://localhost:4467
-| KETO_QUEUE_PROCESS_INTERVAL_MS | Frequency to check the messages to be updated to Keto | 1000
 
 > ***Note:** See [`./config/default.json`](./config/default.json) for all available config options, and their default values.*
 
@@ -84,10 +83,11 @@ npm ci
 minikube start
 ```
 
-### Deploy the namespace and CRD in K8S
+### Deploy the namespace and CRDs in K8S
 ```bash
 kubectl apply -f resources/mojaloop-namespace.yaml
 kubectl -n mojaloop apply -f resources/mojalooprole-crd.yaml
+kubectl -n mojaloop apply -f resources/mojaloop-permission-exclusions-crd.yaml
 ```
 
 ### Start the keto docker service
@@ -103,12 +103,12 @@ npm run startDev
 
 ### Add couple of K8S custom resources and observe the change in keto tuples
 ```bash
-kubectl apply -f resources/mojalooprole-sample1.yaml
+kubectl -n mojaloop apply -f resources/mojalooprole-sample1.yaml
 sleep 2000
 
 curl --location --request GET 'http://localhost:4466/relation-tuples?namespace=permission'
 
-kubectl apply -f resources/mojalooprole-sample2.yaml
+kubectl -n mojaloop apply -f resources/mojalooprole-sample2.yaml
 sleep 2000
 
 curl --location --request GET 'http://localhost:4466/relation-tuples?namespace=permission'

@@ -1,7 +1,7 @@
 {
   "name": "security-role-perm-operator-svc",
   "version": "2.0.0",
-  "description": "K8S operator for role permission sync to Ory Keto",
+  "description": "K8S operator for role permission sync",
   "author": "Mojaloop",
   "contributors": [
     "Vijaya Kumar Guthi <vijaya.guthi@modusbox.com>"
@@ -9,7 +9,7 @@
   "repository": "https://github.com/mojaloop/security-role-perm-operator-svc",
   "main": "dist/index.js",
   "scripts": {
-    "build": "tsc -p ./tsconfig.build.json",
+    "build": "tsc -p ./tsconfig.build.json; rm -rf dist/src/interface; cp -R src/interface dist/src/interface",
     "watch": "npx tsc -w",
     "clean": "rm -rf dist node_modules",
     "start": "node dist/src/index.js",
@@ -28,14 +28,27 @@
   },
   "license": "Apache-2.0",
   "dependencies": {
+    "@hapi/hapi": "^20.2.1",
+    "@hapi/inert": "^6.0.4",
+    "@hapi/vision": "^6.1.0",
     "@kubernetes/client-node": "^0.14.3",
-    "@mojaloop/central-services-logger": "^10.6.2",
+    "@mojaloop/central-services-error-handling": "11.3.0",
+    "@mojaloop/central-services-logger": "10.6.2",
+    "@mojaloop/central-services-metrics": "11.0.0",
+    "@mojaloop/central-services-shared": "^15.1.0",
+    "@mojaloop/event-sdk": "10.7.1",
     "@ory/keto-client": "^0.6.0-alpha.6",
+    "ajv": "8.6.3",
+    "ajv-keywords": "5.0.0",
+    "p-queue": "^6.6.2",
     "parse-strings-in-object": "^1.4.0",
     "rc": "^1.2.8",
     "typescript": "^4.2.3"
   },
   "devDependencies": {
+    "@types/hapi__hapi": "^20.0.9",
+    "@types/hapi__inert": "^5.2.3",
+    "@types/hapi__vision": "^5.5.3",
     "@types/jest": "^27.0.2",
     "@types/node": "^16.10.1",
     "@types/rc": "^1.2.0",
@@ -53,11 +66,40 @@
     "eslint-plugin-standard": "^5.0.0",
     "jest": "^27.2.2",
     "jest-junit": "^12.3.0",
+    "jest-mock-process": "^1.4.1",
     "npm-audit-resolver": "^2.3.1",
     "npm-check-updates": "^11.8.5",
     "prettier": "^2.3.0",
     "ts-jest": "^27.0.5",
     "ts-node": "^10.1.0",
     "tsconfig-paths": "^3.11.0"
+  },
+  "peerDependencies": {
+    "@mojaloop/central-services-error-handling": "11.3.0",
+    "@mojaloop/central-services-logger": "10.6.2",
+    "@mojaloop/central-services-metrics": "11.0.0",
+    "@mojaloop/event-sdk": "10.7.1",
+    "ajv": "8.6.3",
+    "ajv-keywords": "5.0.0"
+  },
+  "peerDependenciesMeta": {
+    "@mojaloop/central-services-error-handling": {
+      "optional": false
+    },
+    "@mojaloop/central-services-logger": {
+      "optional": false
+    },
+    "@mojaloop/central-services-metrics": {
+      "optional": false
+    },
+    "@mojaloop/event-sdk": {
+      "optional": false
+    },
+    "ajv": {
+      "optional": false
+    },
+    "ajv-keyboards": {
+      "optional": false
+    }
   }
 }

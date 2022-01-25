@@ -27,69 +27,17 @@
  --------------
  ******/
 
-import Config from '../shared/config'
-import { logger } from '../shared/logger'
+import PQueue from 'p-queue'
 
-export class KetoChangeProcessor {
-  queue: string[][];
-  timerOn: boolean;
-  timeoutId: NodeJS.Timeout;
-  updateFn: (subjectObjectCombos: string[]) => Promise<void>;
+export default class KetoChangeProcessor {
+  private static _instance: KetoChangeProcessor;
+  public queue: PQueue;
 
-  constructor (updateFn: (subjectObjectCombos: string[]) => Promise<void>) {
-    this.queue = []
-    this.timerOn = true
-    this.timeoutId = setTimeout(this._processQueue.bind(this))
-    this.updateFn = updateFn
+  private constructor () {
+    this.queue = new PQueue({ concurrency: 1 })
   }
 
-  _pushQueue (subjectObjectCombos: string []) : void {
-    this.queue.push(subjectObjectCombos)
-  }
-
-  _popQueue () : string[] | undefined {
-    return this.queue.shift()
-  }
-
-  _getFirstItemInQueue () : string[] | null {
-    if (this.queue.length > 0) {
-      return this.queue[0]
-    } else {
-      return null
-    }
-  }
-
-  async _processQueue () : Promise<void> {
-    if (this.timerOn) {
-      const subjectObjectCombos = this._getFirstItemInQueue()
-      if (subjectObjectCombos) {
-        try {
-          await this._updateRelationTuples(subjectObjectCombos)
-          this._popQueue()
-        } catch (err: any) {
-          logger.error(err.message)
-        }
-      }
-      this.timeoutId = setTimeout(this._processQueue.bind(this), Config.KETO_QUEUE_PROCESS_INTERVAL_MS)
-    }
-  }
-
-  async _updateRelationTuples (subjectObjectCombos: string[]) : Promise<void> {
-    await this.updateFn(subjectObjectCombos)
-    logger.info('Updated the relation tuples in Keto', subjectObjectCombos)
-  }
-
-  addToQueue (subjectObjectCombos: string[]) : void {
-    this._pushQueue(subjectObjectCombos)
-  }
-
-  getQueue () : string[][] {
-    return this.queue
-  }
-
-  // Helper functions for unit tests
-  destroy () : void {
-    this.timerOn = false
-    clearTimeout(this.timeoutId)
+  public static getInstance (): KetoChangeProcessor {
+    return this._instance || (this._instance = new this())
   }
 }

@@ -27,17 +27,54 @@
 
  --------------
  ******/
+/* eslint-disable import/first */
 
-// eslint-disable-next-line max-len
-import { startOperator, getPermissionExclusionResourceStore, getPermissionExclusionsChangeProcessor, getWatch } from '../../src/permission-exclusions-operator'
+// Mock functions for jest. Keep these functions at the top because jest.mock calls will be hoisted to below these lines
+const mockAddToQueue = jest.fn().mockImplementation(async (inputFn) => {
+  await inputFn()
+})
 
-jest.mock('@kubernetes/client-node');
-jest.mock('../../src/lib/permission-exclusions-store');
-jest.mock('../../src/lib/keto-change-processor');
+// Mock K8s client-node library
+import * as k8s from '@kubernetes/client-node'
+import { PermissionExclusionResources } from '../../src/lib/permission-exclusions-store'
+import { startOperator } from '../../src/permission-exclusions-operator'
+import { PermissionExclusionsValidator, UserRole, RolePermissions, PermissionExclusions } from '../../src/validation/permission-exclusions'
+
+jest.mock('../../src/lib/permission-exclusions-store')
+jest.mock('../../src/validation/permission-exclusions')
+jest.mock('@kubernetes/client-node')
+
+const k8sWatchInstance = (<any>k8s.Watch).mock.instances[0]
+
+// PermissionExclusionResources
+const permissionExclusionResourceStoreObject = (<any>PermissionExclusionResources).mock.instances[0];
+(permissionExclusionResourceStoreObject.getConsolidatedTempData as jest.Mock).mockReturnValue({
+  pe1: {
+    permissionsA: [
+      'PERM1'
+    ],
+    permissionsB: [
+      'PERM2'
+    ]
+  }
+})
+
+jest.mock('../../src/lib/keto-change-processor', () => {
+  return {
+    getInstance: jest.fn().mockImplementation(() => {
+      return {
+        queue: {
+          add: mockAddToQueue
+        }
+      }
+    })
+  }
+})
 
 const sampleApiObj = {
   metadata: {
-    name: 'sampleResource1'
+    name: 'sampleResource1',
+    generation: 1
   },
   spec: {
     permissionsA: [
@@ -51,7 +88,8 @@ const sampleApiObj = {
 
 const wrongApiObjWithoutPermissionsB = {
   metadata: {
-    name: 'sampleResource1'
+    name: 'sampleResource1',
+    generation: 1
   },
   spec: {
     permissionsA: [
@@ -62,7 +100,8 @@ const wrongApiObjWithoutPermissionsB = {
 
 const wrongApiObjWithoutPermissionsA = {
   metadata: {
-    name: 'sampleResource1'
+    name: 'sampleResource1',
+    generation: 1
   },
   spec: {
     permissionsB: [
@@ -95,8 +134,8 @@ const wrongApiObjWithoutResourceName = {
 }
 
 const createWatchEventImplementation = (phase: string, apiObj: any) => {
-  return (_path: string, _queryParams: any, eventCallback: jest.Mock, _doneCallback: jest.Mock) => {
-    eventCallback(phase, apiObj)
+  return async (_path: string, _queryParams: any, eventCallback: jest.Mock, _doneCallback: jest.Mock) => {
+    await eventCallback(phase, apiObj)
   }
 }
 
@@ -111,11 +150,13 @@ describe('Permission Exclusion operator', (): void => {
   let spyDeleteResource: jest.Mock
   let spyAddToQueue: jest.Mock
   let spyWatch: jest.Mock
+  let peValidatorInstance: any
   beforeAll(() => {
-    spyUpdateResource = (getPermissionExclusionResourceStore().updateResource as jest.Mock)
-    spyDeleteResource = (getPermissionExclusionResourceStore().deleteResource as jest.Mock)
-    spyAddToQueue = (getPermissionExclusionsChangeProcessor().addToQueue as jest.Mock)
-    spyWatch = (getWatch().watch as jest.Mock)
+    spyUpdateResource = (permissionExclusionResourceStoreObject.updateResource as jest.Mock)
+    spyDeleteResource = (permissionExclusionResourceStoreObject.deleteResource as jest.Mock)
+    peValidatorInstance = (PermissionExclusionsValidator as jest.Mock).mock.instances[0]
+    spyAddToQueue = mockAddToQueue
+    spyWatch = k8sWatchInstance.watch
   })
   describe('Positive Scenarios', (): void => {
     afterEach(() => {
@@ -125,6 +166,7 @@ describe('Permission Exclusion operator', (): void => {
       spyWatch.mockClear()
     })
     it('startOperator should call the function watch', async () => {
+      jest.useFakeTimers()
       await startOperator()
       expect(spyWatch).toHaveBeenCalledTimes(1)
     })
@@ -132,14 +174,14 @@ describe('Permission Exclusion operator', (): void => {
       spyWatch.mockImplementation(createWatchEventImplementation('ADDED', sampleApiObj))
       await startOperator()
       expect(spyWatch).toHaveBeenCalledTimes(1)
-      expect(spyUpdateResource).toHaveBeenCalledWith('sampleResource1', ['samplePermissionA1'], ['samplePermissionB1'])
+      expect(spyUpdateResource).toHaveBeenCalledWith('sampleResource1', '1', ['samplePermissionA1'], ['samplePermissionB1'])
       expect(spyAddToQueue).toHaveBeenCalledTimes(1)
     })
     it('MODIFIED phase event', async () => {
       spyWatch.mockImplementation(createWatchEventImplementation('MODIFIED', sampleApiObj))
       await startOperator()
       expect(spyWatch).toHaveBeenCalledTimes(1)
-      expect(spyUpdateResource).toHaveBeenCalledWith('sampleResource1', ['samplePermissionA1'], ['samplePermissionB1'])
+      expect(spyUpdateResource).toHaveBeenCalledWith('sampleResource1', '1', ['samplePermissionA1'], ['samplePermissionB1'])
       expect(spyAddToQueue).toHaveBeenCalledTimes(1)
     })
     it('DELETED phase event', async () => {
@@ -178,12 +220,16 @@ describe('Permission Exclusion operator', (): void => {
       await expect(startOperator).not.toThrowError()
       expect(spyWatch).toHaveBeenCalledTimes(1)
     })
+    it('startOperator should catch the error thrown by K8S watch', async () => {
+      (peValidatorInstance.validatePermissionExclusions as jest.Mock).mockRejectedValue(new Error('Some error'))
+      await expect(startOperator).not.toThrowError()
+      expect(spyWatch).toHaveBeenCalledTimes(1)
+    })
     it('Unknown phase event', async () => {
       spyWatch.mockImplementation(createWatchEventImplementation('SOMEEVENT', sampleApiObj))
       await startOperator()
       expect(spyUpdateResource).not.toHaveBeenCalled()
       expect(spyDeleteResource).not.toHaveBeenCalled()
-      expect(spyAddToQueue).not.toHaveBeenCalled()
     })
     it('Event with wrong api object 1', async () => {
       spyWatch.mockImplementation(createWatchEventImplementation('ADDED', wrongApiObjWithoutMetadata))

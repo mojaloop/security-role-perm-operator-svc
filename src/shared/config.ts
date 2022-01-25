@@ -34,6 +34,13 @@ import Package from '../../package.json'
 export interface ServiceConfig {
   // package.json
   PACKAGE: Record<string, unknown>;
+  // API Server
+  PORT: number;
+  HOST: string;
+  CORS_WHITELIST: string[];
+  ALLOW_CREDENTIALS: boolean;
+
+  // Operators
   ROLE_PERMISSION_OPERATOR: {
     WATCH_RESOURCE_GROUP: string;
     WATCH_RESOURCE_VERSION: string;
@@ -47,7 +54,6 @@ export interface ServiceConfig {
   WATCH_NAMESPACE: string;
   ORY_KETO_READ_SERVICE_URL: string;
   ORY_KETO_WRITE_SERVICE_URL: string;
-  KETO_QUEUE_PROCESS_INTERVAL_MS: number;
 }
 
 const RC = parse(rc('ROLE_PERM_OPERATOR', Config)) as ServiceConfig

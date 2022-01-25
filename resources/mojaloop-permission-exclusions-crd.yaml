@@ -63,10 +63,20 @@ spec:
               type: object
               properties:
                 state:
-                  description: The state of keto tuples.
+                  description: The state of custom resource.
                   type: string
+                errors:
+                  description: If there are any errors.
+                  type: array
+                  items:
+                    description: Error.
+                    type: string
       subresources:
         status: {}
       additionalPrinterColumns:
+        - name: Status
+          type: string
+          description: Validation Status
+          jsonPath: .status.state
   conversion:
     strategy: None
