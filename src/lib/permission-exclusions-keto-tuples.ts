@@ -33,10 +33,12 @@ import { logger } from '../shared/logger'
 import { KETO_NAMESPACES, KETO_RELATIONS, PAGE_SIZE } from '../constants'
 
 class KetoTuples {
-  relationshipApi: keto.RelationshipApi;
+  relationshipApi: keto.RelationshipApi
+  adminRelationshipApi: keto.RelationshipApi
 
   constructor () {
     this.relationshipApi = new keto.RelationshipApi(undefined, Config.ORY_KETO_READ_SERVICE_URL)
+    this.adminRelationshipApi = new keto.RelationshipApi(undefined, Config.ORY_KETO_WRITE_SERVICE_URL)
   }
 
   /**
@@ -75,7 +77,7 @@ class KetoTuples {
     const relationshipPatch = this._generatePermissionExclusionComboPatchDeltaArray(addPermissionCombos, deletePermissionCombos)
     if (relationshipPatch.length > 0) {
       logger.info('Patching permission exclusions in Ory Keto....')
-      await this.relationshipApi.patchRelationships({ relationshipPatch })
+      await this.adminRelationshipApi.patchRelationships({ relationshipPatch })
     }
   }
 

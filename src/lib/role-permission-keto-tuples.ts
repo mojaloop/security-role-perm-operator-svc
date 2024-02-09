@@ -38,9 +38,11 @@ import { KETO_NAMESPACES, KETO_RELATIONS, PAGE_SIZE } from '../constants'
 
 class KetoTuples {
   relationshipApi: RelationshipApi;
+  adminRelationshipApi: RelationshipApi;
 
   constructor () {
     this.relationshipApi = new RelationshipApi(undefined, Config.ORY_KETO_READ_SERVICE_URL)
+    this.adminRelationshipApi = new RelationshipApi(undefined, Config.ORY_KETO_WRITE_SERVICE_URL)
   }
 
   /**
@@ -70,7 +72,7 @@ class KetoTuples {
   async updateAllRolePermissions (rolePermissionCombos: string[]) : Promise<void> {
     const currentPermissionCombos = (await this.getAllRolePermissionCombos()) || []
     // Calculate the permissions to be deleted
-    const deletePermissionCombos = currentPermissionCombos?.filter(item => !rolePermissionCombos.includes(item))
+    const deletePermissionCombos = currentPermissionCombos?.filter(item => !rolePermissionCombos?.includes(item))
     // Calculate the permissions to be added
     const addPermissionCombos = rolePermissionCombos?.filter(item => !currentPermissionCombos.includes(item))
 
@@ -80,7 +82,7 @@ class KetoTuples {
     )
     if (relationshipPatch.length > 0) {
       logger.info('Patching permissions in Ory Keto....')
-      await this.relationshipApi.patchRelationships({ relationshipPatch })
+      await this.adminRelationshipApi.patchRelationships({ relationshipPatch })
     }
   }
 

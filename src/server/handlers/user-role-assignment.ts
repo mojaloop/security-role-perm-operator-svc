@@ -28,24 +28,26 @@
  --------------
  ******/
 
-import { StateResponseToolkit } from '~/server/plugins/state'
+import * as keto from '@ory/keto-client'
 import { Request, ResponseObject } from '@hapi/hapi'
+import { StateResponseToolkit } from '~/server/plugins/state'
 import { PermissionExclusionsValidator, UserRole } from '../../validation/permission-exclusions'
 import { ValidationError } from '../../validation/validation-error'
 import Config from '../../shared/config'
-import * as keto from '@ory/keto-client'
+
+import { KETO_NAMESPACES, KETO_RELATIONS, PAGE_SIZE } from '../../constants'
 
 interface AssignmentErrorResponse {
   isCreated: boolean;
   errors: string[];
 }
 
-const oryKetoReadApi: keto.ReadApi = new keto.ReadApi(
+const relationshipApi = new keto.RelationshipApi(
   undefined,
   Config.ORY_KETO_READ_SERVICE_URL
 )
 
-const oryKetoWriteApi: keto.WriteApi = new keto.WriteApi(
+const adminRelationshipApi = new keto.RelationshipApi(
   undefined,
   Config.ORY_KETO_WRITE_SERVICE_URL
 )
@@ -64,19 +66,17 @@ const AssignUserRole = async (
       await permissionExclusionsValidator.validateUserRole(userRole)
 
       // Get current role assignments
-      const responseGetCurrentRoles = await oryKetoReadApi.getRelationTuples(
-        'role',
-        undefined,
-        'member',
-        userRole.username,
-        undefined,
-        1000000
-      )
+      const responseGetCurrentRoles = await relationshipApi.getRelationships({
+        namespace: KETO_NAMESPACES.role,
+        relation: KETO_RELATIONS.member,
+        subjectId: userRole.username,
+        pageSize: PAGE_SIZE
+      })
       const currentRoles = responseGetCurrentRoles.data?.relation_tuples?.map(({ object }) => object) || []
       // Get the difference
-      const patchDeltaArr = _generateUserRolesPatchDeltaArray(currentRoles, userRole.roles, userRole.username)
+      const relationshipPatch = _generateUserRolesPatchDeltaArray(currentRoles, userRole.roles, userRole.username)
       // Apply patch
-      await oryKetoWriteApi.patchRelationTuples(patchDeltaArr)
+      await adminRelationshipApi.patchRelationships({ relationshipPatch })
       h.response().code(200)
     } catch (err) {
       if (err instanceof ValidationError) {
@@ -98,12 +98,13 @@ const AssignUserRole = async (
 
 const _generateUserRolesPatchDeltaArray = (
   currentRoles: string[], newRoles: string[], username: string
-): keto.PatchDelta[] => {
+): keto.RelationshipPatch[] => {
   // Calculate the roles to be deleted
   const deleteRoles = currentRoles?.filter(item => !newRoles.includes(item)) || []
   // Calculate the permissions to be added
   const addRoles = newRoles?.filter(item => !currentRoles.includes(item)) || []
-  let patchDeltaArray: keto.PatchDelta[] = []
+  let patchDeltaArray: keto.RelationshipPatch[] = []
+
   patchDeltaArray = patchDeltaArray.concat(addRoles.map(role => {
     return {
       action: 'insert',
@@ -111,7 +112,7 @@ const _generateUserRolesPatchDeltaArray = (
         namespace: 'role',
         object: role,
         relation: 'member',
-        subject: username
+        subject_id: username
       }
     }
   }))

@@ -87,8 +87,8 @@ describe('user role assignment handlers', (): void => {
   let spyGetRelationTuples: any
   beforeAll(() => {
     peValidatorInstance = (PermissionExclusionsValidator as jest.Mock).mock.instances[0]
-    oryKetoReadApi = (keto.ReadApi as jest.Mock).mock.instances[0]
-    spyGetRelationTuples = oryKetoReadApi.getRelationTuples as jest.Mock
+    oryKetoReadApi = (keto.RelationshipApi as jest.Mock).mock.instances[0]
+    spyGetRelationTuples = oryKetoReadApi.getRelationships as jest.Mock
     spyGetRelationTuples.mockResolvedValue({
       status: 200,
       statusText: 'OK',

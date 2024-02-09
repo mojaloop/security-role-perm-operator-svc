@@ -51,10 +51,10 @@ describe('role-resources', (): void => {
     let spyGetRelationTuples: jest.Mock
     let spyPatchRelationTuples: jest.Mock
 
-    beforeAll(() => {
+    beforeEach(() => {
       oryKeto = new KetoTuples()
       spyGetRelationTuples = oryKeto.relationshipApi.getRelationships as jest.Mock
-      spyPatchRelationTuples = oryKeto.relationshipApi.patchRelationships as jest.Mock
+      spyPatchRelationTuples = oryKeto.adminRelationshipApi.patchRelationships as jest.Mock
       spyGetRelationTuples.mockResolvedValue({
         status: 200,
         statusText: 'OK',
@@ -95,12 +95,14 @@ describe('role-resources', (): void => {
     it('updateAllRolePermissions with empty array', async () => {
       const newRolePermissionCombos: any[] = []
       await oryKeto.updateAllRolePermissions(newRolePermissionCombos)
-      expect(spyPatchRelationTuples).toHaveBeenCalledWith(expect.arrayContaining([
-        {
-          action: 'delete',
-          relation_tuple: expect.objectContaining({ object: 'samplePermission1' })
-        }
-      ]))
+      expect(spyPatchRelationTuples).toHaveBeenCalledWith({
+        relationshipPatch: expect.arrayContaining([
+          {
+            action: 'delete',
+            relation_tuple: expect.objectContaining({ object: 'samplePermission1' })
+          }
+        ])
+      })
     })
     it('updateAllRolePermissions with same rolePermissions', async () => {
       const newRolePermissionCombos = [
@@ -111,7 +113,7 @@ describe('role-resources', (): void => {
     })
     // Negative scenarios
     it('getAllRolePermissionCombos', async () => {
-      const spyGetRelationTuples = oryKeto.relationshipApi.patchRelationships as jest.Mock
+      const spyGetRelationTuples = oryKeto.relationshipApi.getRelationships as jest.Mock
       spyGetRelationTuples.mockResolvedValue({
         status: 200,
         statusText: 'OK',
@@ -137,12 +139,14 @@ describe('role-resources', (): void => {
         'sampleRole2:samplePermission2'
       ]
       await oryKeto.updateAllRolePermissions(newRolePermissionCombos)
-      expect(spyPatchRelationTuples).toHaveBeenCalledWith(expect.arrayContaining([
-        {
-          action: 'insert',
-          relation_tuple: expect.objectContaining({ object: 'samplePermission2' })
-        }
-      ]))
+      expect(spyPatchRelationTuples).toHaveBeenCalledWith({
+        relationshipPatch: expect.arrayContaining([
+          {
+            action: 'insert',
+            relation_tuple: expect.objectContaining({ object: 'samplePermission2' })
+          }
+        ])
+      })
     })
   })
 })
