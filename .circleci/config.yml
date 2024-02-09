@@ -7,9 +7,9 @@ version: 2.1
 # Orbs used in this pipeline
 ##
 orbs:
-  anchore: anchore/anchore-engine@1.6.0
+  anchore: anchore/anchore-engine@1.9.0
   github-release: h-matsuo/github-release@0.1.3
-  slack: circleci/slack@3.4.2
+  slack: circleci/slack@4.12.5 # Ref: https://github.com/mojaloop/ci-config/tree/master/slack-templates
 
 ##
 # defaults
@@ -48,13 +48,21 @@ defaults_license_scanner: &defaults_license_scanner
 ##
 executors:
   default-docker:
-    working_directory: /home/circleci/project
+    working_directory: &WORKING_DIR /home/circleci/project
+    shell: "/bin/sh -leo pipefail" ## Ref: https://circleci.com/docs/env-vars/#alpine-linux
+    environment:
+      BASH_ENV:
+        /etc/profile ## Ref: https://circleci.com/docs/env-vars/#alpine-linux
+      NVM_ARCH_UNOFFICIAL_OVERRIDE:
+        x64-musl ## Ref: https://github.com/nvm-sh/nvm/issues/1102#issuecomment-550572252
     docker:
-      - image: node:12.16.1-alpine
+      - image: node:lts-alpine # Ref: https://hub.docker.com/_/node?tab=tags&page=1&name=alpine
 
   default-machine:
+    working_directory: *WORKING_DIR
+    shell: "/bin/bash -leo pipefail"
     machine:
-      image: ubuntu-1604:201903-01
+      image: ubuntu-2204:2023.04.2 # Ref: https://circleci.com/developer/machine/image/ubuntu-2204
 
 ##
 # Jobs
