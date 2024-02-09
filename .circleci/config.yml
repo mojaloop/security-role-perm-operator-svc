@@ -87,7 +87,7 @@ jobs:
           command: cd $(npm root -g)/npm
       - run:
           name: Update NPM install
-          command: npm ci
+          command: npm install # ci
       - run:
           name: Delete build dependencies
           command: apk del build-dependencies
