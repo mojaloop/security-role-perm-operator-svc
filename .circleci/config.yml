@@ -17,13 +17,16 @@ orbs:
 # YAML defaults templates, in alphabetical order
 ##
 defaults_Dependencies: &defaults_Dependencies |
+  apk --no-cache add bash
   apk --no-cache add git
   apk --no-cache add ca-certificates
   apk --no-cache add curl
   apk --no-cache add openssh-client
-  apk add --no-cache -t build-dependencies make gcc g++ python libtool autoconf automake jq
-  npm config set unsafe-perm true
-  npm install -g node-gyp
+  apk --no-cache add -t build-dependencies make gcc g++ python3 libtool autoconf automake jq
+  apk --no-cache add -t openssl ncurses coreutils libgcc linux-headers grep util-linux binutils findutils
+  apk --no-cache add librdkafka-dev
+#  npm config set unsafe-perm true
+#  npm install -g node-gyp
 
 defaults_awsCliDependencies: &defaults_awsCliDependencies |
   apk upgrade --no-cache
@@ -469,7 +472,6 @@ jobs:
 # CircleCI Workflow config
 ##
 workflows:
-  version: 2
   build_and_test:
     jobs:
       - build-local:
