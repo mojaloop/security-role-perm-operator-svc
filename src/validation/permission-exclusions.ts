@@ -31,6 +31,7 @@ import * as keto from '@ory/keto-client'
 import { ValidationError } from './validation-error'
 import { ServiceConfig } from '../shared/config'
 import { logger } from '../shared/logger'
+import { KETO_NAMESPACES, KETO_RELATIONS, PAGE_SIZE } from '../constants'
 
 export interface UserRole {
   username: string;
@@ -49,7 +50,7 @@ export interface PermissionExclusions {
 
 export interface PermissionExclusionCombos {
   permissionA: string;
-  permissionB: string;
+  permissionB: string | undefined;
 }
 
 export function isPermissionExclusionCombos (obj: PermissionExclusions | PermissionExclusionCombos): boolean {
@@ -57,12 +58,12 @@ export function isPermissionExclusionCombos (obj: PermissionExclusions | Permiss
 }
 
 export class PermissionExclusionsValidator {
-  oryKetoReadApi: keto.ReadApi
+  relationshipApi: keto.RelationshipApi
   serviceConfig: ServiceConfig
 
   constructor (serviceConfig: ServiceConfig) {
     this.serviceConfig = serviceConfig
-    this.oryKetoReadApi = new keto.ReadApi(
+    this.relationshipApi = new keto.RelationshipApi(
       undefined,
       serviceConfig.ORY_KETO_READ_SERVICE_URL
     )
@@ -76,11 +77,12 @@ export class PermissionExclusionsValidator {
     if (permissionExclusions.length <= 0) {
       return permissionExclusionsSet
     }
+
     if (isPermissionExclusionCombos(permissionExclusions[0])) {
       const castedPermissionExclusions = <PermissionExclusionCombos[]>permissionExclusions
       castedPermissionExclusions
         .filter(item => item.permissionA === permission)
-        .forEach(perm => permissionExclusionsSet.add(perm.permissionB))
+        .forEach(perm => permissionExclusionsSet.add(perm.permissionB || ''))
       castedPermissionExclusions
         .filter(item => item.permissionB === permission)
         .forEach(perm => permissionExclusionsSet.add(perm.permissionA))
@@ -137,7 +139,7 @@ export class PermissionExclusionsValidator {
           }
         }
       }
-      // Check the new permissions permissions with the excluded permissions using set intersection
+      // Check the new permissions with the excluded permissions using set intersection
       const intersect = new Set([...totalGrantedPermissions].filter(i => totalExcludedPermissions.has(i)))
       if (intersect.size > 0) {
         validationErrors.push(
@@ -160,17 +162,16 @@ export class PermissionExclusionsValidator {
     const userRoles : Map<string, string[]> = new Map()
     for (let i = 0; i < rolePermissions.length; i++) {
       try {
-        const readRolesResponse = await this.oryKetoReadApi.getRelationTuples(
-          'role',
-          rolePermissions[i].rolename,
-          'member',
-          undefined,
-          undefined,
-          1000000
-        )
-        const readRolesRelationTuples = readRolesResponse.data?.relation_tuples || []
+        const readRolesResponse = await this.relationshipApi.getRelationships({
+          namespace: KETO_NAMESPACES.role,
+          object: rolePermissions[i].rolename,
+          relation: KETO_RELATIONS.member,
+          pageSize: PAGE_SIZE
+        })
+
+        const readRolesRelationTuples: keto.Relationship[] = readRolesResponse.data?.relation_tuples || []
         readRolesRelationTuples.forEach(relationTuple => {
-          const user = relationTuple.subject
+          const user = relationTuple.subject_id || ''
           if (!userRoles.has(user)) {
             userRoles.set(user, [])
           }
@@ -189,15 +190,13 @@ export class PermissionExclusionsValidator {
     // Iterate through all the roles and get the role permission mappings
     const rolePermissions: RolePermissions[] = []
     for (let i = 0; i < userRole.roles.length; i++) {
-      const readRolePermissionsResponse = await this.oryKetoReadApi.getRelationTuples(
-        'permission',
-        undefined,
-        'granted',
-        'role:' + userRole.roles[i] + '#member',
-        undefined,
-        1000000
-      )
-      const readRolePermissionsRelationTuples = readRolePermissionsResponse.data?.relation_tuples || []
+      const readRolePermissionsResponse = await this.relationshipApi.getRelationships({
+        namespace: KETO_NAMESPACES.permission,
+        relation: KETO_RELATIONS.granted,
+        subjectId: `role:${userRole.roles[i]}#member`,
+        pageSize: PAGE_SIZE
+      })
+      const readRolePermissionsRelationTuples: keto.Relationship[] = readRolePermissionsResponse.data?.relation_tuples || []
       const permissions = readRolePermissionsRelationTuples.map(item => item.object)
       rolePermissions.push({
         rolename: userRole.roles[i],
@@ -206,20 +205,17 @@ export class PermissionExclusionsValidator {
     }
 
     // Get all the permission exclusions
-    let permissionExclusionCombos: PermissionExclusionCombos[] = []
-    const readPermissionExclusionsResponse = await this.oryKetoReadApi.getRelationTuples(
-      'permission',
-      undefined,
-      'excludes',
-      undefined,
-      undefined,
-      1000000
-    )
-    const readPermissionExclusionsRelationTuples = readPermissionExclusionsResponse.data?.relation_tuples || []
-    permissionExclusionCombos = readPermissionExclusionsRelationTuples.map(item => {
+    // let permissionExclusionCombos: PermissionExclusionCombos[]
+    const readPermissionExclusionsResponse = await this.relationshipApi.getRelationships({
+      namespace: KETO_NAMESPACES.permission,
+      relation: KETO_RELATIONS.excludes,
+      pageSize: PAGE_SIZE
+    })
+    const readPermissionExclusionsRelationTuples: keto.Relationship[] = readPermissionExclusionsResponse.data?.relation_tuples || []
+    const permissionExclusionCombos: PermissionExclusionCombos[] = readPermissionExclusionsRelationTuples.map(item => {
       return {
         permissionA: item.object,
-        permissionB: item.subject.replace(/permission:([^#.]*)(#.*)?/, '$1')
+        permissionB: item.subject_id?.replace(/permission:([^#.]*)(#.*)?/, '$1')
       }
     })
     this.validateUserRolePermissions([userRole], rolePermissions, permissionExclusionCombos)
@@ -228,17 +224,15 @@ export class PermissionExclusionsValidator {
   async validatePermissionExclusions (permissionExclusions: PermissionExclusions[]) : Promise<void> {
     // Get all the role permission mappings
     const roles: any = {}
-    const readRolePermissionsResponse = await this.oryKetoReadApi.getRelationTuples(
-      'permission',
-      undefined,
-      'granted',
-      undefined,
-      undefined,
-      1000000
-    )
-    const readRolePermissionsRelationTuples = readRolePermissionsResponse.data?.relation_tuples || []
+    const readRolePermissionsResponse = await this.relationshipApi.getRelationships({
+      namespace: KETO_NAMESPACES.permission,
+      relation: KETO_RELATIONS.granted,
+      pageSize: PAGE_SIZE
+    })
+
+    const readRolePermissionsRelationTuples: keto.Relationship[] = readRolePermissionsResponse.data?.relation_tuples || []
     readRolePermissionsRelationTuples.forEach(rolePermission => {
-      const rolename = rolePermission.subject.replace(/role:([^#.]*)(#.*)?/, '$1')
+      const rolename = rolePermission.subject_id?.replace(/role:([^#.]*)(#.*)?/, '$1') || ''
       const permissions = rolePermission.object
       if (!roles[rolename]) {
         roles[rolename] = []
@@ -257,20 +251,18 @@ export class PermissionExclusionsValidator {
 
   async validateRolePermissions (rolePermissions: RolePermissions[]) : Promise<void> {
     // Get all the permission exclusions
-    let permissionExclusionCombos: PermissionExclusionCombos[] = []
-    const readPermissionExclusionsResponse = await this.oryKetoReadApi.getRelationTuples(
-      'permission',
-      undefined,
-      'excludes',
-      undefined,
-      undefined,
-      1000000
-    )
-    const readPermissionExclusionsRelationTuples = readPermissionExclusionsResponse.data?.relation_tuples || []
-    permissionExclusionCombos = readPermissionExclusionsRelationTuples.map(item => {
+    // let permissionExclusionCombos: PermissionExclusionCombos[]
+    const readPermissionExclusionsResponse = await this.relationshipApi.getRelationships({
+      namespace: KETO_NAMESPACES.permission,
+      relation: KETO_RELATIONS.excludes,
+      pageSize: PAGE_SIZE
+    })
+
+    const readPermissionExclusionsRelationTuples: keto.Relationship[] = readPermissionExclusionsResponse.data?.relation_tuples || []
+    const permissionExclusionCombos: PermissionExclusionCombos[] = readPermissionExclusionsRelationTuples.map(item => {
       return {
         permissionA: item.object,
-        permissionB: item.subject.replace(/permission:([^#.]*)(#.*)?/, '$1')
+        permissionB: item.subject_id?.replace(/permission:([^#.]*)(#.*)?/, '$1')
       }
     })
     await this.validateRolePermissionsAndPermissionExclusions(rolePermissions, permissionExclusionCombos)

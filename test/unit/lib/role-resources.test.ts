@@ -28,13 +28,13 @@
  --------------
  ******/
 
-import { RoleResources } from "../../../src/lib/role-resources";
+import { RoleResources } from '../../../src/lib/role-resources'
 
 describe('role-resources', (): void => {
   describe('Add / Update role resources', (): void => {
-    var roleResourceStore: RoleResources
+    let roleResourceStore: RoleResources
     beforeAll(() => {
-      roleResourceStore = new RoleResources();
+      roleResourceStore = new RoleResources()
     })
 
     it('getData should be empty initially', (): void => {
@@ -46,12 +46,12 @@ describe('role-resources', (): void => {
       roleResourceStore.updateRoleResource('sampleResource1', '1', 'sampleRole1', ['samplePermission1'])
       const data = roleResourceStore.getData()
       expect(data).toHaveProperty('sampleResource1')
-      expect(data['sampleResource1']).toHaveProperty('role')
-      expect(data['sampleResource1']).toHaveProperty('permissions')
-      expect(data['sampleResource1'].role).toEqual('sampleRole1')
-      expect(Array.isArray(data['sampleResource1'].permissions))
-      expect(data['sampleResource1'].permissions.length).toEqual(1)
-      expect(data['sampleResource1'].permissions[0]).toEqual('samplePermission1')
+      expect(data.sampleResource1).toHaveProperty('role')
+      expect(data.sampleResource1).toHaveProperty('permissions')
+      expect(data.sampleResource1.role).toEqual('sampleRole1')
+      expect(Array.isArray(data.sampleResource1.permissions))
+      expect(data.sampleResource1.permissions?.length).toEqual(1)
+      expect(data.sampleResource1.permissions?.[0]).toEqual('samplePermission1')
     })
     it('getUniqueRolePermissionCombos', (): void => {
       const data = roleResourceStore.getUniqueRolePermissionCombos()
@@ -68,13 +68,13 @@ describe('role-resources', (): void => {
       roleResourceStore.updateRoleResource('sampleResource2', '1', 'sampleRole2', ['samplePermission1', 'samplePermission2'])
       const data = roleResourceStore.getData()
       expect(data).toHaveProperty('sampleResource2')
-      expect(data['sampleResource2']).toHaveProperty('role')
-      expect(data['sampleResource2']).toHaveProperty('permissions')
-      expect(data['sampleResource2'].role).toEqual('sampleRole2')
-      expect(Array.isArray(data['sampleResource2'].permissions))
-      expect(data['sampleResource2'].permissions.length).toEqual(2)
-      expect(data['sampleResource2'].permissions).toContain('samplePermission1')
-      expect(data['sampleResource2'].permissions).toContain('samplePermission2')
+      expect(data.sampleResource2).toHaveProperty('role')
+      expect(data.sampleResource2).toHaveProperty('permissions')
+      expect(data.sampleResource2.role).toEqual('sampleRole2')
+      expect(Array.isArray(data.sampleResource2.permissions))
+      expect(data.sampleResource2.permissions?.length).toEqual(2)
+      expect(data.sampleResource2.permissions).toContain('samplePermission1')
+      expect(data.sampleResource2.permissions).toContain('samplePermission2')
     })
     it('getUniqueRolePermissionCombos again', (): void => {
       const data = roleResourceStore.getUniqueRolePermissionCombos()
@@ -88,13 +88,13 @@ describe('role-resources', (): void => {
       roleResourceStore.updateRoleResource('sampleResource3', '1', 'sampleRole2', ['samplePermission2', 'samplePermission3'])
       const data = roleResourceStore.getData()
       expect(data).toHaveProperty('sampleResource3')
-      expect(data['sampleResource3']).toHaveProperty('role')
-      expect(data['sampleResource3']).toHaveProperty('permissions')
-      expect(data['sampleResource3'].role).toEqual('sampleRole2')
-      expect(Array.isArray(data['sampleResource3'].permissions))
-      expect(data['sampleResource3'].permissions.length).toEqual(2)
-      expect(data['sampleResource3'].permissions).toContain('samplePermission2')
-      expect(data['sampleResource3'].permissions).toContain('samplePermission3')
+      expect(data.sampleResource3).toHaveProperty('role')
+      expect(data.sampleResource3).toHaveProperty('permissions')
+      expect(data.sampleResource3.role).toEqual('sampleRole2')
+      expect(Array.isArray(data.sampleResource3.permissions))
+      expect(data.sampleResource3.permissions?.length).toEqual(2)
+      expect(data.sampleResource3.permissions).toContain('samplePermission2')
+      expect(data.sampleResource3.permissions).toContain('samplePermission3')
     })
     it('getUniqueRolePermissionCombos should contain the combined unique combos', (): void => {
       const data = roleResourceStore.getUniqueRolePermissionCombos()
@@ -132,13 +132,13 @@ describe('role-resources', (): void => {
       roleResourceStore.updateRoleResource('sampleResource2', '2', 'sampleRole2', ['samplePermission4', 'samplePermission5'])
       const data = roleResourceStore.getData()
       expect(data).toHaveProperty('sampleResource2')
-      expect(data['sampleResource2']).toHaveProperty('role')
-      expect(data['sampleResource2']).toHaveProperty('permissions')
-      expect(data['sampleResource2'].role).toEqual('sampleRole2')
-      expect(Array.isArray(data['sampleResource2'].permissions))
-      expect(data['sampleResource2'].permissions.length).toEqual(2)
-      expect(data['sampleResource2'].permissions).toContain('samplePermission4')
-      expect(data['sampleResource2'].permissions).toContain('samplePermission5')
+      expect(data.sampleResource2).toHaveProperty('role')
+      expect(data.sampleResource2).toHaveProperty('permissions')
+      expect(data.sampleResource2.role).toEqual('sampleRole2')
+      expect(Array.isArray(data.sampleResource2.permissions))
+      expect(data.sampleResource2.permissions?.length).toEqual(2)
+      expect(data.sampleResource2.permissions).toContain('samplePermission4')
+      expect(data.sampleResource2.permissions).toContain('samplePermission5')
     })
     it('getUniqueRolePermissionCombos should contain the updated combos', (): void => {
       const data = roleResourceStore.getUniqueRolePermissionCombos()

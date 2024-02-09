@@ -2,7 +2,7 @@ version: "3.7"
 
 services:
   keto:
-    image: oryd/keto:v0.6.0-alpha.3-sqlite
+    image: oryd/keto:v0.11.1-alpha.3-sqlite
     ports:
       - '4466:4466' # Read port
       - '4467:4467' # Write port

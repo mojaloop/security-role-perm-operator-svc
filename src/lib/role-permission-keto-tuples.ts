@@ -27,41 +27,35 @@
  --------------
  ******/
 
-import * as keto from '@ory/keto-client'
-import { PatchDelta, InternalRelationTuple } from '@ory/keto-client'
+import {
+  RelationshipApi,
+  Relationship, RelationshipPatch, RelationshipPatchActionEnum
+} from '@ory/keto-client'
+
 import Config from '../shared/config'
 import { logger } from '../shared/logger'
+import { KETO_NAMESPACES, KETO_RELATIONS, PAGE_SIZE } from '../constants'
 
 class KetoTuples {
-  oryKetoReadApi: keto.ReadApi;
-  oryKetoWriteApi: keto.WriteApi;
+  relationshipApi: RelationshipApi;
 
   constructor () {
-    this.oryKetoReadApi = new keto.ReadApi(
-      undefined,
-      Config.ORY_KETO_READ_SERVICE_URL
-    )
-    this.oryKetoWriteApi = new keto.WriteApi(
-      undefined,
-      Config.ORY_KETO_WRITE_SERVICE_URL
-    )
+    this.relationshipApi = new RelationshipApi(undefined, Config.ORY_KETO_READ_SERVICE_URL)
   }
 
   /**
    * Gets all roles and permissions in the namespace from Ory Keto server.
    */
   async getAllRolePermissionCombos () : Promise<string[]> {
-    const response = await this.oryKetoReadApi.getRelationTuples(
-      'permission',
-      undefined,
-      'granted',
-      undefined,
-      undefined,
-      1000000
-    )
+    const response = await this.relationshipApi.getRelationships({
+      namespace: KETO_NAMESPACES.permission,
+      relation: KETO_RELATIONS.granted,
+      pageSize: PAGE_SIZE
+    })
+
     const relationTuples = response.data?.relation_tuples || []
     return relationTuples.map(tuple => {
-      const role = tuple.subject.replace(/role:(.*)#.*/, '$1')
+      const role = tuple.subject_id?.replace(/role:(.*)#.*/, '$1')
       return role + ':' + tuple.object
     })
   }
@@ -81,40 +75,44 @@ class KetoTuples {
     const addPermissionCombos = rolePermissionCombos?.filter(item => !currentPermissionCombos.includes(item))
 
     // Construct patch delta
-    const patchDeltaArr = this._generateRolePermissionComboPatchDeltaArray(addPermissionCombos, deletePermissionCombos)
-    if (patchDeltaArr.length > 0) {
+    const relationshipPatch = this._generateRolePermissionComboPatchDeltaArray(
+      addPermissionCombos, deletePermissionCombos
+    )
+    if (relationshipPatch.length > 0) {
       logger.info('Patching permissions in Ory Keto....')
-      await this.oryKetoWriteApi.patchRelationTuples(patchDeltaArr)
+      await this.relationshipApi.patchRelationships({ relationshipPatch })
     }
   }
 
   _generateRolePermissionComboPatchDeltaArray (
     addPermissionCombos: string[], deletePermissionCombos: string[]
-  ): PatchDelta[] {
-    let patchDeltaArray: PatchDelta[] = []
+  ): RelationshipPatch[] {
+    let patchDeltaArray: RelationshipPatch[] = []
+
     patchDeltaArray = patchDeltaArray.concat(addPermissionCombos.map(permissionCombo => {
       const rolePermissionArr = permissionCombo.split(':')
       return {
-        action: 'insert',
+        action: RelationshipPatchActionEnum.Insert,
         relation_tuple: this._generatePermissionTuple(rolePermissionArr[0], rolePermissionArr[1])
       }
     }))
     patchDeltaArray = patchDeltaArray.concat(deletePermissionCombos.map(permissionCombo => {
       const rolePermissionArr = permissionCombo.split(':')
       return {
-        action: 'delete',
+        action: RelationshipPatchActionEnum.Delete,
         relation_tuple: this._generatePermissionTuple(rolePermissionArr[0], rolePermissionArr[1])
       }
     }))
+
     return patchDeltaArray
   }
 
-  _generatePermissionTuple (role: string, permission: string): InternalRelationTuple {
+  _generatePermissionTuple (role: string, permission: string): Relationship {
     return {
-      namespace: 'permission',
+      namespace: KETO_NAMESPACES.permission,
       object: permission,
-      relation: 'granted',
-      subject: 'role:' + role + '#member'
+      relation: KETO_RELATIONS.granted,
+      subject_id: `role:${role}#member`
     }
   }
 }
