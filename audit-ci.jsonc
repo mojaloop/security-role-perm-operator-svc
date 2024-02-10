@@ -1,0 +1,18 @@
+{
+  "$schema": "https://github.com/IBM/audit-ci/raw/main/docs/schema.json",
+  // audit-ci supports reading JSON, JSONC, and JSON5 config files.
+  // Only use one of ["low": true, "moderate": true, "high": true, "critical": true]
+  "moderate": true,
+  "allowlist": [ // NOTE: Please add as much information as possible to any items added to the allowList
+    "GHSA-93q8-gq69-wqmw", // Inefficient Regular Expression Complexity in chalk/ansi-regex - https://github.com/advisories/GHSA-93q8-gq69-wqmw
+    "GHSA-fwr7-v2mv-hh25", // Prototype Pollution in async - https://github.com/advisories/GHSA-fwr7-v2mv-hh25
+    "GHSA-rc47-6667-2j5j",  //, http-cache-semantics vulnerable to Regular Expression Denial of Service - https://github.com/advisories/GHSA-rc47-6667-2j5j
+    "GHSA-78xj-cgh5-2h22", // NPM IP package vulnerable to Server-Side Request Forgery (SSRF) attacks - https://github.com/advisories/GHSA-78xj-cgh5-2h22
+    "GHSA-9c47-m6qq-7p4h", // Prototype Pollution in JSON5 via Parse Method - https://github.com/advisories/GHSA-9c47-m6qq-7p4h
+    "GHSA-f8q6-p94x-37v3", // minimatch ReDoS vulnerability - https://github.com/advisories/GHSA-f8q6-p94x-37v3
+    "GHSA-wc69-rhjr-hc9g", // Moment.js vulnerable to Inefficient Regular Expression Complexity - https://github.com/advisories/GHSA-wc69-rhjr-hc9g
+    "GHSA-8hfj-j24r-96c4", // Path Traversal: 'dir/../../filename' in moment.locale - https://github.com/advisories/GHSA-8hfj-j24r-96c4
+    "GHSA-hrpp-h998-j3pp", // qs vulnerable to Prototype Pollution - https://github.com/advisories/GHSA-hrpp-h998-j3pp
+    "GHSA-g694-m8vq-gv9h" // URL Confusion When Scheme Not Supplied in medialize/uri.js - https://github.com/advisories/GHSA-g694-m8vq-gv9h
+  ]
+}

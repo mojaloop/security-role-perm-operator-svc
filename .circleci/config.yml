@@ -35,7 +35,7 @@ defaults_awsCliDependencies: &defaults_awsCliDependencies |
           groff \
           less \
           mailcap
-  pip3 install --upgrade pip awscli==1.14.5 s3cmd==2.0.1 python-magic
+  pip3 install --upgrade pip awscli==1.14.5 s3cmd==2.0.1 python-magic --break-system-packages
 
 defaults_license_scanner: &defaults_license_scanner
   name: Install and set up license-scanner
@@ -153,9 +153,9 @@ jobs:
             fi
 
   test-integration:
-#    executor: default-machine
     machine:
-      image: ubuntu-2204:2023.04.2 #circleci/classic:201808-01
+      image: cimg/base:2024.01 #circleci/classic:201808-01
+      resource_class: medium
       docker_layer_caching: true
     environment:
       K8S_VERSION: v1.16.0

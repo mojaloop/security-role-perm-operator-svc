@@ -23,8 +23,10 @@
     "test:integration": "jest --testMatch '**/test/integration/**/*.(test|spec).ts' --runInBand",
     "test:junit": "jest --reporters=default --reporters=jest-junit",
     "test:unit": "jest --testMatch '**/test/unit/**/*.(test|spec).ts'",
-    "audit:resolve": "SHELL=sh resolve-audit --production",
-    "audit:check": "SHELL=sh check-audit --production"
+    "audit:resolve-old": "SHELL=sh resolve-audit --production",
+    "audit:check-old": "SHELL=sh check-audit --production",
+    "audit:fix": "npm audit fix",
+    "audit:check": "npm audit --config ./audit-ci.jsonc"
   },
   "license": "Apache-2.0",
   "dependencies": {
@@ -54,6 +56,7 @@
     "@types/rc": "^1.2.0",
     "@typescript-eslint/eslint-plugin": "^4.25.0",
     "@typescript-eslint/parser": "^4.25.0",
+    "audit-ci": "^6.6.1",
     "eslint": "^7.27.0",
     "eslint-config-prettier": "^8.3.0",
     "eslint-config-standard": "^16.0.3",
