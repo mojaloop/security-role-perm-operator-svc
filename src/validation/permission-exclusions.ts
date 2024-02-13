@@ -1,3 +1,4 @@
+/* eslint-disable max-len */
 /*****
  License
  --------------
@@ -258,6 +259,7 @@ export class PermissionExclusionsValidator {
       pageSize: PAGE_SIZE
     })
 
+    // eslint-disable-next-line max-len
     const readPermissionExclusionsRelationTuples: keto.Relationship[] = readPermissionExclusionsResponse.data?.relation_tuples || []
     const permissionExclusionCombos: PermissionExclusionCombos[] = readPermissionExclusionsRelationTuples.map(item => {
       return {

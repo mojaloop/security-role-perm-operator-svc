@@ -33,7 +33,7 @@ export interface RolePermissionModel {
 }
 
 class PermissionExclusionResources {
-  permissionExclusionResourceData: any;
+  permissionExclusionResourceData: any
 
   constructor () {
     this.permissionExclusionResourceData = {}

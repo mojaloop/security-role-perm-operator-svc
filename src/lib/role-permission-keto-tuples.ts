@@ -37,8 +37,8 @@ import { logger } from '../shared/logger'
 import { KETO_NAMESPACES, KETO_RELATIONS, PAGE_SIZE } from '../constants'
 
 class KetoTuples {
-  relationshipApi: RelationshipApi;
-  adminRelationshipApi: RelationshipApi;
+  relationshipApi: RelationshipApi
+  adminRelationshipApi: RelationshipApi
 
   constructor () {
     this.relationshipApi = new RelationshipApi(undefined, Config.ORY_KETO_READ_SERVICE_URL)
