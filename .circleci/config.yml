@@ -154,13 +154,13 @@ jobs:
 
   test-integration:
     machine:
-      image: cimg/base:2024.01 #circleci/classic:201808-01
+      image: ubuntu-2204:2023.04.2 #circleci/classic:201808-01
       resource_class: medium
       docker_layer_caching: true
     environment:
-      K8S_VERSION: v1.16.0
       KUBECONFIG: /home/circleci/.kube/config
-      MINIKUBE_VERSION: v1.16.0
+      K8S_VERSION: v1.27.0
+      MINIKUBE_VERSION: v1.31.0
       MINIKUBE_WANTUPDATENOTIFICATION: false
       MINIKUBE_WANTREPORTERRORPROMPT: false
       MINIKUBE_HOME: /home/circleci
