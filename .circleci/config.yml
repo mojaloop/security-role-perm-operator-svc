@@ -154,19 +154,18 @@ jobs:
 
   test-integration:
     machine:
-      image: ubuntu-2204:2023.04.2 #circleci/classic:201808-01
-#      resource_class: medium
+      image: ubuntu-2204:2023.04.2
       docker_layer_caching: true
     environment:
       KUBECONFIG: /home/circleci/.kube/config
-      K8S_VERSION: v1.23.0
-      MINIKUBE_VERSION: v1.31.0
+      K8S_VERSION: v1.27.4
+      MINIKUBE_VERSION: v1.31.2
       MINIKUBE_WANTUPDATENOTIFICATION: false
       MINIKUBE_WANTREPORTERRORPROMPT: false
       MINIKUBE_HOME: /home/circleci
       CHANGE_MINIKUBE_NONE_USER: true
       GOPATH: /home/circleci/go
-      NODE_VERSION: v18.19.0
+      NODE_VERSION: v18.17.1
     steps:
       - run:
           name: Change the node version
@@ -188,7 +187,7 @@ jobs:
       - run:
           name: Install crictl for k8s (minikube)
           command: |
-            CRICTL_VERSION="v1.23.0"
+            CRICTL_VERSION="v1.27.0"
             wget https://github.com/kubernetes-sigs/cri-tools/releases/download/${CRICTL_VERSION}/crictl-${CRICTL_VERSION}-linux-amd64.tar.gz
             sudo tar zxvf crictl-${CRICTL_VERSION}-linux-amd64.tar.gz -C /usr/local/bin
             rm -f crictl-${CRICTL_VERSION}-linux-amd64.tar.gz
