@@ -280,14 +280,6 @@ describe('Permission Exclusion Validator', (): void => {
         'PEVALROLE2'
       ]
     }
-    try {
-      const result = await axios.post(Config.PERMISSION_OPERATOR_API_URL + '/assignment/user-role', postData)
-      expect(result).toBeTruthy()
-    } catch (err) {
-      if (err instanceof Error) console.error(`Error in Assign role1 and role2 to user1: ${err?.message}`, err)
-      throw err
-    }
-    const result = await
     await expect(axios.post(Config.PERMISSION_OPERATOR_API_URL + '/assignment/user-role', postData)).rejects.toThrowError()
   })
   it('Delete the permission exclusion', async () => {
