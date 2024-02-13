@@ -155,7 +155,7 @@ jobs:
   test-integration:
     machine:
       image: ubuntu-2204:2023.04.2 #circleci/classic:201808-01
-      resource_class: medium
+#      resource_class: medium
       docker_layer_caching: true
     environment:
       KUBECONFIG: /home/circleci/.kube/config
@@ -180,6 +180,11 @@ jobs:
             - dependency-cache-{{ checksum "package-lock.json" }}
       - attach_workspace:
           at: /tmp
+      - run:
+          name: Install conntrack for k8s (minikube)
+          command: |
+            sudo apt-get update
+            sudo apt-get install -y conntrack
       - run:
           name: Setup kubectl
           command: |
