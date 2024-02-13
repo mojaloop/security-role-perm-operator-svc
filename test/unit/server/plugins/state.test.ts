@@ -31,7 +31,6 @@
 import { StatePlugin } from '~/server/plugins/state'
 import { Server } from '@hapi/hapi'
 import { mockProcessExit } from 'jest-mock-process'
-import { mocked } from 'ts-jest/utils'
 
 jest.mock('~/shared/logger')
 
@@ -60,9 +59,8 @@ describe('StatePlugin', () => {
   })
 
   it('exceptions: should properly register', async () => {
-    // eslint-disable-next-line prefer-promise-reject-errors
-    mocked(ServerMock.decorate).mockImplementationOnce(() => {
-      throw new Error()
+    ServerMock.decorate = jest.fn(() => {
+      throw new Error('decorate error')
     })
 
     const mockExit = mockProcessExit()
