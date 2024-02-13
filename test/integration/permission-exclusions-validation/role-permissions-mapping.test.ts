@@ -28,7 +28,7 @@
  --------------
  ******/
 
-import * as k8s from "@kubernetes/client-node"
+import * as k8s from '@kubernetes/client-node'
 import Config from './config'
 import ServiceConfig from './../../../src/shared/config'
 // eslint-disable-next-line max-len
@@ -178,7 +178,7 @@ describe('Permission Exclusion Validator', (): void => {
   it('Wait for some time', async () => {
     await new Promise(resolve => setTimeout(resolve, Config.WAIT_TIME_MS_AFTER_K8S_RESOURCE_CHANGE))
   })
-  it('Validate rolepermissions', async () => {
+  it('Validate role permissions', async () => {
     const postData = {
       rolePermissions,
       permissionExclusions
@@ -203,7 +203,7 @@ describe('Permission Exclusion Validator', (): void => {
     }
     await expect(axios.post(Config.PERMISSION_OPERATOR_API_URL + '/assignment/user-role', postData)).resolves.toBeTruthy()
   })
-  it('rolepermissions validation should be passed', async () => {
+  it('role permissions validation should be passed', async () => {
     const postData = {
       rolePermissions,
       permissionExclusions
@@ -218,7 +218,13 @@ describe('Permission Exclusion Validator', (): void => {
         'PEVALROLE2'
       ]
     }
-    await expect(axios.post(Config.PERMISSION_OPERATOR_API_URL + '/assignment/user-role', postData)).resolves.toBeTruthy()
+    try {
+      const result = await axios.post(Config.PERMISSION_OPERATOR_API_URL + '/assignment/user-role', postData)
+      expect(result).toBeTruthy()
+    } catch (err) {
+      if (err instanceof Error) console.error(`Error in Assign role1 and role2 to user1: ${err?.message}`, err)
+      throw err
+    }
   })
   it('rolepermissions validation should be failed', async () => {
     const postData = {
@@ -274,6 +280,14 @@ describe('Permission Exclusion Validator', (): void => {
         'PEVALROLE2'
       ]
     }
+    try {
+      const result = await axios.post(Config.PERMISSION_OPERATOR_API_URL + '/assignment/user-role', postData)
+      expect(result).toBeTruthy()
+    } catch (err) {
+      if (err instanceof Error) console.error(`Error in Assign role1 and role2 to user1: ${err?.message}`, err)
+      throw err
+    }
+    const result = await
     await expect(axios.post(Config.PERMISSION_OPERATOR_API_URL + '/assignment/user-role', postData)).rejects.toThrowError()
   })
   it('Delete the permission exclusion', async () => {
