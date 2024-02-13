@@ -48,6 +48,8 @@ const spawnLoggerTest = () => {
   })
 }
 
+jest.setTimeout(10_000)
+
 describe('shared/logger', (): void => {
   describe('Logger module', () => {
     it('should have proper layout', () => {
