@@ -166,13 +166,14 @@ jobs:
       MINIKUBE_HOME: /home/circleci
       CHANGE_MINIKUBE_NONE_USER: true
       GOPATH: /home/circleci/go
+      NODE_VERSION: v18.19.0
     steps:
       - run:
           name: Change the node version
           command: |
             [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
-            nvm install v14.17.6
-            nvm alias default v14.17.6
+            nvm install $NODE_VERSION
+            nvm alias default $NODE_VERSION
       - checkout
       - restore_cache:
           keys:
@@ -218,7 +219,7 @@ jobs:
           name: Execute integration tests
           command: |
             [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
-            nvm use v14.17.6
+            nvm use $NODE_VERSION
             export ROLE_PERM_OPERATOR_ORY_KETO_READ_SERVICE_URL=`minikube service list -n mojaloop |grep 4466 |awk '{print $8}'`
             export PERMISSION_EXCLUSIONS_OPERATOR_ORY_KETO_READ_SERVICE_URL=`minikube service list -n mojaloop |grep 4466 |awk '{print $8}'`
             export PERMISSION_EXCLUSIONS_VALIDATION_ORY_KETO_READ_SERVICE_URL=`minikube service list -n mojaloop |grep 4466 |awk '{print $8}'`

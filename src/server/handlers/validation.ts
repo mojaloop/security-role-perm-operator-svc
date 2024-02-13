@@ -33,6 +33,7 @@ import { StateResponseToolkit } from '~/server/plugins/state'
 import { Request, ResponseObject } from '@hapi/hapi'
 import { PermissionExclusionsValidator, UserRole, RolePermissions, PermissionExclusions } from '../../validation/permission-exclusions'
 import { ValidationError } from '../../validation/validation-error'
+import { logger } from '../../shared/logger'
 import Config from '../../shared/config'
 
 interface ValidationErrorResponse {
@@ -44,54 +45,55 @@ const permissionExclusionsValidator = new PermissionExclusionsValidator(Config)
 
 // eslint-disable-next-line max-len
 const ValidateUserRole = async (_context: unknown, _request: Request, h: StateResponseToolkit): Promise<ResponseObject> => {
+  const response = {}
+
   try {
-    const response = {}
     const userRole : UserRole = <UserRole>_request.payload
-    try {
-      await permissionExclusionsValidator.validateUserRole(userRole)
-    } catch (err) {
-      if (err instanceof ValidationError) {
-        const errorResponse: ValidationErrorResponse = {
-          isValid: false,
-          errors: err.validationErrors
-        }
-        return h.response(errorResponse).code(406)
-      } else {
-        throw err
+    await permissionExclusionsValidator.validateUserRole(userRole)
+  } catch (err) {
+    if (err instanceof Error) logger.error(`error in ValidateUserRole: ${err.message}`)
+
+    if (err instanceof ValidationError) {
+      const errorResponse: ValidationErrorResponse = {
+        isValid: false,
+        errors: err.validationErrors
       }
+      return h.response(errorResponse).code(406)
     }
-    return h.response(response).code(200)
-  } catch (e) {
-    h.getLogger().error(e)
+
+    h.getLogger().error(err)
     return h.response().code(500)
   }
+
+  return h.response(response).code(200)
 }
 
 // eslint-disable-next-line max-len
 const ValidateRolePermissions = async (_context: unknown, _request: Request, h: StateResponseToolkit): Promise<ResponseObject> => {
+  const response = {}
+
   try {
-    const response = {}
     const requestObject: any = _request.payload
     const rolePermissions : RolePermissions[] = requestObject?.rolePermissions
     const permissionExclusions : PermissionExclusions[] = requestObject?.permissionExclusions
-    try {
-      await permissionExclusionsValidator.validateRolePermissionsAndPermissionExclusions(rolePermissions, permissionExclusions)
-    } catch (err) {
-      if (err instanceof ValidationError) {
-        const errorResponse: ValidationErrorResponse = {
-          isValid: false,
-          errors: err.validationErrors
-        }
-        return h.response(errorResponse).code(406)
-      } else {
-        throw err
+    await permissionExclusionsValidator
+      .validateRolePermissionsAndPermissionExclusions(rolePermissions, permissionExclusions)
+  } catch (err) {
+    if (err instanceof Error) logger.error(`error in ValidateRolePermissions: ${err.message}`)
+
+    if (err instanceof ValidationError) {
+      const errorResponse: ValidationErrorResponse = {
+        isValid: false,
+        errors: err.validationErrors
       }
+      return h.response(errorResponse).code(406)
     }
-    return h.response(response).code(200)
-  } catch (e) {
-    h.getLogger().error(e)
+
+    h.getLogger().error(err)
     return h.response().code(500)
   }
+
+  return h.response(response).code(200)
 }
 
 export default {

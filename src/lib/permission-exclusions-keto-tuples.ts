@@ -107,7 +107,7 @@ class KetoTuples {
       namespace: KETO_NAMESPACES.permission,
       object: permissionY,
       relation: KETO_RELATIONS.excludes,
-      subject_id: `permission:${permissionX}'#granted`
+      subject_id: `permission:${permissionX}#granted`
     }
   }
 }

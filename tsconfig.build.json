@@ -12,6 +12,7 @@
     "jest.config.js"
   ],
   "compilerOptions": {
+    "importHelpers": false,
     "paths": {
       "~/*": [
         "src/*"

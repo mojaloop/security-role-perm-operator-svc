@@ -33,6 +33,7 @@ import { Request, ResponseObject } from '@hapi/hapi'
 import { StateResponseToolkit } from '~/server/plugins/state'
 import { PermissionExclusionsValidator, UserRole } from '../../validation/permission-exclusions'
 import { ValidationError } from '../../validation/validation-error'
+import { logger } from '../../shared/logger'
 import Config from '../../shared/config'
 
 import { KETO_NAMESPACES, KETO_RELATIONS, PAGE_SIZE } from '../../constants'
@@ -59,41 +60,41 @@ const AssignUserRole = async (
   _request: Request,
   h: StateResponseToolkit
 ): Promise<ResponseObject> => {
-  try {
-    const response = {}
-    const userRole : UserRole = <UserRole>_request.payload
-    try {
-      await permissionExclusionsValidator.validateUserRole(userRole)
+  const response = {}
 
-      // Get current role assignments
-      const responseGetCurrentRoles = await relationshipApi.getRelationships({
-        namespace: KETO_NAMESPACES.role,
-        relation: KETO_RELATIONS.member,
-        subjectId: userRole.username,
-        pageSize: PAGE_SIZE
-      })
-      const currentRoles = responseGetCurrentRoles.data?.relation_tuples?.map(({ object }) => object) || []
-      // Get the difference
-      const relationshipPatch = _generateUserRolesPatchDeltaArray(currentRoles, userRole.roles, userRole.username)
-      // Apply patch
-      await adminRelationshipApi.patchRelationships({ relationshipPatch })
-      h.response().code(200)
-    } catch (err) {
-      if (err instanceof ValidationError) {
-        const errorResponse: AssignmentErrorResponse = {
-          isCreated: false,
-          errors: err.validationErrors
-        }
-        return h.response(errorResponse).code(406)
-      } else {
-        throw err
+  try {
+    const userRole : UserRole = <UserRole>_request.payload
+    await permissionExclusionsValidator.validateUserRole(userRole)
+
+    // Get current role assignments
+    const responseGetCurrentRoles = await relationshipApi.getRelationships({
+      namespace: KETO_NAMESPACES.role,
+      relation: KETO_RELATIONS.member,
+      subjectId: userRole.username,
+      pageSize: PAGE_SIZE
+    })
+    const currentRoles = responseGetCurrentRoles.data?.relation_tuples?.map(({ object }) => object) || []
+    // Get the difference
+    const relationshipPatch = _generateUserRolesPatchDeltaArray(currentRoles, userRole.roles, userRole.username)
+    // Apply patch
+    await adminRelationshipApi.patchRelationships({ relationshipPatch })
+    h.response().code(200)
+  } catch (err) {
+    if (err instanceof Error) logger.error(`error in AssignUserRole: ${err.message}`)
+
+    if (err instanceof ValidationError) {
+      const errorResponse: AssignmentErrorResponse = {
+        isCreated: false,
+        errors: err.validationErrors
       }
+      return h.response(errorResponse).code(406)
     }
-    return h.response(response).code(200)
-  } catch (e) {
-    h.getLogger().error(e)
+
+    h.getLogger().error(err)
     return h.response().code(500)
   }
+
+  return h.response(response).code(200)
 }
 
 const _generateUserRolesPatchDeltaArray = (
@@ -105,26 +106,23 @@ const _generateUserRolesPatchDeltaArray = (
   const addRoles = newRoles?.filter(item => !currentRoles.includes(item)) || []
   let patchDeltaArray: keto.RelationshipPatch[] = []
 
+  const createRelationTuple = (role: string): keto.Relationship => ({
+    namespace: KETO_NAMESPACES.role,
+    object: role,
+    relation: KETO_RELATIONS.member,
+    subject_id: username
+  })
+
   patchDeltaArray = patchDeltaArray.concat(addRoles.map(role => {
     return {
-      action: 'insert',
-      relation_tuple: {
-        namespace: 'role',
-        object: role,
-        relation: 'member',
-        subject_id: username
-      }
+      action: keto.RelationshipPatchActionEnum.Insert,
+      relation_tuple: createRelationTuple(role)
     }
   }))
   patchDeltaArray = patchDeltaArray.concat(deleteRoles.map(role => {
     return {
-      action: 'delete',
-      relation_tuple: {
-        namespace: 'role',
-        object: role,
-        relation: 'member',
-        subject: username
-      }
+      action: keto.RelationshipPatchActionEnum.Delete,
+      relation_tuple: createRelationTuple(role)
     }
   }))
   return patchDeltaArray

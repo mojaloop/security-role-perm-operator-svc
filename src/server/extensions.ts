@@ -31,7 +31,7 @@ import { Server } from '@hapi/hapi'
 import onPreHandler from './handlers/onPreHandler'
 
 async function register (server: Server): Promise<Server> {
-  await server.ext([
+  server.ext([
     {
       type: 'onPreHandler',
       method: onPreHandler

@@ -151,14 +151,15 @@ async function _updateResourceStatus (apiObj: any, statusText: string, errors?: 
 
 // Helpers to continue watching after an event
 function onDone (err: any) {
-  logger.error(`Connection closed. ${err}`)
+  logger.error(`error: ${err?.message} - connection closed. ${err}`)
   setTimeout(watchResource, 1000)
 }
 
 async function watchResource (): Promise<any> {
-  logger.info('Watching RolePermission Resources')
+  const path = `/apis/${RESOURCE_GROUP}/${RESOURCE_VERSION}/namespaces/${NAMESPACE}/${RESOURCE_PLURAL}`
+  logger.info(`Watching RolePermission Resources: ${path}`)
   return watch.watch(
-    `/apis/${RESOURCE_GROUP}/${RESOURCE_VERSION}/namespaces/${NAMESPACE}/${RESOURCE_PLURAL}`,
+    path,
     {},
     onEvent,
     onDone

@@ -28,29 +28,25 @@
  --------------
  ******/
 
+import path from 'node:path'
+import { spawn } from 'node:child_process'
 import { logger } from '~/shared/logger'
-const path = require('path');
-const { spawn } = require('child_process');
 
-var targetScript = path.join(__dirname, 'loggerTester.ts');
+const tsNode = path.join(__dirname, '../../..', 'node_modules', '.bin', 'ts-node')
+const targetScript = path.join(__dirname, 'loggerTester.ts')
+
 const spawnLoggerTest = () => {
-  return new Promise((resolve, reject) => { 
-    var child = spawn('ts-node', [targetScript], { stdio: 'pipe' });
-    var data = '';
+  return new Promise((resolve) => {
+    const child = spawn(tsNode, [targetScript], { stdio: 'pipe' })
+    let data = ''
 
     child.stdout.setEncoding('utf8')
-    child.stdout.on('data', function (str: any) { data += str; });
+    child.stdout.on('data', function (str: any) { data += str })
     child.on('close', function () {
-      resolve(data); 
-    });
-
-    child.stderr.setEncoding('utf8')
-    child.stderr.on('data', function (str: any) { data += str; });
-    child.on('close', function () {
-      reject('Error executing test file'); 
-    });
-  });
-};
+      resolve(data)
+    })
+  })
+}
 
 describe('shared/logger', (): void => {
   describe('Logger module', () => {

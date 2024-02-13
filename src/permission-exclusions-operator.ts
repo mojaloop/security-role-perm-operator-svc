@@ -29,14 +29,14 @@
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
-import * as k8s from "@kubernetes/client-node"
+import * as k8s from '@kubernetes/client-node'
 import { logger } from './shared/logger'
 import Config from './shared/config'
 import { PermissionExclusionResources } from './lib/permission-exclusions-store'
 import { PermissionExclusions, PermissionExclusionsValidator } from './validation/permission-exclusions'
-import KetoChangeProcessor from "./lib/keto-change-processor"
+import KetoChangeProcessor from './lib/keto-change-processor'
 import { KetoTuples } from './lib/permission-exclusions-keto-tuples'
-import { ValidationError } from "./validation/validation-error"
+import { ValidationError } from './validation/validation-error'
 
 const permissionExclusionsValidator = new PermissionExclusionsValidator(Config)
 // Configure the operator to monitor your custom resources
@@ -57,7 +57,7 @@ const updateKetoFn = async (fnArgs: any) => {
 const kc = new k8s.KubeConfig()
 kc.loadFromDefault()
 
-let healthStatus = "Unknown"
+let healthStatus = 'Unknown'
 
 // If we want to do something in K8S, we can use the following APIs
 // const k8sApi = kc.makeApiClient(k8s.AppsV1Api);
@@ -67,7 +67,7 @@ const k8sApiCustomObjects = kc.makeApiClient(k8s.CustomObjectsApi)
 // Listen for events or notifications and act accordingly
 const watch = new k8s.Watch(kc)
 
-async function onEvent(phase: string, apiObj: any) {
+async function onEvent (phase: string, apiObj: any) {
   logger.info(`Received event in phase ${phase} for the resource ${apiObj?.metadata?.name}`)
   const resourceName = apiObj?.metadata?.name
   const generation = apiObj?.metadata?.generation + ''
@@ -152,15 +152,16 @@ async function _updateResourceStatus (apiObj: any, statusText: string, errors?: 
 }
 
 // Helpers to continue watching after an event
-function onDone(err: any) {
-  logger.error(`Connection closed. ${err}`)
-  setTimeout(watchResource,1000)
+function onDone (err: any) {
+  logger.error(`error: ${err?.message} - connection closed. ${err}`)
+  setTimeout(watchResource, 1000)
 }
 
 async function watchResource (): Promise<any> {
-  logger.info('Watching Permission Exclusions Resources')
+  const path = `/apis/${RESOURCE_GROUP}/${RESOURCE_VERSION}/namespaces/${NAMESPACE}/${RESOURCE_PLURAL}`
+  logger.info(`Watching Permission Exclusions Resources: ${path}`)
   return watch.watch(
-    `/apis/${RESOURCE_GROUP}/${RESOURCE_VERSION}/namespaces/${NAMESPACE}/${RESOURCE_PLURAL}`,
+    path,
     {},
     onEvent,
     onDone
