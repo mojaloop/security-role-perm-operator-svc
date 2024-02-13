@@ -21,7 +21,8 @@ spec:
         app: moja-role-operator
     spec:
       containers:
-      - image: geka1302/security-role-perm-operator-svc:2.1.5  # mojaloop/security-role-perm-operator-svc:local
+      - image: mojaloop/security-role-perm-operator-svc:local
+#        image: geka1302/security-role-perm-operator-svc:2.1.6
         imagePullPolicy:  IfNotPresent
         name: moja-role-operator
         ports:
