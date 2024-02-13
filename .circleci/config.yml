@@ -186,6 +186,13 @@ jobs:
             sudo apt-get update
             sudo apt-get install -y conntrack
       - run:
+          name: Install crictl for k8s (minikube)
+          command: |
+            CRICTL_VERSION="v1.23.0"
+            wget https://github.com/kubernetes-sigs/cri-tools/releases/download/${CRICTL_VERSION}/crictl-${CRICTL_VERSION}-linux-amd64.tar.gz
+            sudo tar zxvf crictl-${CRICTL_VERSION}-linux-amd64.tar.gz -C /usr/local/bin
+            rm -f crictl-${CRICTL_VERSION}-linux-amd64.tar.gz
+      - run:
           name: Setup kubectl
           command: |
             curl -Lo kubectl https://storage.googleapis.com/kubernetes-release/release/${K8S_VERSION}/bin/linux/amd64/kubectl && chmod +x kubectl && sudo mv kubectl /usr/local/bin/
