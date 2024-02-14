@@ -47,13 +47,14 @@ const k8sApiCustomObjects = kc.makeApiClient(k8s.CustomObjectsApi)
 // const k8sApiPods = kc.makeApiClient(k8s.CoreV1Api)
 
 const _relationTuplesToPermissionCombos = (relationTuples: Array<any>) => {
-  return relationTuples?.map(item => item.object + ':' + item.subject_id.replace(/permission:([^#.]*)(#.*)?/, '$1'))
+  return relationTuples?.map(item => item.object + ':' + item.subject_set?.object)
 }
 
 const waitingChanges = () => new Promise(resolve => setTimeout(resolve, Config.WAIT_TIME_MS_AFTER_K8S_RESOURCE_CHANGE))
 
 describe('K8S operator', (): void => {
   let relationshipApi: keto.RelationshipApi
+
   beforeAll(async () => {
     relationshipApi = new keto.RelationshipApi(
       undefined,
@@ -85,7 +86,7 @@ describe('K8S operator', (): void => {
     expect(response.data?.relation_tuples?.length).toEqual(0)
   })
 
-  it('Add a K8S custom resource', async () => {
+  it('Add first k8s CRD, and check keto relation tuples to be updated', async () => {
     const status = await k8sApiCustomObjects.createNamespacedCustomObject(
       Config.WATCH_RESOURCE_GROUP,
       Config.WATCH_RESOURCE_VERSION,
@@ -94,10 +95,9 @@ describe('K8S operator', (): void => {
       sampleResource1
     )
     expect(status.response.statusCode).toEqual(201)
-    await waitingChanges()
-  })
 
-  it('Check the keto relation tuples to be updated', async () => {
+    await waitingChanges()
+
     const response = await relationshipApi.getRelationships({
       namespace: KETO_NAMESPACES.permission,
       relation: KETO_RELATIONS.excludes
@@ -113,7 +113,7 @@ describe('K8S operator', (): void => {
     expect(permissionCombos).toContain('PERMISSIONY2:PERMISSIONX1')
   })
 
-  it('Add a second K8S custom resource', async () => {
+  it('Add second K8S CRD, and check the keto relation tuples to be updated', async () => {
     const status = await k8sApiCustomObjects.createNamespacedCustomObject(
       Config.WATCH_RESOURCE_GROUP,
       Config.WATCH_RESOURCE_VERSION,
@@ -122,10 +122,9 @@ describe('K8S operator', (): void => {
       sampleResource2
     )
     expect(status.response.statusCode).toEqual(201)
-    await waitingChanges()
-  })
 
-  it('Check the keto relation tuples to be updated', async () => {
+    await waitingChanges()
+
     const response = await relationshipApi.getRelationships({
       namespace: KETO_NAMESPACES.permission,
       relation: KETO_RELATIONS.excludes

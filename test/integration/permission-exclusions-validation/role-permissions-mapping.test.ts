@@ -246,6 +246,7 @@ describe('Permission Exclusion Validator', (): void => {
     await expect(axios.post(Config.PERMISSION_OPERATOR_API_URL + '/validate/role-permissions', postData))
       .resolves.toBeTruthy()
   })
+
   it('Add a permission exclusion', async () => {
     const status = await k8sApiCustomObjects.createNamespacedCustomObject(
       Config.WATCH_RESOURCE_GROUP,

@@ -57,7 +57,7 @@ class KetoTuples {
 
     const relationTuples = response.data?.relation_tuples || []
     return relationTuples.map(tuple => {
-      const role = tuple.subject_id?.replace(/role:(.*)#.*/, '$1')
+      const role = tuple.subject_set?.object
       return role + ':' + tuple.object
     })
   }
@@ -87,7 +87,7 @@ class KetoTuples {
   }
 
   _generateRolePermissionComboPatchDeltaArray (
-    addPermissionCombos: string[], deletePermissionCombos: string[]
+    addPermissionCombos: string[] = [], deletePermissionCombos: string[] = []
   ): RelationshipPatch[] {
     let patchDeltaArray: RelationshipPatch[] = []
 
@@ -114,7 +114,11 @@ class KetoTuples {
       namespace: KETO_NAMESPACES.permission,
       object: permission,
       relation: KETO_RELATIONS.granted,
-      subject_id: `role:${role}#member`
+      subject_set: {
+        namespace: KETO_NAMESPACES.role,
+        object: role,
+        relation: KETO_RELATIONS.member
+      }
     }
   }
 }

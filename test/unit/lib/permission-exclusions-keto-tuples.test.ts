@@ -38,12 +38,14 @@ const sampleRelationTupleData = {
       namespace: 'permission',
       object: 'samplePermission2',
       relation: 'excludes',
-      subject_id: 'permission:samplePermission1'
+      subject_set: {
+        namespace: 'permission',
+        object: 'samplePermission1',
+        relation: 'granted'
+      }
     }
   ]
 }
-
-// const mockLoggerError = jest.spyOn(Logger, 'error')
 
 describe('Permission Exclusions Keto Tuples', (): void => {
   describe('Keto update tuples', (): void => {

@@ -194,7 +194,9 @@ export class PermissionExclusionsValidator {
       const readRolePermissionsResponse = await this.relationshipApi.getRelationships({
         namespace: KETO_NAMESPACES.permission,
         relation: KETO_RELATIONS.granted,
-        subjectId: `role:${userRole.roles[i]}#member`,
+        subjectSetNamespace: KETO_NAMESPACES.role,
+        subjectSetObject: userRole.roles[i],
+        subjectSetRelation: KETO_RELATIONS.member,
         pageSize: PAGE_SIZE
       })
       const readRolePermissionsRelationTuples: keto.Relationship[] = readRolePermissionsResponse.data?.relation_tuples || []
@@ -206,7 +208,6 @@ export class PermissionExclusionsValidator {
     }
 
     // Get all the permission exclusions
-    // let permissionExclusionCombos: PermissionExclusionCombos[]
     const readPermissionExclusionsResponse = await this.relationshipApi.getRelationships({
       namespace: KETO_NAMESPACES.permission,
       relation: KETO_RELATIONS.excludes,
@@ -216,7 +217,7 @@ export class PermissionExclusionsValidator {
     const permissionExclusionCombos: PermissionExclusionCombos[] = readPermissionExclusionsRelationTuples.map(item => {
       return {
         permissionA: item.object,
-        permissionB: item.subject_id?.replace(/permission:([^#.]*)(#.*)?/, '$1')
+        permissionB: item.subject_set?.object
       }
     })
     this.validateUserRolePermissions([userRole], rolePermissions, permissionExclusionCombos)
@@ -233,7 +234,7 @@ export class PermissionExclusionsValidator {
 
     const readRolePermissionsRelationTuples: keto.Relationship[] = readRolePermissionsResponse.data?.relation_tuples || []
     readRolePermissionsRelationTuples.forEach(rolePermission => {
-      const rolename = rolePermission.subject_id?.replace(/role:([^#.]*)(#.*)?/, '$1') || ''
+      const rolename = rolePermission.subject_set?.object || ''
       const permissions = rolePermission.object
       if (!roles[rolename]) {
         roles[rolename] = []
@@ -264,7 +265,7 @@ export class PermissionExclusionsValidator {
     const permissionExclusionCombos: PermissionExclusionCombos[] = readPermissionExclusionsRelationTuples.map(item => {
       return {
         permissionA: item.object,
-        permissionB: item.subject_id?.replace(/permission:([^#.]*)(#.*)?/, '$1')
+        permissionB: item.subject_set?.object
       }
     })
     await this.validateRolePermissionsAndPermissionExclusions(rolePermissions, permissionExclusionCombos)

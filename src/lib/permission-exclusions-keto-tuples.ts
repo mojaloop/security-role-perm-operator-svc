@@ -53,7 +53,7 @@ class KetoTuples {
 
     const relationTuples = response.data?.relation_tuples || []
     return relationTuples.map(tuple => {
-      const permissionA = tuple.subject_id?.replace(/permission:([^#.]*)(#.*)?/, '$1')
+      const permissionA = tuple.subject_set?.object
       return permissionA + ':' + tuple.object
     })
   }
@@ -82,7 +82,7 @@ class KetoTuples {
   }
 
   _generatePermissionExclusionComboPatchDeltaArray (
-    addPermissionCombos: string[], deletePermissionCombos: string[]
+    addPermissionCombos: string[] = [], deletePermissionCombos: string[] = []
   ): keto.RelationshipPatch[] {
     let patchDeltaArray: keto.RelationshipPatch[] = []
     patchDeltaArray = patchDeltaArray.concat(addPermissionCombos.map(permissionCombo => {
@@ -107,7 +107,11 @@ class KetoTuples {
       namespace: KETO_NAMESPACES.permission,
       object: permissionY,
       relation: KETO_RELATIONS.excludes,
-      subject_id: `permission:${permissionX}#granted`
+      subject_set: {
+        namespace: KETO_NAMESPACES.permission,
+        object: permissionX,
+        relation: KETO_RELATIONS.granted
+      }
     }
   }
 }
