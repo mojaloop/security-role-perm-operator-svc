@@ -92,30 +92,60 @@ const cleanup = async () => {
     await axios.post(Config.PERMISSION_OPERATOR_API_URL + '/assignment/user-role', postData)
   } catch (err) {}
 
-  const cleaning = [
-    // Remove role permission mappings
-    role1Resource,
-    role2Resource,
-    role3Resource,
-    // Remove permission exclusions
-    pe1Resource,
-    pe2Resource
-  ].map(crd => k8sApiCustomObjects.deleteNamespacedCustomObject(
-    Config.WATCH_RESOURCE_GROUP,
-    Config.WATCH_RESOURCE_VERSION,
-    Config.WATCH_NAMESPACE,
-    Config.WATCH_ROLE_PERMISSIONS_RESOURCE_PLURAL,
-    crd.metadata.name
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  ).catch(() => {}))
+  // Remove role permission mappings
+  try {
+    await k8sApiCustomObjects.deleteNamespacedCustomObject(
+      Config.WATCH_RESOURCE_GROUP,
+      Config.WATCH_RESOURCE_VERSION,
+      Config.WATCH_NAMESPACE,
+      Config.WATCH_ROLE_PERMISSIONS_RESOURCE_PLURAL,
+      role1Resource.metadata.name
+    )
+  } catch (err) {}
+  try {
+    await k8sApiCustomObjects.deleteNamespacedCustomObject(
+      Config.WATCH_RESOURCE_GROUP,
+      Config.WATCH_RESOURCE_VERSION,
+      Config.WATCH_NAMESPACE,
+      Config.WATCH_ROLE_PERMISSIONS_RESOURCE_PLURAL,
+      role2Resource.metadata.name
+    )
+  } catch (err) {}
+  try {
+    await k8sApiCustomObjects.deleteNamespacedCustomObject(
+      Config.WATCH_RESOURCE_GROUP,
+      Config.WATCH_RESOURCE_VERSION,
+      Config.WATCH_NAMESPACE,
+      Config.WATCH_ROLE_PERMISSIONS_RESOURCE_PLURAL,
+      role3Resource.metadata.name
+    )
+  } catch (err) {}
+  // Remove permission exclusions
+  try {
+    await k8sApiCustomObjects.deleteNamespacedCustomObject(
+      Config.WATCH_RESOURCE_GROUP,
+      Config.WATCH_RESOURCE_VERSION,
+      Config.WATCH_NAMESPACE,
+      Config.WATCH_PERMISSION_EXCLUSIONS_RESOURCE_PLURAL,
+      pe1Resource.metadata.name
+    )
+  } catch (err) {}
+  try {
+    await k8sApiCustomObjects.deleteNamespacedCustomObject(
+      Config.WATCH_RESOURCE_GROUP,
+      Config.WATCH_RESOURCE_VERSION,
+      Config.WATCH_NAMESPACE,
+      Config.WATCH_PERMISSION_EXCLUSIONS_RESOURCE_PLURAL,
+      pe2Resource.metadata.name
+    )
+  } catch (err) {}
 
-  await Promise.all(cleaning)
+  await waitChanges()
 }
 
 describe('Permission Exclusion Validator', (): void => {
   beforeAll(async () => {
     await cleanup()
-    await waitChanges()
   })
   afterAll(async () => {
     await cleanup()
