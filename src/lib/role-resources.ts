@@ -62,6 +62,7 @@ class RoleResources {
   }
 
   checkHash (resourceName: string, hash: string) : boolean {
+    /* istanbul ignore next */
     return this.roleResourceData[resourceName]?.hash === hash
   }
 

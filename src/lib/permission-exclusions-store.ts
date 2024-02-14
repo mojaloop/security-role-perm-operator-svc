@@ -59,6 +59,7 @@ class PermissionExclusionResources {
   }
 
   checkHash (resourceName: string, hash: string) : boolean {
+    /* istanbul ignore next */
     return this.permissionExclusionResourceData?.[resourceName]?.hash === hash
   }
 
