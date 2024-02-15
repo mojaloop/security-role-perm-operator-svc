@@ -95,6 +95,7 @@ describe('validation handlers', (): void => {
     afterEach(() => {
       spyCodeFn.mockClear()
     })
+
     it('Happy Path', async () => {
       await expect(ValidationHandler.ValidateRolePermissions(null, request, toolkit)).resolves.toBeTruthy()
       expect(peValidatorInstance.validateRolePermissionsAndPermissionExclusions).toHaveBeenCalled()

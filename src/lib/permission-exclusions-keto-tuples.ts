@@ -28,40 +28,32 @@
  ******/
 
 import * as keto from '@ory/keto-client'
-import { PatchDelta, InternalRelationTuple } from '@ory/keto-client'
 import Config from '../shared/config'
 import { logger } from '../shared/logger'
+import { KETO_NAMESPACES, KETO_RELATIONS, PAGE_SIZE } from '../constants'
 
 class KetoTuples {
-  oryKetoReadApi: keto.ReadApi;
-  oryKetoWriteApi: keto.WriteApi;
+  relationshipApi: keto.RelationshipApi
+  adminRelationshipApi: keto.RelationshipApi
 
   constructor () {
-    this.oryKetoReadApi = new keto.ReadApi(
-      undefined,
-      Config.ORY_KETO_READ_SERVICE_URL
-    )
-    this.oryKetoWriteApi = new keto.WriteApi(
-      undefined,
-      Config.ORY_KETO_WRITE_SERVICE_URL
-    )
+    this.relationshipApi = new keto.RelationshipApi(undefined, Config.ORY_KETO_READ_SERVICE_URL)
+    this.adminRelationshipApi = new keto.RelationshipApi(undefined, Config.ORY_KETO_WRITE_SERVICE_URL)
   }
 
   /**
    * Gets all permission exclusions in the namespace from Ory Keto server.
    */
   async getAllPermissionExclusionCombos () : Promise<string[]> {
-    const response = await this.oryKetoReadApi.getRelationTuples(
-      'permission',
-      undefined,
-      'excludes',
-      undefined,
-      undefined,
-      1000000
-    )
+    const response = await this.relationshipApi.getRelationships({
+      namespace: KETO_NAMESPACES.permission,
+      relation: KETO_RELATIONS.excludes,
+      pageSize: PAGE_SIZE
+    })
+
     const relationTuples = response.data?.relation_tuples || []
     return relationTuples.map(tuple => {
-      const permissionA = tuple.subject.replace(/permission:([^#.]*)(#.*)?/, '$1')
+      const permissionA = tuple.subject_set?.object
       return permissionA + ':' + tuple.object
     })
   }
@@ -82,40 +74,44 @@ class KetoTuples {
 
     // Construct patch delta
     // eslint-disable-next-line max-len
-    const patchDeltaArr = this._generatePermissionExclusionComboPatchDeltaArray(addPermissionCombos, deletePermissionCombos)
-    if (patchDeltaArr.length > 0) {
+    const relationshipPatch = this._generatePermissionExclusionComboPatchDeltaArray(addPermissionCombos, deletePermissionCombos)
+    if (relationshipPatch.length > 0) {
       logger.info('Patching permission exclusions in Ory Keto....')
-      await this.oryKetoWriteApi.patchRelationTuples(patchDeltaArr)
+      await this.adminRelationshipApi.patchRelationships({ relationshipPatch })
     }
   }
 
   _generatePermissionExclusionComboPatchDeltaArray (
-    addPermissionCombos: string[], deletePermissionCombos: string[]
-  ): PatchDelta[] {
-    let patchDeltaArray: PatchDelta[] = []
+    addPermissionCombos: string[] = [], deletePermissionCombos: string[] = []
+  ): keto.RelationshipPatch[] {
+    let patchDeltaArray: keto.RelationshipPatch[] = []
     patchDeltaArray = patchDeltaArray.concat(addPermissionCombos.map(permissionCombo => {
       const permissionArr = permissionCombo.split(':')
       return {
-        action: 'insert',
+        action: keto.RelationshipPatchActionEnum.Insert,
         relation_tuple: this._generatePermissionTuple(permissionArr[0], permissionArr[1])
       }
     }))
     patchDeltaArray = patchDeltaArray.concat(deletePermissionCombos.map(permissionCombo => {
       const permissionArr = permissionCombo.split(':')
       return {
-        action: 'delete',
+        action: keto.RelationshipPatchActionEnum.Delete,
         relation_tuple: this._generatePermissionTuple(permissionArr[0], permissionArr[1])
       }
     }))
     return patchDeltaArray
   }
 
-  _generatePermissionTuple (permissionX: string, permissionY: string): InternalRelationTuple {
+  _generatePermissionTuple (permissionX: string, permissionY: string): keto.Relationship {
     return {
-      namespace: 'permission',
+      namespace: KETO_NAMESPACES.permission,
       object: permissionY,
-      relation: 'excludes',
-      subject: 'permission:' + permissionX + '#granted'
+      relation: KETO_RELATIONS.excludes,
+      subject_set: {
+        namespace: KETO_NAMESPACES.permission,
+        object: permissionX,
+        relation: KETO_RELATIONS.granted
+      }
     }
   }
 }

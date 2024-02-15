@@ -2,14 +2,13 @@
 version: 2.1
 
 ##
-# orbs
 #
 # Orbs used in this pipeline
 ##
 orbs:
-  anchore: anchore/anchore-engine@1.6.0
+  anchore: anchore/anchore-engine@1.9.0
   github-release: h-matsuo/github-release@0.1.3
-  slack: circleci/slack@3.4.2
+  slack: circleci/slack@4.12.5 # Ref: https://github.com/mojaloop/ci-config/tree/master/slack-templates
 
 ##
 # defaults
@@ -17,12 +16,14 @@ orbs:
 # YAML defaults templates, in alphabetical order
 ##
 defaults_Dependencies: &defaults_Dependencies |
+  apk --no-cache add bash
   apk --no-cache add git
   apk --no-cache add ca-certificates
   apk --no-cache add curl
   apk --no-cache add openssh-client
-  apk add --no-cache -t build-dependencies make gcc g++ python libtool autoconf automake jq
-  npm config set unsafe-perm true
+  apk --no-cache add -t build-dependencies make gcc g++ python3 libtool autoconf automake jq
+  apk --no-cache add -t openssl ncurses coreutils libgcc linux-headers grep util-linux binutils findutils
+  apk --no-cache add librdkafka-dev
   npm install -g node-gyp
 
 defaults_awsCliDependencies: &defaults_awsCliDependencies |
@@ -33,7 +34,7 @@ defaults_awsCliDependencies: &defaults_awsCliDependencies |
           groff \
           less \
           mailcap
-  pip3 install --upgrade pip awscli==1.14.5 s3cmd==2.0.1 python-magic
+  pip3 install --upgrade pip awscli==1.14.5 s3cmd==2.0.1 python-magic --break-system-packages
 
 defaults_license_scanner: &defaults_license_scanner
   name: Install and set up license-scanner
@@ -48,13 +49,21 @@ defaults_license_scanner: &defaults_license_scanner
 ##
 executors:
   default-docker:
-    working_directory: /home/circleci/project
+    working_directory: &WORKING_DIR /home/circleci/project
+    shell: "/bin/sh -leo pipefail" ## Ref: https://circleci.com/docs/env-vars/#alpine-linux
+    environment:
+      BASH_ENV:
+        /etc/profile ## Ref: https://circleci.com/docs/env-vars/#alpine-linux
+      NVM_ARCH_UNOFFICIAL_OVERRIDE:
+        x64-musl ## Ref: https://github.com/nvm-sh/nvm/issues/1102#issuecomment-550572252
     docker:
-      - image: node:12.16.1-alpine
+      - image: node:18-alpine # Ref: https://hub.docker.com/_/node?tab=tags&page=1&name=alpine
 
   default-machine:
+    working_directory: *WORKING_DIR
+    shell: "/bin/bash -leo pipefail"
     machine:
-      image: ubuntu-1604:201903-01
+      image: ubuntu-2204:2023.04.2 # Ref: https://circleci.com/developer/machine/image/ubuntu-2204
 
 ##
 # Jobs
@@ -144,30 +153,43 @@ jobs:
 
   test-integration:
     machine:
-      image: circleci/classic:201808-01
+      image: ubuntu-2204:2023.04.2
       docker_layer_caching: true
     environment:
-      K8S_VERSION: v1.16.0
       KUBECONFIG: /home/circleci/.kube/config
-      MINIKUBE_VERSION: v1.16.0
+      K8S_VERSION: v1.23.0
+      MINIKUBE_VERSION: v1.31.2
       MINIKUBE_WANTUPDATENOTIFICATION: false
       MINIKUBE_WANTREPORTERRORPROMPT: false
       MINIKUBE_HOME: /home/circleci
       CHANGE_MINIKUBE_NONE_USER: true
       GOPATH: /home/circleci/go
+      NODE_VERSION: v18.17.1
     steps:
       - run:
           name: Change the node version
           command: |
             [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
-            nvm install v14.17.6
-            nvm alias default v14.17.6
+            nvm install $NODE_VERSION
+            nvm alias default $NODE_VERSION
       - checkout
       - restore_cache:
           keys:
             - dependency-cache-{{ checksum "package-lock.json" }}
       - attach_workspace:
           at: /tmp
+      - run:
+          name: Install conntrack for k8s (minikube)
+          command: |
+            sudo apt-get update
+            sudo apt-get install -y conntrack
+      - run:
+          name: Install crictl for k8s (minikube)
+          command: |
+            CRICTL_VERSION="v1.23.0"
+            wget https://github.com/kubernetes-sigs/cri-tools/releases/download/${CRICTL_VERSION}/crictl-${CRICTL_VERSION}-linux-amd64.tar.gz
+            sudo tar zxvf crictl-${CRICTL_VERSION}-linux-amd64.tar.gz -C /usr/local/bin
+            rm -f crictl-${CRICTL_VERSION}-linux-amd64.tar.gz
       - run:
           name: Setup kubectl
           command: |
@@ -207,7 +229,7 @@ jobs:
           name: Execute integration tests
           command: |
             [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
-            nvm use v14.17.6
+            nvm use $NODE_VERSION
             export ROLE_PERM_OPERATOR_ORY_KETO_READ_SERVICE_URL=`minikube service list -n mojaloop |grep 4466 |awk '{print $8}'`
             export PERMISSION_EXCLUSIONS_OPERATOR_ORY_KETO_READ_SERVICE_URL=`minikube service list -n mojaloop |grep 4466 |awk '{print $8}'`
             export PERMISSION_EXCLUSIONS_VALIDATION_ORY_KETO_READ_SERVICE_URL=`minikube service list -n mojaloop |grep 4466 |awk '{print $8}'`
@@ -242,14 +264,8 @@ jobs:
       - restore_cache:
           key: dependency-cache-{{ checksum "package-lock.json" }}
       - run:
-          name: Create dir for test results
-          command: mkdir -p ./audit/results
-      - run:
           name: Check for new npm vulnerabilities
-          command: npm run audit:check --silent -- --json > ./audit/results/auditResults.json
-      - store_artifacts:
-          path: ./audit/results
-          prefix: audit
+          command: npm run audit:check
 
   audit-licenses:
     executor: default-docker
@@ -461,7 +477,6 @@ jobs:
 # CircleCI Workflow config
 ##
 workflows:
-  version: 2
   build_and_test:
     jobs:
       - build-local:

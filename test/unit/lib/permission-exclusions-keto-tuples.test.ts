@@ -38,22 +38,25 @@ const sampleRelationTupleData = {
       namespace: 'permission',
       object: 'samplePermission2',
       relation: 'excludes',
-      subject: 'permission:samplePermission1'
+      subject_set: {
+        namespace: 'permission',
+        object: 'samplePermission1',
+        relation: 'granted'
+      }
     }
   ]
 }
-
-// const mockLoggerError = jest.spyOn(Logger, 'error')
 
 describe('Permission Exclusions Keto Tuples', (): void => {
   describe('Keto update tuples', (): void => {
     let oryKeto: KetoTuples
     let spyGetRelationTuples: jest.Mock
     let spyPatchRelationTuples: jest.Mock
+
     beforeAll(() => {
       oryKeto = new KetoTuples();
-      spyGetRelationTuples = oryKeto.oryKetoReadApi.getRelationTuples as jest.Mock
-      spyPatchRelationTuples = oryKeto.oryKetoWriteApi.patchRelationTuples as jest.Mock
+      spyGetRelationTuples = oryKeto.relationshipApi.getRelationships as jest.Mock
+      spyPatchRelationTuples = oryKeto.adminRelationshipApi.patchRelationships as jest.Mock
       spyGetRelationTuples.mockResolvedValue({
         status: 200,
         statusText: 'OK',
@@ -78,26 +81,30 @@ describe('Permission Exclusions Keto Tuples', (): void => {
         'samplePermission3:samplePermission4'
       ]
       await oryKeto.updateAllPermissionExclusions(newPermissionExclusionCombos);
-      expect(spyPatchRelationTuples).toHaveBeenCalledWith(expect.arrayContaining([
-        {
-          action: 'delete',
-          relation_tuple: expect.objectContaining({ object: 'samplePermission2'})
-        },
-        {
-          action: 'insert',
-          relation_tuple: expect.objectContaining({ object: 'samplePermission4'})
-        }
-      ]))
+      expect(spyPatchRelationTuples).toHaveBeenCalledWith({
+        relationshipPatch: expect.arrayContaining([
+          {
+            action: 'delete',
+            relation_tuple: expect.objectContaining({ object: 'samplePermission2'})
+          },
+          {
+            action: 'insert',
+            relation_tuple: expect.objectContaining({ object: 'samplePermission4'})
+          }
+        ])
+      })
     })
     it('updateAllPermissionExclusions with empty array', async () => {
       const newPermissionExclusionCombos: any[] = []
       await oryKeto.updateAllPermissionExclusions(newPermissionExclusionCombos);
-      expect(spyPatchRelationTuples).toHaveBeenCalledWith(expect.arrayContaining([
-        {
-          action: 'delete',
-          relation_tuple: expect.objectContaining({ object: 'samplePermission2'})
-        }
-      ]))
+      expect(spyPatchRelationTuples).toHaveBeenCalledWith({
+        relationshipPatch: expect.arrayContaining([
+          {
+            action: 'delete',
+            relation_tuple: expect.objectContaining({ object: 'samplePermission2'})
+          }
+        ])
+      })
     })
     it('updateAllPermissionExclusions with same rolePermissions', async () => {
       const newPermissionExclusionCombos = [
@@ -108,7 +115,7 @@ describe('Permission Exclusions Keto Tuples', (): void => {
     })
     // Negative scenarios
     it('getAllPermissionExclusionCombos', async () => {
-      const spyGetRelationTuples = oryKeto.oryKetoReadApi.getRelationTuples as jest.Mock
+      const spyGetRelationTuples = oryKeto.relationshipApi.getRelationships as jest.Mock
       spyGetRelationTuples.mockResolvedValue({
         status: 200,
         statusText: 'OK',
@@ -134,12 +141,14 @@ describe('Permission Exclusions Keto Tuples', (): void => {
         'samplePermission10:samplePermission11'
       ]
       await oryKeto.updateAllPermissionExclusions(newPermissionExclusionCombos);
-      expect(spyPatchRelationTuples).toHaveBeenCalledWith(expect.arrayContaining([
-        {
-          action: 'insert',
-          relation_tuple: expect.objectContaining({ object: 'samplePermission11'})
-        }
-      ]))
+      expect(spyPatchRelationTuples).toHaveBeenCalledWith({
+        relationshipPatch: expect.arrayContaining([
+          {
+            action: 'insert',
+            relation_tuple: expect.objectContaining({ object: 'samplePermission11'})
+          }
+        ])
+      })
     })
   })
 })

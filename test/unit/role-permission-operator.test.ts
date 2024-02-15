@@ -41,7 +41,7 @@ import { startOperator } from '../../src/role-permission-operator'
 
 jest.mock('../../src/lib/role-resources')
 jest.mock('../../src/validation/permission-exclusions')
-jest.mock('@kubernetes/client-node');
+jest.mock('@kubernetes/client-node')
 
 const k8sWatchInstance = (<any>k8s.Watch).mock.instances[0]
 
@@ -139,12 +139,14 @@ describe('Role Permission operator', (): void => {
   let spyDeleteRoleResource: jest.Mock
   let spyAddToQueue: jest.Mock
   let spyWatch: jest.Mock
+
   beforeAll(() => {
     spyUpdateRoleResource = (roleResourcesObject.updateRoleResource as jest.Mock)
     spyDeleteRoleResource = (roleResourcesObject.deleteRoleResource as jest.Mock)
     spyAddToQueue = mockAddToQueue
     spyWatch = k8sWatchInstance.watch
   })
+
   describe('Positive Scenarios', (): void => {
     afterEach(() => {
       spyUpdateRoleResource.mockClear()
@@ -152,6 +154,7 @@ describe('Role Permission operator', (): void => {
       spyAddToQueue.mockClear()
       spyWatch.mockClear()
     })
+
     it('startOperator should call the function watch', async () => {
       await startOperator()
       expect(spyWatch).toHaveBeenCalledTimes(1)
@@ -197,6 +200,7 @@ describe('Role Permission operator', (): void => {
       spyAddToQueue.mockClear()
       spyWatch.mockClear()
     })
+
     it('startOperator should catch the standard error from K8S', async () => {
       spyWatch.mockRejectedValue(new Error('No currently active cluster'))
       await expect(startOperator).not.toThrowError()

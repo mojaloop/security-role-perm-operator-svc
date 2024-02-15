@@ -28,12 +28,15 @@
  ******/
 
 export interface RolePermissionModel {
-  role: string;
-  permissions: string[];
+  role?: string | null;
+  permissions?: string[];
+  hash?: string;
 }
 
+export type RolePermissionModelMap = Record<string, RolePermissionModel>
+
 class RoleResources {
-  roleResourceData: any;
+  roleResourceData: RolePermissionModelMap
 
   constructor () {
     this.roleResourceData = {}
@@ -59,11 +62,8 @@ class RoleResources {
   }
 
   checkHash (resourceName: string, hash: string) : boolean {
-    if (this.roleResourceData[resourceName] && this.roleResourceData[resourceName].hash === hash) {
-      return true
-    } else {
-      return false
-    }
+    /* istanbul ignore next */
+    return this.roleResourceData[resourceName]?.hash === hash
   }
 
   deleteRoleResource (resourceName: string) : void {
@@ -72,7 +72,7 @@ class RoleResources {
     }
   }
 
-  getData () : any {
+  getData (): RolePermissionModelMap {
     return this.roleResourceData
   }
 
@@ -89,10 +89,10 @@ class RoleResources {
 
   getUniqueRolePermissionCombos () : string[] {
     const rolePermissionCombos: string[] = []
-    for (const [, value] of Object.entries(this.roleResourceData)) {
-      const resourceObj = <any>value
+    for (const [, resourceObj] of Object.entries(this.roleResourceData)) {
       const role = resourceObj.role
-      const permissions = resourceObj.permissions
+      const permissions = resourceObj.permissions || []
+
       for (const permission of permissions) {
         const rolePermissionCombo = role + ':' + permission
         if (!rolePermissionCombos.includes(rolePermissionCombo)) {

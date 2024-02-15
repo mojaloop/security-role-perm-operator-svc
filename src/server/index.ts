@@ -31,6 +31,7 @@
 // eslint-disable-next-line @typescript-eslint/triple-slash-reference
 /// <reference path="../../ambient.d.ts"/>
 import { Server } from '@hapi/hapi'
+import { name, version } from '../../package.json'
 import { ServiceConfig } from '../shared/config'
 import extensions from './extensions'
 import plugins from './plugins'
@@ -40,7 +41,7 @@ import Logger from '@mojaloop/central-services-logger'
 import { validateRoutes } from '@mojaloop/central-services-error-handling'
 
 async function _create (config: ServiceConfig): Promise<Server> {
-  const server: Server = await new Server({
+  const server: Server = new Server({
     host: config.HOST,
     port: config.PORT,
     routes: {
@@ -54,11 +55,12 @@ async function _create (config: ServiceConfig): Promise<Server> {
       }
     }
   })
+
   return server
 }
 
 async function _start (server: Server): Promise<Server> {
-  Logger.info(`security-role-perm-operator-svc is running @ ${server.info.uri}`)
+  Logger.info(`${name}@${version} is running: ${server.info.uri}`)
   await server.start()
   return server
 }

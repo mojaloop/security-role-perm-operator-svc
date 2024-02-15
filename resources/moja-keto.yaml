@@ -4,7 +4,7 @@ metadata:
   name: keto-config
 data:
   keto.yml: |
-    version: v0.6.0-alpha.1
+    version: v0.11.1
     log:
       level: debug
     namespaces:
@@ -45,7 +45,8 @@ spec:
         app: moja-keto
     spec:
       containers:
-        - image: oryd/keto:v0.6.0-alpha.3-sqlite
+        - image: oryd/keto:v0.11.1
+          imagePullPolicy: IfNotPresent
           name: moja-keto
           ports:
             - containerPort: 4466

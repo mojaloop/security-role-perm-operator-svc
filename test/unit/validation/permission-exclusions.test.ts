@@ -163,7 +163,7 @@ describe('permission-exclusions', (): void => {
     describe('Happy Path', (): void => {
       let spyGetRelationTuples: jest.Mock
       beforeAll(() => {
-        spyGetRelationTuples = permissionExclusionsValidator.oryKetoReadApi.getRelationTuples as jest.Mock
+        spyGetRelationTuples = permissionExclusionsValidator.relationshipApi.getRelationships as jest.Mock
         const sampleRelationTupleData = {
           relation_tuples: [
             {
@@ -217,7 +217,7 @@ describe('permission-exclusions', (): void => {
     describe('Happy Path', (): void => {
       let spyGetRelationTuples: jest.Mock
       beforeAll(() => {
-        spyGetRelationTuples = permissionExclusionsValidator.oryKetoReadApi.getRelationTuples as jest.Mock
+        spyGetRelationTuples = permissionExclusionsValidator.relationshipApi.getRelationships as jest.Mock
         const sampleRelationTupleData1 = {
           relation_tuples: [
             {
@@ -290,7 +290,7 @@ describe('permission-exclusions', (): void => {
     describe('Happy Path', (): void => {
       let spyGetRelationTuples: jest.Mock
       beforeAll(() => {
-        spyGetRelationTuples = permissionExclusionsValidator.oryKetoReadApi.getRelationTuples as jest.Mock
+        spyGetRelationTuples = permissionExclusionsValidator.relationshipApi.getRelationships as jest.Mock
         const sampleRelationTupleData1 = {
           relation_tuples: [
             {
@@ -360,7 +360,7 @@ describe('permission-exclusions', (): void => {
     describe('Happy Path', (): void => {
       let spyGetRelationTuples: jest.Mock
       beforeAll(() => {
-        spyGetRelationTuples = permissionExclusionsValidator.oryKetoReadApi.getRelationTuples as jest.Mock
+        spyGetRelationTuples = permissionExclusionsValidator.relationshipApi.getRelationships as jest.Mock
         const sampleRelationTupleData1 = {
           relation_tuples: [
             {

@@ -28,14 +28,16 @@
  --------------
  ******/
 
-import * as k8s from "@kubernetes/client-node"
-import Config from './config'
+import * as k8s from '@kubernetes/client-node'
 import * as keto from '@ory/keto-client'
+import { KETO_NAMESPACES, KETO_RELATIONS } from '../../../src/constants'
+
+import Config from './config'
 import sampleResource1 from './data/sample-resource1.json'
 import sampleResource2 from './data/sample-resource2.json'
 import sampleResource3 from './data/sample-resource3.json'
 
-jest.setTimeout(50000)
+jest.setTimeout(50_000)
 
 const kc = new k8s.KubeConfig()
 kc.loadFromDefault()
@@ -45,57 +47,40 @@ kc.loadFromDefault()
 const k8sApiCustomObjects = kc.makeApiClient(k8s.CustomObjectsApi)
 // const k8sApiPods = kc.makeApiClient(k8s.CoreV1Api)
 
+const waitingChanges = () => new Promise(resolve => setTimeout(resolve, Config.WAIT_TIME_MS_AFTER_K8S_RESOURCE_CHANGE))
+
 describe('K8S operator', (): void => {
-  let oryKetoReadApi : keto.ReadApi
+  let relationshipApi : keto.RelationshipApi
+
   beforeAll(async () => {
-    oryKetoReadApi = new keto.ReadApi(
+    relationshipApi = new keto.RelationshipApi(
       undefined,
       Config.ORY_KETO_READ_SERVICE_URL
     )
-  })
-  it('Clear all the K8S custom resources', async () => {
-    try {
-      await k8sApiCustomObjects.deleteNamespacedCustomObject(
+    const clearing = [sampleResource1, sampleResource1, sampleResource1]
+      .map(crd => k8sApiCustomObjects.deleteNamespacedCustomObject(
         Config.WATCH_RESOURCE_GROUP,
         Config.WATCH_RESOURCE_VERSION,
         Config.WATCH_NAMESPACE,
         Config.WATCH_RESOURCE_PLURAL,
-        sampleResource1.metadata.name
-      )
-    } catch (err) {}
-    try {
-      await k8sApiCustomObjects.deleteNamespacedCustomObject(
-        Config.WATCH_RESOURCE_GROUP,
-        Config.WATCH_RESOURCE_VERSION,
-        Config.WATCH_NAMESPACE,
-        Config.WATCH_RESOURCE_PLURAL,
-        sampleResource2.metadata.name
-      )
-    } catch (err) {}
-    try {
-      await k8sApiCustomObjects.deleteNamespacedCustomObject(
-        Config.WATCH_RESOURCE_GROUP,
-        Config.WATCH_RESOURCE_VERSION,
-        Config.WATCH_NAMESPACE,
-        Config.WATCH_RESOURCE_PLURAL,
-        sampleResource3.metadata.name
-      )
-    } catch (err) {}
+        crd.metadata.name
+        // eslint-disable-next-line @typescript-eslint/no-empty-function
+      ).catch(() => {}))
+    await Promise.all(clearing)
+    await waitingChanges()
   })
-  it('Wait for some time', async () => {
-    await new Promise(resolve => setTimeout(resolve, 3 * Config.WAIT_TIME_MS_AFTER_K8S_RESOURCE_CHANGE))
-  })
+
   it('Keto relation tuples should be empty initially', async () => {
-    const response = await oryKetoReadApi.getRelationTuples(
-      'permission',
-      undefined,
-      'granted'
-    )
+    const response = await relationshipApi.getRelationships({
+      namespace: KETO_NAMESPACES.permission,
+      relation: KETO_RELATIONS.granted
+    })
     expect(response).toHaveProperty('data')
     expect(response.data).toHaveProperty('relation_tuples')
     expect(Array.isArray(response.data.relation_tuples)).toBe(true)
     expect(response.data?.relation_tuples?.length).toEqual(0)
   })
+
   it('Add a K8S custom resource', async () => {
     const status = await k8sApiCustomObjects.createNamespacedCustomObject(
       Config.WATCH_RESOURCE_GROUP,
@@ -105,16 +90,14 @@ describe('K8S operator', (): void => {
       sampleResource1
     )
     expect(status.response.statusCode).toEqual(201)
+    await waitingChanges()
   })
-  it('Wait for some time', async () => {
-    await new Promise(resolve => setTimeout(resolve, Config.WAIT_TIME_MS_AFTER_K8S_RESOURCE_CHANGE))
-  })
+
   it('Check the keto relation tuples to be updated', async () => {
-    const response = await oryKetoReadApi.getRelationTuples(
-      'permission',
-      undefined,
-      'granted'
-    )
+    const response = await relationshipApi.getRelationships({
+      namespace: KETO_NAMESPACES.permission,
+      relation: KETO_RELATIONS.granted
+    })
     expect(response).toHaveProperty('data')
     expect(response.data).toHaveProperty('relation_tuples')
     expect(Array.isArray(response.data.relation_tuples)).toBe(true)
@@ -131,16 +114,14 @@ describe('K8S operator', (): void => {
       sampleResource2
     )
     expect(status.response.statusCode).toEqual(201)
+    await waitingChanges()
   })
-  it('Wait for some time', async () => {
-    await new Promise(resolve => setTimeout(resolve, Config.WAIT_TIME_MS_AFTER_K8S_RESOURCE_CHANGE))
-  })
+
   it('Check the keto relation tuples to be updated', async () => {
-    const response = await oryKetoReadApi.getRelationTuples(
-      'permission',
-      undefined,
-      'granted'
-    )
+    const response = await relationshipApi.getRelationships({
+      namespace: KETO_NAMESPACES.permission,
+      relation: KETO_RELATIONS.granted
+    })
     expect(response).toHaveProperty('data')
     expect(response.data).toHaveProperty('relation_tuples')
     expect(Array.isArray(response.data.relation_tuples)).toBe(true)
@@ -158,16 +139,14 @@ describe('K8S operator', (): void => {
       sampleResource3
     )
     expect(status.response.statusCode).toEqual(201)
+    await waitingChanges()
   })
-  it('Wait for some time', async () => {
-    await new Promise(resolve => setTimeout(resolve, Config.WAIT_TIME_MS_AFTER_K8S_RESOURCE_CHANGE))
-  })
+
   it('Check the keto relation tuples to be updated', async () => {
-    const response = await oryKetoReadApi.getRelationTuples(
-      'permission',
-      undefined,
-      'granted'
-    )
+    const response = await relationshipApi.getRelationships({
+      namespace: KETO_NAMESPACES.permission,
+      relation: KETO_RELATIONS.granted
+    })
     expect(response).toHaveProperty('data')
     expect(response.data).toHaveProperty('relation_tuples')
     expect(Array.isArray(response.data.relation_tuples)).toBe(true)
@@ -186,16 +165,14 @@ describe('K8S operator', (): void => {
       sampleResource1.metadata.name
     )
     expect(status.response.statusCode).toEqual(200)
+    await waitingChanges()
   })
-  it('Wait for some time', async () => {
-    await new Promise(resolve => setTimeout(resolve, Config.WAIT_TIME_MS_AFTER_K8S_RESOURCE_CHANGE))
-  })
+
   it('Check the keto relation tuples to be updated', async () => {
-    const response = await oryKetoReadApi.getRelationTuples(
-      'permission',
-      undefined,
-      'granted'
-    )
+    const response = await relationshipApi.getRelationships({
+      namespace: KETO_NAMESPACES.permission,
+      relation: KETO_RELATIONS.granted
+    })
     expect(response).toHaveProperty('data')
     expect(response.data).toHaveProperty('relation_tuples')
     expect(Array.isArray(response.data.relation_tuples)).toBe(true)
@@ -214,16 +191,14 @@ describe('K8S operator', (): void => {
       sampleResource2.metadata.name
     )
     expect(status.response.statusCode).toEqual(200)
+    await waitingChanges()
   })
-  it('Wait for some time', async () => {
-    await new Promise(resolve => setTimeout(resolve, Config.WAIT_TIME_MS_AFTER_K8S_RESOURCE_CHANGE))
-  })
+
   it('Check the keto relation tuples to be updated', async () => {
-    const response = await oryKetoReadApi.getRelationTuples(
-      'permission',
-      undefined,
-      'granted'
-    )
+    const response = await relationshipApi.getRelationships({
+      namespace: KETO_NAMESPACES.permission,
+      relation: KETO_RELATIONS.granted
+    })
     expect(response).toHaveProperty('data')
     expect(response.data).toHaveProperty('relation_tuples')
     expect(Array.isArray(response.data.relation_tuples)).toBe(true)
@@ -242,16 +217,14 @@ describe('K8S operator', (): void => {
       sampleResource3.metadata.name
     )
     expect(status.response.statusCode).toEqual(200)
+    await waitingChanges()
   })
-  it('Wait for some time', async () => {
-    await new Promise(resolve => setTimeout(resolve, Config.WAIT_TIME_MS_AFTER_K8S_RESOURCE_CHANGE))
-  })
+
   it('Check the keto relation tuples to be again empty', async () => {
-    const response = await oryKetoReadApi.getRelationTuples(
-      'permission',
-      undefined,
-      'granted'
-    )
+    const response = await relationshipApi.getRelationships({
+      namespace: KETO_NAMESPACES.permission,
+      relation: KETO_RELATIONS.granted
+    })
     expect(response).toHaveProperty('data')
     expect(response.data).toHaveProperty('relation_tuples')
     expect(Array.isArray(response.data.relation_tuples)).toBe(true)

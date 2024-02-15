@@ -33,7 +33,7 @@ export interface RolePermissionModel {
 }
 
 class PermissionExclusionResources {
-  permissionExclusionResourceData: any;
+  permissionExclusionResourceData: any
 
   constructor () {
     this.permissionExclusionResourceData = {}
@@ -59,6 +59,7 @@ class PermissionExclusionResources {
   }
 
   checkHash (resourceName: string, hash: string) : boolean {
+    /* istanbul ignore next */
     return this.permissionExclusionResourceData?.[resourceName]?.hash === hash
   }
 

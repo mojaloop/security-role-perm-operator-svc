@@ -29,14 +29,14 @@
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
-import * as k8s from "@kubernetes/client-node"
+import * as k8s from '@kubernetes/client-node'
 import { logger } from './shared/logger'
 import Config from './shared/config'
-import { RoleResources } from "./lib/role-resources"
+import { RoleResources } from './lib/role-resources'
 import { RolePermissions, PermissionExclusionsValidator } from './validation/permission-exclusions'
-import KetoChangeProcessor from "./lib/keto-change-processor"
+import KetoChangeProcessor from './lib/keto-change-processor'
 import { KetoTuples } from './lib/role-permission-keto-tuples'
-import { ValidationError } from "./validation/validation-error"
+import { ValidationError } from './validation/validation-error'
 
 const permissionExclusionsValidator = new PermissionExclusionsValidator(Config)
 // Configure the operator to monitor your custom resources
@@ -47,18 +47,18 @@ const RESOURCE_PLURAL = Config.ROLE_PERMISSION_OPERATOR.WATCH_RESOURCE_PLURAL
 const NAMESPACE = Config.WATCH_NAMESPACE
 
 const roleResourceStore = new RoleResources()
-const oryKeto = new KetoTuples()
 const ketoChangeProcessor = KetoChangeProcessor.getInstance()
-const updateKetoFn = async (fnArgs: any) => {
-  const boundedFn = oryKeto.updateAllRolePermissions.bind(oryKeto)
-  boundedFn(fnArgs.subjectObjectCombos)
-  logger.info('Updated the relation tuples in Keto', fnArgs.subjectObjectCombos)
+const oryKeto = new KetoTuples()
+
+const updateKetoFn = async (subjectObjectCombos: string[]) => {
+  await oryKeto.updateAllRolePermissions(subjectObjectCombos)
+  logger.info('Updated the relation tuples in Keto', subjectObjectCombos)
 }
 
 const kc = new k8s.KubeConfig()
 kc.loadFromDefault()
 
-let healthStatus = "Unknown"
+let healthStatus = 'Unknown'
 
 // If we want to do something in K8S, we can use the following APIs
 // const k8sApi = kc.makeApiClient(k8s.AppsV1Api);
@@ -69,7 +69,7 @@ const k8sApiCustomObjects = kc.makeApiClient(k8s.CustomObjectsApi)
 // Listen for events or notifications and act accordingly
 const watch = new k8s.Watch(kc)
 
-async function onEvent(phase: string, apiObj: any) {
+async function onEvent (phase: string, apiObj: any) {
   logger.info(`Received event in phase ${phase} for the resource ${apiObj?.metadata?.name}`)
   const resourceName = apiObj?.metadata?.name
   const role = apiObj?.spec?.role
@@ -115,10 +115,8 @@ async function onEvent(phase: string, apiObj: any) {
       }
       const rolePermissionCombos = roleResourceStore.getUniqueRolePermissionCombos()
       logger.info('Current permissions in memory' + JSON.stringify(rolePermissionCombos))
-      const queueArgs = {
-        subjectObjectCombos: rolePermissionCombos
-      }
-      await updateKetoFn(queueArgs)
+
+      await updateKetoFn(rolePermissionCombos)
     })
   }
 }
@@ -138,7 +136,7 @@ async function _updateResourceStatus (apiObj: any, statusText: string, errors?: 
   }
 
   try {
-    k8sApiCustomObjects.replaceNamespacedCustomObjectStatus(
+    await k8sApiCustomObjects.replaceNamespacedCustomObjectStatus(
       RESOURCE_GROUP,
       RESOURCE_VERSION,
       NAMESPACE,
@@ -153,14 +151,15 @@ async function _updateResourceStatus (apiObj: any, statusText: string, errors?: 
 
 // Helpers to continue watching after an event
 function onDone (err: any) {
-  logger.error(`Connection closed. ${err}`)
-  setTimeout(watchResource,1000)
+  logger.error(`error: ${err?.message} - connection closed. ${err}`)
+  setTimeout(watchResource, 1000)
 }
 
 async function watchResource (): Promise<any> {
-  logger.info('Watching RolePermission Resources')
+  const path = `/apis/${RESOURCE_GROUP}/${RESOURCE_VERSION}/namespaces/${NAMESPACE}/${RESOURCE_PLURAL}`
+  logger.info(`Watching RolePermission Resources: ${path}`)
   return watch.watch(
-    `/apis/${RESOURCE_GROUP}/${RESOURCE_VERSION}/namespaces/${NAMESPACE}/${RESOURCE_PLURAL}`,
+    path,
     {},
     onEvent,
     onDone

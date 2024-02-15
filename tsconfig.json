@@ -21,7 +21,7 @@
     "lib": [
       "esnext"
     ],
-    "importHelpers": true,
+    "importHelpers": false,
     "declaration": true,
     "sourceMap": true,
     "rootDir": "./",
