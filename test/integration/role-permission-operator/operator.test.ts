@@ -58,14 +58,13 @@ describe('K8S operator', (): void => {
       Config.ORY_KETO_READ_SERVICE_URL
     )
     const clearing = [sampleResource1, sampleResource1, sampleResource1]
-      .map(crd => k8sApiCustomObjects.deleteNamespacedCustomObject(
-        Config.WATCH_RESOURCE_GROUP,
-        Config.WATCH_RESOURCE_VERSION,
-        Config.WATCH_NAMESPACE,
-        Config.WATCH_RESOURCE_PLURAL,
-        crd.metadata.name
-        // eslint-disable-next-line @typescript-eslint/no-empty-function
-      ).catch(() => {}))
+      .map(crd => k8sApiCustomObjects.deleteNamespacedCustomObject({
+        group: Config.WATCH_RESOURCE_GROUP,
+        version: Config.WATCH_RESOURCE_VERSION,
+        namespace: Config.WATCH_NAMESPACE,
+        plural: Config.WATCH_RESOURCE_PLURAL,
+        name: crd.metadata.name
+      }).catch(() => {}))
     await Promise.all(clearing)
     await waitingChanges()
   })
@@ -82,13 +81,13 @@ describe('K8S operator', (): void => {
   })
 
   it('Add a K8S custom resource', async () => {
-    const status = await k8sApiCustomObjects.createNamespacedCustomObject(
-      Config.WATCH_RESOURCE_GROUP,
-      Config.WATCH_RESOURCE_VERSION,
-      Config.WATCH_NAMESPACE,
-      Config.WATCH_RESOURCE_PLURAL,
-      sampleResource1
-    )
+    const status = await k8sApiCustomObjects.createNamespacedCustomObject({
+      group: Config.WATCH_RESOURCE_GROUP,
+      version: Config.WATCH_RESOURCE_VERSION,
+      namespace: Config.WATCH_NAMESPACE,
+      plural: Config.WATCH_RESOURCE_PLURAL,
+      body: sampleResource1
+    })
     expect(status.response.statusCode).toEqual(201)
     await waitingChanges()
   })
@@ -106,13 +105,13 @@ describe('K8S operator', (): void => {
     expect(response.data?.relation_tuples?.map(item => item.object)).toContain('listService')
   })
   it('Add a second K8S custom resource', async () => {
-    const status = await k8sApiCustomObjects.createNamespacedCustomObject(
-      Config.WATCH_RESOURCE_GROUP,
-      Config.WATCH_RESOURCE_VERSION,
-      Config.WATCH_NAMESPACE,
-      Config.WATCH_RESOURCE_PLURAL,
-      sampleResource2
-    )
+    const status = await k8sApiCustomObjects.createNamespacedCustomObject({
+      group: Config.WATCH_RESOURCE_GROUP,
+      version: Config.WATCH_RESOURCE_VERSION,
+      namespace: Config.WATCH_NAMESPACE,
+      plural: Config.WATCH_RESOURCE_PLURAL,
+      body: sampleResource2
+    })
     expect(status.response.statusCode).toEqual(201)
     await waitingChanges()
   })
@@ -131,13 +130,13 @@ describe('K8S operator', (): void => {
     expect(response.data?.relation_tuples?.map(item => item.object)).toContain('removeService')
   })
   it('Add a third K8S custom resource with same role and different permissions', async () => {
-    const status = await k8sApiCustomObjects.createNamespacedCustomObject(
-      Config.WATCH_RESOURCE_GROUP,
-      Config.WATCH_RESOURCE_VERSION,
-      Config.WATCH_NAMESPACE,
-      Config.WATCH_RESOURCE_PLURAL,
-      sampleResource3
-    )
+    const status = await k8sApiCustomObjects.createNamespacedCustomObject({
+      group: Config.WATCH_RESOURCE_GROUP,
+      version: Config.WATCH_RESOURCE_VERSION,
+      namespace: Config.WATCH_NAMESPACE,
+      plural: Config.WATCH_RESOURCE_PLURAL,
+      body: sampleResource3
+    })
     expect(status.response.statusCode).toEqual(201)
     await waitingChanges()
   })
@@ -157,13 +156,13 @@ describe('K8S operator', (): void => {
     expect(response.data?.relation_tuples?.map(item => item.object)).toContain('monitorService')
   })
   it('Delete the first K8S custom resource', async () => {
-    const status = await k8sApiCustomObjects.deleteNamespacedCustomObject(
-      Config.WATCH_RESOURCE_GROUP,
-      Config.WATCH_RESOURCE_VERSION,
-      Config.WATCH_NAMESPACE,
-      Config.WATCH_RESOURCE_PLURAL,
-      sampleResource1.metadata.name
-    )
+    const status = await k8sApiCustomObjects.deleteNamespacedCustomObject({
+      group: Config.WATCH_RESOURCE_GROUP,
+      version: Config.WATCH_RESOURCE_VERSION,
+      namespace: Config.WATCH_NAMESPACE,
+      plural: Config.WATCH_RESOURCE_PLURAL,
+      name: sampleResource1.metadata.name
+    })
     expect(status.response.statusCode).toEqual(200)
     await waitingChanges()
   })
@@ -183,13 +182,13 @@ describe('K8S operator', (): void => {
     expect(response.data?.relation_tuples?.map(item => item.object)).toContain('monitorService')
   })
   it('Delete the second K8S custom resource', async () => {
-    const status = await k8sApiCustomObjects.deleteNamespacedCustomObject(
-      Config.WATCH_RESOURCE_GROUP,
-      Config.WATCH_RESOURCE_VERSION,
-      Config.WATCH_NAMESPACE,
-      Config.WATCH_RESOURCE_PLURAL,
-      sampleResource2.metadata.name
-    )
+    const status = await k8sApiCustomObjects.deleteNamespacedCustomObject({
+      group: Config.WATCH_RESOURCE_GROUP,
+      version: Config.WATCH_RESOURCE_VERSION,
+      namespace: Config.WATCH_NAMESPACE,
+      plural: Config.WATCH_RESOURCE_PLURAL,
+      name: sampleResource2.metadata.name
+    })
     expect(status.response.statusCode).toEqual(200)
     await waitingChanges()
   })
@@ -209,13 +208,13 @@ describe('K8S operator', (): void => {
     expect(response.data?.relation_tuples?.map(item => item.object)).toContain('monitorService')
   })
   it('Delete the third K8S custom resource', async () => {
-    const status = await k8sApiCustomObjects.deleteNamespacedCustomObject(
-      Config.WATCH_RESOURCE_GROUP,
-      Config.WATCH_RESOURCE_VERSION,
-      Config.WATCH_NAMESPACE,
-      Config.WATCH_RESOURCE_PLURAL,
-      sampleResource3.metadata.name
-    )
+    const status = await k8sApiCustomObjects.deleteNamespacedCustomObject({
+      group: Config.WATCH_RESOURCE_GROUP,
+      version: Config.WATCH_RESOURCE_VERSION,
+      namespace: Config.WATCH_NAMESPACE,
+      plural: Config.WATCH_RESOURCE_PLURAL,
+      name: sampleResource3.metadata.name
+    })
     expect(status.response.statusCode).toEqual(200)
     await waitingChanges()
   })

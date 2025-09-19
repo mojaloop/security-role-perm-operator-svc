@@ -30,14 +30,14 @@
 
 import Path from 'path'
 import { Util } from '@mojaloop/central-services-shared'
+import { ServerRegisterPluginObject } from "@hapi/hapi"
+import type { APIDocumentationPluginOptions } from "@mojaloop/central-services-shared"
 
-const plugin = {
+
+const plugin: ServerRegisterPluginObject<APIDocumentationPluginOptions> = {
   plugin: Util.Hapi.APIDocumentation,
   options: {
-    documentPath: Path.resolve(__dirname, '../../interface/api.yaml'),
-    widdershinsOptions: {
-      sample: true
-    }
+    documentPath: Path.resolve(__dirname, '../../interface/api.yaml')
   }
 }
 

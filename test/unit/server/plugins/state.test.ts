@@ -65,7 +65,7 @@ describe('StatePlugin', () => {
 
     const mockExit = mockProcessExit()
     await StatePlugin.register(ServerMock as unknown as Server)
-    expect(mockExit).toBeCalledWith(1)
+    expect(mockExit).toHaveBeenCalledWith(1)
     mockExit.mockRestore()
   })
 })

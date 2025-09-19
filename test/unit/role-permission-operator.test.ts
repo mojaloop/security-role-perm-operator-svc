@@ -27,7 +27,6 @@
 
  --------------
  ******/
-/* eslint-disable import/first */
 
 // Mock functions for jest. Keep these functions at the top because jest.mock calls will be hoisted to below these lines
 const mockAddToQueue = jest.fn().mockImplementation(async (inputFn) => {
@@ -203,12 +202,12 @@ describe('Role Permission operator', (): void => {
 
     it('startOperator should catch the standard error from K8S', async () => {
       spyWatch.mockRejectedValue(new Error('No currently active cluster'))
-      await expect(startOperator).not.toThrowError()
+      await expect(startOperator).not.toThrow()
       expect(spyWatch).toHaveBeenCalledTimes(1)
     })
     it('startOperator should catch the error thrown by K8S watch', async () => {
       spyWatch.mockRejectedValue(new Error('Some K8S watch error'))
-      await expect(startOperator).not.toThrowError()
+      await expect(startOperator).not.toThrow()
       expect(spyWatch).toHaveBeenCalledTimes(1)
     })
     it('Unknown phase event', async () => {

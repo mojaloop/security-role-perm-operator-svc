@@ -27,7 +27,6 @@
 
  --------------
  ******/
-/* eslint-disable import/first */
 
 // Mock functions for jest. Keep these functions at the top because jest.mock calls will be hoisted to below these lines
 const mockAddToQueue = jest.fn().mockImplementation(async (inputFn) => {
@@ -38,7 +37,8 @@ const mockAddToQueue = jest.fn().mockImplementation(async (inputFn) => {
 import * as k8s from '@kubernetes/client-node'
 import { PermissionExclusionResources } from '../../src/lib/permission-exclusions-store'
 import { startOperator } from '../../src/permission-exclusions-operator'
-import { PermissionExclusionsValidator, UserRole, RolePermissions, PermissionExclusions } from '../../src/validation/permission-exclusions'
+import { PermissionExclusionsValidator, UserRole, RolePermissions, PermissionExclusions }
+  from '../../src/validation/permission-exclusions'
 
 jest.mock('../../src/lib/permission-exclusions-store')
 jest.mock('../../src/validation/permission-exclusions')
@@ -174,14 +174,24 @@ describe('Permission Exclusion operator', (): void => {
       spyWatch.mockImplementation(createWatchEventImplementation('ADDED', sampleApiObj))
       await startOperator()
       expect(spyWatch).toHaveBeenCalledTimes(1)
-      expect(spyUpdateResource).toHaveBeenCalledWith('sampleResource1', '1', ['samplePermissionA1'], ['samplePermissionB1'])
+      expect(spyUpdateResource).toHaveBeenCalledWith(
+        'sampleResource1',
+        '1',
+        ['samplePermissionA1'],
+        ['samplePermissionB1']
+      )
       expect(spyAddToQueue).toHaveBeenCalledTimes(1)
     })
     it('MODIFIED phase event', async () => {
       spyWatch.mockImplementation(createWatchEventImplementation('MODIFIED', sampleApiObj))
       await startOperator()
       expect(spyWatch).toHaveBeenCalledTimes(1)
-      expect(spyUpdateResource).toHaveBeenCalledWith('sampleResource1', '1', ['samplePermissionA1'], ['samplePermissionB1'])
+      expect(spyUpdateResource).toHaveBeenCalledWith(
+        'sampleResource1',
+        '1',
+        ['samplePermissionA1'],
+        ['samplePermissionB1']
+      )
       expect(spyAddToQueue).toHaveBeenCalledTimes(1)
     })
     it('DELETED phase event', async () => {
@@ -212,17 +222,17 @@ describe('Permission Exclusion operator', (): void => {
     })
     it('startOperator should catch the standard error from K8S', async () => {
       spyWatch.mockRejectedValue(new Error('No currently active cluster'))
-      await expect(startOperator).not.toThrowError()
+      await expect(startOperator).not.toThrow()
       expect(spyWatch).toHaveBeenCalledTimes(1)
     })
     it('startOperator should catch the error thrown by K8S watch', async () => {
       spyWatch.mockRejectedValue(new Error('Some K8S watch error'))
-      await expect(startOperator).not.toThrowError()
+      await expect(startOperator).not.toThrow()
       expect(spyWatch).toHaveBeenCalledTimes(1)
     })
     it('startOperator should catch the error thrown by K8S watch', async () => {
       (peValidatorInstance.validatePermissionExclusions as jest.Mock).mockRejectedValue(new Error('Some error'))
-      await expect(startOperator).not.toThrowError()
+      await expect(startOperator).not.toThrow()
       expect(spyWatch).toHaveBeenCalledTimes(1)
     })
     it('Unknown phase event', async () => {

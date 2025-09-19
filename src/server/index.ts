@@ -28,7 +28,7 @@
  --------------
  ******/
 // workaround for lack of typescript types for mojaloop dependencies
-// eslint-disable-next-line @typescript-eslint/triple-slash-reference
+ 
 /// <reference path="../../ambient.d.ts"/>
 import { Server } from '@hapi/hapi'
 import { name, version } from '../../package.json'

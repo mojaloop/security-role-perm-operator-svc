@@ -94,50 +94,50 @@ const cleanup = async () => {
 
   // Remove role permission mappings
   try {
-    await k8sApiCustomObjects.deleteNamespacedCustomObject(
-      Config.WATCH_RESOURCE_GROUP,
-      Config.WATCH_RESOURCE_VERSION,
-      Config.WATCH_NAMESPACE,
-      Config.WATCH_ROLE_PERMISSIONS_RESOURCE_PLURAL,
-      role1Resource.metadata.name
-    )
+    await k8sApiCustomObjects.deleteNamespacedCustomObject({
+      group: Config.WATCH_RESOURCE_GROUP,
+      version: Config.WATCH_RESOURCE_VERSION,
+      namespace: Config.WATCH_NAMESPACE,
+      plural: Config.WATCH_ROLE_PERMISSIONS_RESOURCE_PLURAL,
+      name: role1Resource.metadata.name
+    })
   } catch (err) {}
   try {
-    await k8sApiCustomObjects.deleteNamespacedCustomObject(
-      Config.WATCH_RESOURCE_GROUP,
-      Config.WATCH_RESOURCE_VERSION,
-      Config.WATCH_NAMESPACE,
-      Config.WATCH_ROLE_PERMISSIONS_RESOURCE_PLURAL,
-      role2Resource.metadata.name
-    )
+    await k8sApiCustomObjects.deleteNamespacedCustomObject({
+      group: Config.WATCH_RESOURCE_GROUP,
+      version: Config.WATCH_RESOURCE_VERSION,
+      namespace: Config.WATCH_NAMESPACE,
+      plural: Config.WATCH_ROLE_PERMISSIONS_RESOURCE_PLURAL,
+      name: role2Resource.metadata.name
+    })
   } catch (err) {}
   try {
-    await k8sApiCustomObjects.deleteNamespacedCustomObject(
-      Config.WATCH_RESOURCE_GROUP,
-      Config.WATCH_RESOURCE_VERSION,
-      Config.WATCH_NAMESPACE,
-      Config.WATCH_ROLE_PERMISSIONS_RESOURCE_PLURAL,
-      role3Resource.metadata.name
-    )
+    await k8sApiCustomObjects.deleteNamespacedCustomObject({
+      group: Config.WATCH_RESOURCE_GROUP,
+      version: Config.WATCH_RESOURCE_VERSION,
+      namespace: Config.WATCH_NAMESPACE,
+      plural: Config.WATCH_ROLE_PERMISSIONS_RESOURCE_PLURAL,
+      name: role3Resource.metadata.name
+    })
   } catch (err) {}
   // Remove permission exclusions
   try {
-    await k8sApiCustomObjects.deleteNamespacedCustomObject(
-      Config.WATCH_RESOURCE_GROUP,
-      Config.WATCH_RESOURCE_VERSION,
-      Config.WATCH_NAMESPACE,
-      Config.WATCH_PERMISSION_EXCLUSIONS_RESOURCE_PLURAL,
-      pe1Resource.metadata.name
-    )
+    await k8sApiCustomObjects.deleteNamespacedCustomObject({
+      group: Config.WATCH_RESOURCE_GROUP,
+      version: Config.WATCH_RESOURCE_VERSION,
+      namespace: Config.WATCH_NAMESPACE,
+      plural: Config.WATCH_PERMISSION_EXCLUSIONS_RESOURCE_PLURAL,
+      name: pe1Resource.metadata.name
+    })
   } catch (err) {}
   try {
-    await k8sApiCustomObjects.deleteNamespacedCustomObject(
-      Config.WATCH_RESOURCE_GROUP,
-      Config.WATCH_RESOURCE_VERSION,
-      Config.WATCH_NAMESPACE,
-      Config.WATCH_PERMISSION_EXCLUSIONS_RESOURCE_PLURAL,
-      pe2Resource.metadata.name
-    )
+    await k8sApiCustomObjects.deleteNamespacedCustomObject({
+      group: Config.WATCH_RESOURCE_GROUP,
+      version: Config.WATCH_RESOURCE_VERSION,
+      namespace: Config.WATCH_NAMESPACE,
+      plural: Config.WATCH_PERMISSION_EXCLUSIONS_RESOURCE_PLURAL,
+      name: pe2Resource.metadata.name
+    })
   } catch (err) {}
 
   await waitChanges()
@@ -152,24 +152,24 @@ describe('Permission Exclusion Validator', (): void => {
   })
 
   it('Add a role1 permission mapping', async () => {
-    const status = await k8sApiCustomObjects.createNamespacedCustomObject(
-      Config.WATCH_RESOURCE_GROUP,
-      Config.WATCH_RESOURCE_VERSION,
-      Config.WATCH_NAMESPACE,
-      Config.WATCH_ROLE_PERMISSIONS_RESOURCE_PLURAL,
-      role1Resource
-    )
+    const status = await k8sApiCustomObjects.createNamespacedCustomObject({
+      group: Config.WATCH_RESOURCE_GROUP,
+      version: Config.WATCH_RESOURCE_VERSION,
+      namespace: Config.WATCH_NAMESPACE,
+      plural: Config.WATCH_ROLE_PERMISSIONS_RESOURCE_PLURAL,
+      body: role1Resource
+    })
     expect(status.response.statusCode).toEqual(201)
   })
 
   it('Add a role2 permission mapping', async () => {
-    const status = await k8sApiCustomObjects.createNamespacedCustomObject(
-      Config.WATCH_RESOURCE_GROUP,
-      Config.WATCH_RESOURCE_VERSION,
-      Config.WATCH_NAMESPACE,
-      Config.WATCH_ROLE_PERMISSIONS_RESOURCE_PLURAL,
-      role2Resource
-    )
+    const status = await k8sApiCustomObjects.createNamespacedCustomObject({
+      group: Config.WATCH_RESOURCE_GROUP,
+      version: Config.WATCH_RESOURCE_VERSION,
+      namespace: Config.WATCH_NAMESPACE,
+      plural: Config.WATCH_ROLE_PERMISSIONS_RESOURCE_PLURAL,
+      body: role2Resource
+    })
     expect(status.response.statusCode).toEqual(201)
     await waitChanges()
   })
@@ -226,7 +226,7 @@ describe('Permission Exclusion Validator', (): void => {
       permissionExclusions
     }
     await expect(axios.post(Config.PERMISSION_OPERATOR_API_URL + '/validate/role-permissions', postData))
-      .rejects.toThrowError()
+      .rejects.toThrow()
   })
   it('Un-assign role2 from user1', async () => {
     const postData = {
@@ -248,13 +248,13 @@ describe('Permission Exclusion Validator', (): void => {
   })
 
   it('Add a permission exclusion', async () => {
-    const status = await k8sApiCustomObjects.createNamespacedCustomObject(
-      Config.WATCH_RESOURCE_GROUP,
-      Config.WATCH_RESOURCE_VERSION,
-      Config.WATCH_NAMESPACE,
-      Config.WATCH_PERMISSION_EXCLUSIONS_RESOURCE_PLURAL,
-      pe1Resource
-    )
+    const status = await k8sApiCustomObjects.createNamespacedCustomObject({
+      group: Config.WATCH_RESOURCE_GROUP,
+      version: Config.WATCH_RESOURCE_VERSION,
+      namespace: Config.WATCH_NAMESPACE,
+      plural: Config.WATCH_PERMISSION_EXCLUSIONS_RESOURCE_PLURAL,
+      body: pe1Resource
+    })
     expect(status.response.statusCode).toEqual(201)
     await waitChanges()
   })
@@ -268,7 +268,7 @@ describe('Permission Exclusion Validator', (): void => {
       ]
     }
     await expect(axios.post(Config.PERMISSION_OPERATOR_API_URL + '/validate/user-role', postData))
-      .rejects.toThrowError()
+      .rejects.toThrow()
   })
   it('Try to assign role1 and role2 to user1', async () => {
     const postData = {
@@ -279,17 +279,17 @@ describe('Permission Exclusion Validator', (): void => {
       ]
     }
     await expect(axios.post(Config.PERMISSION_OPERATOR_API_URL + '/assignment/user-role', postData))
-      .rejects.toThrowError()
+      .rejects.toThrow()
   })
 
   it('Delete the permission exclusion', async () => {
-    const status = await k8sApiCustomObjects.deleteNamespacedCustomObject(
-      Config.WATCH_RESOURCE_GROUP,
-      Config.WATCH_RESOURCE_VERSION,
-      Config.WATCH_NAMESPACE,
-      Config.WATCH_PERMISSION_EXCLUSIONS_RESOURCE_PLURAL,
-      pe1Resource.metadata.name
-    )
+    const status = await k8sApiCustomObjects.deleteNamespacedCustomObject({
+      group: Config.WATCH_RESOURCE_GROUP,
+      version: Config.WATCH_RESOURCE_VERSION,
+      namespace: Config.WATCH_NAMESPACE,
+      plural: Config.WATCH_PERMISSION_EXCLUSIONS_RESOURCE_PLURAL,
+      name: pe1Resource.metadata.name
+    })
     expect(status.response.statusCode).toEqual(200)
     await waitChanges()
   })
@@ -311,42 +311,42 @@ describe('Permission Exclusion Validator', (): void => {
       permissionExclusions
     }
     await expect(axios.post(Config.PERMISSION_OPERATOR_API_URL + '/validate/role-permissions', postData))
-      .rejects.toThrowError()
+      .rejects.toThrow()
   })
 
   it('If we try to add permission exclusions after validation failure, the CR should be set with invalid status', async () => {
-    const status = await k8sApiCustomObjects.createNamespacedCustomObject(
-      Config.WATCH_RESOURCE_GROUP,
-      Config.WATCH_RESOURCE_VERSION,
-      Config.WATCH_NAMESPACE,
-      Config.WATCH_PERMISSION_EXCLUSIONS_RESOURCE_PLURAL,
-      pe1Resource
-    )
+    const status = await k8sApiCustomObjects.createNamespacedCustomObject({
+      group: Config.WATCH_RESOURCE_GROUP,
+      version: Config.WATCH_RESOURCE_VERSION,
+      namespace: Config.WATCH_NAMESPACE,
+      plural: Config.WATCH_PERMISSION_EXCLUSIONS_RESOURCE_PLURAL,
+      body: pe1Resource
+    })
     expect(status.response.statusCode).toEqual(201)
     await waitChanges()
   })
 
   it('Status of the custom resource should be set to INVALID', async () => {
-    const status = await k8sApiCustomObjects.getNamespacedCustomObjectStatus(
-      Config.WATCH_RESOURCE_GROUP,
-      Config.WATCH_RESOURCE_VERSION,
-      Config.WATCH_NAMESPACE,
-      Config.WATCH_PERMISSION_EXCLUSIONS_RESOURCE_PLURAL,
-      pe1Resource.metadata.name
-    )
+    const status = await k8sApiCustomObjects.getNamespacedCustomObjectStatus({
+      group: Config.WATCH_RESOURCE_GROUP,
+      version: Config.WATCH_RESOURCE_VERSION,
+      namespace: Config.WATCH_NAMESPACE,
+      plural: Config.WATCH_PERMISSION_EXCLUSIONS_RESOURCE_PLURAL,
+      name: pe1Resource.metadata.name
+    })
     expect(status.response.statusCode).toEqual(200)
     expect(status.body).toHaveProperty('status')
     expect((<any>status.body).status).toHaveProperty('state')
     expect((<any>status.body).status.state).not.toEqual('VALIDATED')
   })
   it('Delete the permission exclusion', async () => {
-    const status = await k8sApiCustomObjects.deleteNamespacedCustomObject(
-      Config.WATCH_RESOURCE_GROUP,
-      Config.WATCH_RESOURCE_VERSION,
-      Config.WATCH_NAMESPACE,
-      Config.WATCH_PERMISSION_EXCLUSIONS_RESOURCE_PLURAL,
-      pe1Resource.metadata.name
-    )
+    const status = await k8sApiCustomObjects.deleteNamespacedCustomObject({
+      group: Config.WATCH_RESOURCE_GROUP,
+      version: Config.WATCH_RESOURCE_VERSION,
+      namespace: Config.WATCH_NAMESPACE,
+      plural: Config.WATCH_PERMISSION_EXCLUSIONS_RESOURCE_PLURAL,
+      name: pe1Resource.metadata.name
+    })
     expect(status.response.statusCode).toEqual(200)
     await waitChanges()
   })
@@ -370,50 +370,50 @@ describe('Permission Exclusion Validator', (): void => {
       .resolves.toBeTruthy()
   })
   it('Add permission exclusions now and check the CR status', async () => {
-    const status = await k8sApiCustomObjects.createNamespacedCustomObject(
-      Config.WATCH_RESOURCE_GROUP,
-      Config.WATCH_RESOURCE_VERSION,
-      Config.WATCH_NAMESPACE,
-      Config.WATCH_PERMISSION_EXCLUSIONS_RESOURCE_PLURAL,
-      pe1Resource
-    )
+    const status = await k8sApiCustomObjects.createNamespacedCustomObject({
+      group: Config.WATCH_RESOURCE_GROUP,
+      version: Config.WATCH_RESOURCE_VERSION,
+      namespace: Config.WATCH_NAMESPACE,
+      plural: Config.WATCH_PERMISSION_EXCLUSIONS_RESOURCE_PLURAL,
+      body: pe1Resource
+    })
     expect(status.response.statusCode).toEqual(201)
     await waitChanges()
   })
 
   it('Status of the custom resource should be set to VALIDATED', async () => {
-    const status = await k8sApiCustomObjects.getNamespacedCustomObjectStatus(
-      Config.WATCH_RESOURCE_GROUP,
-      Config.WATCH_RESOURCE_VERSION,
-      Config.WATCH_NAMESPACE,
-      Config.WATCH_PERMISSION_EXCLUSIONS_RESOURCE_PLURAL,
-      pe1Resource.metadata.name
-    )
+    const status = await k8sApiCustomObjects.getNamespacedCustomObjectStatus({
+      group: Config.WATCH_RESOURCE_GROUP,
+      version: Config.WATCH_RESOURCE_VERSION,
+      namespace: Config.WATCH_NAMESPACE,
+      plural: Config.WATCH_PERMISSION_EXCLUSIONS_RESOURCE_PLURAL,
+      name: pe1Resource.metadata.name
+    })
     expect(status.response.statusCode).toEqual(200)
     expect(status.body).toHaveProperty('status')
     expect((<any>status.body).status).toHaveProperty('state')
     expect((<any>status.body).status.state).toEqual('VALIDATED')
   })
   it('Try to assign permissionY1 to rol1, CR should be rejected', async () => {
-    const status = await k8sApiCustomObjects.createNamespacedCustomObject(
-      Config.WATCH_RESOURCE_GROUP,
-      Config.WATCH_RESOURCE_VERSION,
-      Config.WATCH_NAMESPACE,
-      Config.WATCH_ROLE_PERMISSIONS_RESOURCE_PLURAL,
-      role3Resource
-    )
+    const status = await k8sApiCustomObjects.createNamespacedCustomObject({
+      group: Config.WATCH_RESOURCE_GROUP,
+      version: Config.WATCH_RESOURCE_VERSION,
+      namespace: Config.WATCH_NAMESPACE,
+      plural: Config.WATCH_ROLE_PERMISSIONS_RESOURCE_PLURAL,
+      body: role3Resource
+    })
     expect(status.response.statusCode).toEqual(201)
     await waitChanges()
   })
 
   it('Status of the custom resource should be set to INVALID', async () => {
-    const status = await k8sApiCustomObjects.getNamespacedCustomObjectStatus(
-      Config.WATCH_RESOURCE_GROUP,
-      Config.WATCH_RESOURCE_VERSION,
-      Config.WATCH_NAMESPACE,
-      Config.WATCH_ROLE_PERMISSIONS_RESOURCE_PLURAL,
-      role3Resource.metadata.name
-    )
+    const status = await k8sApiCustomObjects.getNamespacedCustomObjectStatus({
+      group: Config.WATCH_RESOURCE_GROUP,
+      version: Config.WATCH_RESOURCE_VERSION,
+      namespace: Config.WATCH_NAMESPACE,
+      plural: Config.WATCH_ROLE_PERMISSIONS_RESOURCE_PLURAL,
+      name: role3Resource.metadata.name
+    })
     expect(status.response.statusCode).toEqual(200)
     expect(status.body).toHaveProperty('status')
     expect((<any>status.body).status).toHaveProperty('state')
