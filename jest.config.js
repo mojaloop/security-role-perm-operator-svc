@@ -2,6 +2,15 @@
 const { pathsToModuleNameMapper } = require('ts-jest')
 const { compilerOptions } = require('./tsconfig')
 
+const transformIgnorePackages = [
+  '@kubernetes/client-node/.*',
+  'openid-client/.*',
+  'oauth4webapi/.*',
+  'jose/.*',
+  'p-queue/.*',
+  'p-timeout/.*',
+]
+
 module.exports = {
   verbose: true,
   preset: 'ts-jest',
@@ -21,5 +30,11 @@ module.exports = {
   moduleNameMapper: pathsToModuleNameMapper(compilerOptions.paths, {
     prefix: '<rootDir>/'
   }),
-  reporters: ['jest-junit', 'default']
+  reporters: ['jest-junit', 'default'],
+  transform: {
+    '^.+\\.(ts|tsx|js)$': 'ts-jest',
+  },
+  transformIgnorePatterns: [
+    `/node_modules/(?!${transformIgnorePackages.join('|')})`,
+  ],
 }
