@@ -130,3 +130,41 @@ The service can be tested by deploying in K8S with the following commands.
 sh script-minikube-docker-build.sh
 sh script-k8s-resource-apply.sh
 ```
+
+## Running integration tests locally
+
+### Prerequisites
+- A running k8s cluster (tested with docker-desktop on macOS with k8s enabled)
+- `kubectl` configured to access the k8s cluster
+- `docker` installed and running
+- `npm` installed
+
+### Steps
+1. Build docker image using the following command
+    ```bash
+    docker build -t mojaloop/security-role-perm-operator-svc:local .
+    ```
+2. Deploy k8 resources using this script
+    ```bash
+    sh script-k8s-resource-apply.sh
+    ```
+3. Wait for couple of minutes for the k8s pods to be in running state
+    ```bash
+    kubectl get pods -n mojaloop
+    ```
+4. Setup integration tests for the terminal session
+    ```bash
+    sh script-local-int-test-setup.sh
+    ```
+5. Run the integration tests
+    ```bash
+    npm run test:integration
+    ```
+6. Cleanup the integration setup
+    ```bash
+    sh script-local-int-test-cleanup.sh
+    ```
+7. Delete k8s resources
+    ```bash
+    sh script-k8s-resource-delete.sh
+    ```
