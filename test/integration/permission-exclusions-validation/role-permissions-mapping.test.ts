@@ -159,7 +159,7 @@ describe('Permission Exclusion Validator', (): void => {
       plural: Config.WATCH_ROLE_PERMISSIONS_RESOURCE_PLURAL,
       body: role1Resource
     })
-    expect(status.response.statusCode).toEqual(201)
+    expect(status.metadata.generation).toBeGreaterThan(0)
   })
 
   it('Add a role2 permission mapping', async () => {
@@ -170,7 +170,7 @@ describe('Permission Exclusion Validator', (): void => {
       plural: Config.WATCH_ROLE_PERMISSIONS_RESOURCE_PLURAL,
       body: role2Resource
     })
-    expect(status.response.statusCode).toEqual(201)
+    expect(status.metadata.generation).toBeGreaterThan(0)
     await waitChanges()
   })
 
@@ -255,7 +255,7 @@ describe('Permission Exclusion Validator', (): void => {
       plural: Config.WATCH_PERMISSION_EXCLUSIONS_RESOURCE_PLURAL,
       body: pe1Resource
     })
-    expect(status.response.statusCode).toEqual(201)
+    expect(status.metadata.generation).toBeGreaterThan(0)
     await waitChanges()
   })
 
@@ -290,7 +290,7 @@ describe('Permission Exclusion Validator', (): void => {
       plural: Config.WATCH_PERMISSION_EXCLUSIONS_RESOURCE_PLURAL,
       name: pe1Resource.metadata.name
     })
-    expect(status.response.statusCode).toEqual(200)
+    expect(status.status).toEqual('Success')
     await waitChanges()
   })
 
@@ -322,7 +322,7 @@ describe('Permission Exclusion Validator', (): void => {
       plural: Config.WATCH_PERMISSION_EXCLUSIONS_RESOURCE_PLURAL,
       body: pe1Resource
     })
-    expect(status.response.statusCode).toEqual(201)
+    expect(status.metadata.generation).toBeGreaterThan(0)
     await waitChanges()
   })
 
@@ -334,10 +334,10 @@ describe('Permission Exclusion Validator', (): void => {
       plural: Config.WATCH_PERMISSION_EXCLUSIONS_RESOURCE_PLURAL,
       name: pe1Resource.metadata.name
     })
-    expect(status.response.statusCode).toEqual(200)
-    expect(status.body).toHaveProperty('status')
-    expect((<any>status.body).status).toHaveProperty('state')
-    expect((<any>status.body).status.state).not.toEqual('VALIDATED')
+    expect(status.metadata.name).toEqual(pe1Resource.metadata.name)
+    expect(status).toHaveProperty('status')
+    expect((<any>status).status).toHaveProperty('state')
+    expect((<any>status).status.state).not.toEqual('VALIDATED')
   })
   it('Delete the permission exclusion', async () => {
     const status = await k8sApiCustomObjects.deleteNamespacedCustomObject({
@@ -347,7 +347,7 @@ describe('Permission Exclusion Validator', (): void => {
       plural: Config.WATCH_PERMISSION_EXCLUSIONS_RESOURCE_PLURAL,
       name: pe1Resource.metadata.name
     })
-    expect(status.response.statusCode).toEqual(200)
+    expect(status.status).toEqual('Success')
     await waitChanges()
   })
 
@@ -377,7 +377,7 @@ describe('Permission Exclusion Validator', (): void => {
       plural: Config.WATCH_PERMISSION_EXCLUSIONS_RESOURCE_PLURAL,
       body: pe1Resource
     })
-    expect(status.response.statusCode).toEqual(201)
+    expect(status.metadata.generation).toBeGreaterThan(0)
     await waitChanges()
   })
 
@@ -389,10 +389,10 @@ describe('Permission Exclusion Validator', (): void => {
       plural: Config.WATCH_PERMISSION_EXCLUSIONS_RESOURCE_PLURAL,
       name: pe1Resource.metadata.name
     })
-    expect(status.response.statusCode).toEqual(200)
-    expect(status.body).toHaveProperty('status')
-    expect((<any>status.body).status).toHaveProperty('state')
-    expect((<any>status.body).status.state).toEqual('VALIDATED')
+    expect(status.metadata.name).toEqual(pe1Resource.metadata.name)
+    expect(status).toHaveProperty('status')
+    expect((<any>status).status).toHaveProperty('state')
+    expect((<any>status).status.state).toEqual('VALIDATED')
   })
   it('Try to assign permissionY1 to rol1, CR should be rejected', async () => {
     const status = await k8sApiCustomObjects.createNamespacedCustomObject({
@@ -402,7 +402,7 @@ describe('Permission Exclusion Validator', (): void => {
       plural: Config.WATCH_ROLE_PERMISSIONS_RESOURCE_PLURAL,
       body: role3Resource
     })
-    expect(status.response.statusCode).toEqual(201)
+    expect(status.metadata.generation).toBeGreaterThan(0)
     await waitChanges()
   })
 
@@ -414,9 +414,9 @@ describe('Permission Exclusion Validator', (): void => {
       plural: Config.WATCH_ROLE_PERMISSIONS_RESOURCE_PLURAL,
       name: role3Resource.metadata.name
     })
-    expect(status.response.statusCode).toEqual(200)
-    expect(status.body).toHaveProperty('status')
-    expect((<any>status.body).status).toHaveProperty('state')
-    expect((<any>status.body).status.state).not.toEqual('VALIDATED')
+    expect(status.metadata.name).toEqual(role3Resource.metadata.name)
+    expect(status).toHaveProperty('status')
+    expect((<any>status).status).toHaveProperty('state')
+    expect((<any>status).status.state).not.toEqual('VALIDATED')
   })
 })

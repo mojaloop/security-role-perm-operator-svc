@@ -93,7 +93,7 @@ describe('K8S operator', (): void => {
       plural: Config.WATCH_RESOURCE_PLURAL,
       body: sampleResource1
     })
-    expect(status.response.statusCode).toEqual(201)
+    expect(status.metadata.generation).toBeGreaterThan(0)
 
     await waitingChanges()
 
@@ -120,7 +120,7 @@ describe('K8S operator', (): void => {
       plural: Config.WATCH_RESOURCE_PLURAL,
       body: sampleResource2
     })
-    expect(status.response.statusCode).toEqual(201)
+    expect(status.metadata.generation).toBeGreaterThan(0)
 
     await waitingChanges()
 
@@ -149,7 +149,7 @@ describe('K8S operator', (): void => {
       plural: Config.WATCH_RESOURCE_PLURAL,
       name: sampleResource1.metadata.name
     })
-    expect(status.response.statusCode).toEqual(200)
+    expect(status.status).toEqual('Success')
     await waitingChanges()
   })
 
@@ -175,7 +175,7 @@ describe('K8S operator', (): void => {
       plural: Config.WATCH_RESOURCE_PLURAL,
       name: sampleResource2.metadata.name
     })
-    expect(status.response.statusCode).toEqual(200)
+    expect(status.status).toEqual('Success')
     await waitingChanges()
   })
 
