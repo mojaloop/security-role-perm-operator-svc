@@ -97,12 +97,23 @@ async function onEvent (phase: string, apiObj: any) {
           // Set the status of our resource
           await _updateResourceStatus(apiObj, 'VALIDATED')
         } catch (err) {
-          logger.error(`Validation failed for the permission exclusion resource: ${resourceName}`)
+          logger.error(`Validation failed for the permission exclusion resource: ${resourceName}`, err)
           if (err instanceof ValidationError) {
             logger.error(JSON.stringify(err.validationErrors))
             await _updateResourceStatus(apiObj, 'VALIDATION FAILED', err.validationErrors)
           } else {
-            await _updateResourceStatus(apiObj, 'UNKNOWN ERROR')
+            const errorMessage = err instanceof Error ? err.message : String(err)
+            const errorName = err instanceof Error ? err.constructor.name : 'Unknown'
+            logger.error(`Non-validation error occurred: ${errorName} - ${errorMessage}`)
+            // Check if it's a connection/network error that might be transient
+            const lowerErrorMessage = errorMessage.toLowerCase()
+            if (lowerErrorMessage.includes('connection') || lowerErrorMessage.includes('network') || lowerErrorMessage.includes('timeout') || lowerErrorMessage.includes('econnrefused')) {
+              logger.warn(`Transient error detected, marking for retry: ${resourceName}`)
+              await _updateResourceStatus(apiObj, 'RETRY_PENDING', [`Transient error: ${errorMessage}`])
+              scheduleRetry(apiObj)
+            } else {
+              await _updateResourceStatus(apiObj, 'UNKNOWN ERROR', [`Unexpected error: ${errorMessage}`])
+            }
           }
           return
         }
@@ -138,17 +149,29 @@ async function _updateResourceStatus (apiObj: any, statusText: string, errors?: 
   }
 
   try {
-    k8sApiCustomObjects.replaceNamespacedCustomObjectStatus(
-      RESOURCE_GROUP,
-      RESOURCE_VERSION,
-      NAMESPACE,
-      RESOURCE_PLURAL,
-      apiObj.metadata.name,
-      status
-    )
+    await k8sApiCustomObjects.replaceNamespacedCustomObjectStatus({
+      group: RESOURCE_GROUP,
+      version: RESOURCE_VERSION,
+      namespace: NAMESPACE,
+      plural: RESOURCE_PLURAL,
+      name: apiObj.metadata.name,
+      body: status
+    })
   } catch (err) {
     logger.error('Error updating status of the custom resource ' + apiObj.metadata.name, err)
   }
+}
+
+// Retry function for resources in RETRY_PENDING state
+function scheduleRetry(apiObj: any, retryDelayMs: number = 5000) {
+  setTimeout(async () => {
+    try {
+      logger.info(`Retrying validation for resource: ${apiObj?.metadata?.name}`)
+      await onEvent('MODIFIED', apiObj)
+    } catch (err) {
+      logger.error(`Retry failed for resource: ${apiObj?.metadata?.name}`, err)
+    }
+  }, retryDelayMs)
 }
 
 // Helpers to continue watching after an event

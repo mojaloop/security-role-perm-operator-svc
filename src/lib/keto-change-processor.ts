@@ -30,7 +30,7 @@
 import PQueue from 'p-queue'
 
 export default class KetoChangeProcessor {
-  // eslint-disable-next-line no-use-before-define
+
   private static _instance: KetoChangeProcessor
   public queue: PQueue
 

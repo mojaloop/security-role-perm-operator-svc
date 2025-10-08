@@ -77,7 +77,7 @@ describe('permission-exclusions', (): void => {
             ]
           }
         ]
-        expect(() => permissionExclusionsValidator.validateUserRolePermissions(userRoles, rolePermissions, permissionExclusions)).not.toThrowError()
+        expect(() => permissionExclusionsValidator.validateUserRolePermissions(userRoles, rolePermissions, permissionExclusions)).not.toThrow()
       })
       it('Validate the permission exclusion', async () => {
         const userRoles: UserRole[] = [
@@ -114,7 +114,7 @@ describe('permission-exclusions', (): void => {
             ]
           }
         ]
-        expect(() => permissionExclusionsValidator.validateUserRolePermissions(userRoles, rolePermissions, permissionExclusions)).not.toThrowError()
+        expect(() => permissionExclusionsValidator.validateUserRolePermissions(userRoles, rolePermissions, permissionExclusions)).not.toThrow()
       })
     })
     describe('Unhappy Path', (): void => {

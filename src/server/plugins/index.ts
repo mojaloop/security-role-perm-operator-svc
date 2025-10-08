@@ -40,13 +40,13 @@ import { StatePlugin } from './state'
 async function register (server: Server): Promise<Server> {
   const openapiBackend = await OpenAPI.initialize()
   const plugins = [
-    StatePlugin,
+    { plugin: StatePlugin },
     ApiDoc,
     Util.Hapi.OpenapiBackendValidator,
     openapiBackend,
     Inert,
     Vision,
-    ErrorHandling,
+    ErrorHandling as any,
     Util.Hapi.HapiEventPlugin
   ]
 
