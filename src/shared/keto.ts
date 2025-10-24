@@ -34,8 +34,6 @@ const log = logger.child({ component: 'KetoRelationshipApiClient' })
 
 const HTTP_TIMEOUT_MS = 10_000 // make configurable
 
-// axios.defaults.timeout = HTTP_TIMEOUT_MS
-
 const axiosInstance = axios.create({
   timeout: HTTP_TIMEOUT_MS,
   transitional: {
@@ -45,7 +43,7 @@ const axiosInstance = axios.create({
 })
 // todo: add retry logic
 
-axios.interceptors.response.use(
+axiosInstance.interceptors.response.use(
   (response: AxiosResponse) => {
     log.debug('HTTP request succeeded: ', {
       method: response.config.method?.toUpperCase(),
