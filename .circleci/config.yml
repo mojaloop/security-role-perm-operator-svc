@@ -158,7 +158,7 @@ jobs:
     environment:
       KUBECONFIG: /home/circleci/.kube/config
       K8S_VERSION: v1.28.0
-      MINIKUBE_VERSION: v1.32.0
+      MINIKUBE_VERSION: v1.31.2
       MINIKUBE_WANTUPDATENOTIFICATION: false
       MINIKUBE_WANTREPORTERRORPROMPT: false
       MINIKUBE_HOME: /home/circleci
