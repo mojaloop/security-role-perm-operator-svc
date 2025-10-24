@@ -102,6 +102,7 @@ describe('K8S operator', (): void => {
     expect(response.data?.relation_tuples?.map(item => item.object)).toContain('deployService')
     expect(response.data?.relation_tuples?.map(item => item.object)).toContain('listService')
   })
+
   it('Add a second K8S custom resource', async () => {
     const status = await k8sApiCustomObjects.createNamespacedCustomObject({
       group: Config.WATCH_RESOURCE_GROUP,
@@ -127,6 +128,7 @@ describe('K8S operator', (): void => {
     expect(response.data?.relation_tuples?.map(item => item.object)).toContain('listService')
     expect(response.data?.relation_tuples?.map(item => item.object)).toContain('removeService')
   })
+
   it('Add a third K8S custom resource with same role and different permissions', async () => {
     const status = await k8sApiCustomObjects.createNamespacedCustomObject({
       group: Config.WATCH_RESOURCE_GROUP,
@@ -153,6 +155,7 @@ describe('K8S operator', (): void => {
     expect(response.data?.relation_tuples?.map(item => item.object)).toContain('removeService')
     expect(response.data?.relation_tuples?.map(item => item.object)).toContain('monitorService')
   })
+
   it('Delete the first K8S custom resource', async () => {
     const status = await k8sApiCustomObjects.deleteNamespacedCustomObject({
       group: Config.WATCH_RESOURCE_GROUP,
@@ -179,6 +182,7 @@ describe('K8S operator', (): void => {
     expect(response.data?.relation_tuples?.map(item => item.object)).toContain('removeService')
     expect(response.data?.relation_tuples?.map(item => item.object)).toContain('monitorService')
   })
+
   it('Delete the second K8S custom resource', async () => {
     const status = await k8sApiCustomObjects.deleteNamespacedCustomObject({
       group: Config.WATCH_RESOURCE_GROUP,
@@ -205,6 +209,7 @@ describe('K8S operator', (): void => {
     expect(response.data?.relation_tuples?.map(item => item.object)).toContain('listService')
     expect(response.data?.relation_tuples?.map(item => item.object)).toContain('monitorService')
   })
+
   it('Delete the third K8S custom resource', async () => {
     const status = await k8sApiCustomObjects.deleteNamespacedCustomObject({
       group: Config.WATCH_RESOURCE_GROUP,
