@@ -36,10 +36,10 @@ const HTTP_TIMEOUT_MS = 10_000 // make configurable
 
 const axiosInstance = axios.create({
   timeout: HTTP_TIMEOUT_MS,
-  transitional: {
-    // throw ETIMEDOUT error instead of generic ECONNABORTED on request timeouts
-    clarifyTimeoutError: false,
-  },
+  // transitional: {
+  //   // throw ETIMEDOUT error instead of generic ECONNABORTED on request timeouts
+  //   clarifyTimeoutError: false,
+  // },
 })
 // todo: add retry logic
 
