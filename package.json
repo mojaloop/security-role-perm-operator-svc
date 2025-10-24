@@ -48,7 +48,7 @@
     "@ory/keto-client": "^0.11.0-alpha.0",
     "ajv": "8.17.1",
     "ajv-keywords": "5.1.0",
-    "axios": "0.21.4",
+    "axios": "1.12.2",
     "p-queue": "^9.0.0",
     "parse-strings-in-object": "^1.6.0",
     "rc": "^1.2.8",
@@ -78,6 +78,9 @@
     "node": ">=18.x"
   },
   "overrides": {
+    "@ory/keto-client": {
+      "axios": "1.12.2"
+    },
     "shins": {
       "ajv": "6.12.3",
       "ejs": "3.1.10",
