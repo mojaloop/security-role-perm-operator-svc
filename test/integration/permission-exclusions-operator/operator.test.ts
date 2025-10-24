@@ -30,7 +30,8 @@
 
 import * as k8s from '@kubernetes/client-node'
 import * as keto from '@ory/keto-client'
-import { KETO_NAMESPACES, KETO_RELATIONS } from '../../../src/constants'
+import { createKetoRelationshipApiClient } from "~/shared/keto"
+import { KETO_NAMESPACES, KETO_RELATIONS } from "~/constants"
 
 import Config from './config'
 import sampleResource1 from './data/sample-resource1.json'
@@ -56,10 +57,7 @@ describe('K8S operator', (): void => {
   let relationshipApi: keto.RelationshipApi
 
   beforeAll(async () => {
-    relationshipApi = new keto.RelationshipApi(
-      undefined,
-      Config.ORY_KETO_READ_SERVICE_URL
-    )
+    relationshipApi = createKetoRelationshipApiClient(Config.ORY_KETO_READ_SERVICE_URL)
 
     const clearing = [sampleResource1, sampleResource2]
       .map(crd => k8sApiCustomObjects.deleteNamespacedCustomObject({

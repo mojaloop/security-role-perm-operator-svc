@@ -30,7 +30,8 @@
 
 import * as k8s from '@kubernetes/client-node'
 import * as keto from '@ory/keto-client'
-import { KETO_NAMESPACES, KETO_RELATIONS } from '../../../src/constants'
+import { createKetoRelationshipApiClient } from '~/shared/keto'
+import { KETO_NAMESPACES, KETO_RELATIONS } from '~/constants'
 
 import Config from './config'
 import sampleResource1 from './data/sample-resource1.json'
@@ -50,13 +51,10 @@ const k8sApiCustomObjects = kc.makeApiClient(k8s.CustomObjectsApi)
 const waitingChanges = () => new Promise(resolve => setTimeout(resolve, Config.WAIT_TIME_MS_AFTER_K8S_RESOURCE_CHANGE))
 
 describe('K8S operator', (): void => {
-  let relationshipApi : keto.RelationshipApi
+  let relationshipApi: keto.RelationshipApi
 
   beforeAll(async () => {
-    relationshipApi = new keto.RelationshipApi(
-      undefined,
-      Config.ORY_KETO_READ_SERVICE_URL
-    )
+    relationshipApi = createKetoRelationshipApiClient(Config.ORY_KETO_READ_SERVICE_URL)
     const clearing = [sampleResource1, sampleResource1, sampleResource1]
       .map(crd => k8sApiCustomObjects.deleteNamespacedCustomObject({
         group: Config.WATCH_RESOURCE_GROUP,
