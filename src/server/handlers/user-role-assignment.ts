@@ -29,8 +29,8 @@
  ******/
 
 import * as keto from '@ory/keto-client'
-import { Request, ResponseObject } from '@hapi/hapi'
-import { createKetoRelationshipApiClient } from '~/shared/keto'
+import { Request } from '@hapi/hapi'
+import { createKetoRelationshipApiClient } from '../../shared/keto'
 import { StateResponseToolkit } from '~/server/plugins/state'
 import { PermissionExclusionsValidator, UserRole } from '../../validation/permission-exclusions'
 import { ValidationError } from '../../validation/validation-error'

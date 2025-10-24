@@ -30,7 +30,7 @@
 
 import * as keto from '@ory/keto-client'
 import { ILogger } from '~/types'
-import { createKetoRelationshipApiClient } from '~/shared/keto'
+import { createKetoRelationshipApiClient } from '../shared/keto'
 import { ServiceConfig } from '../shared/config'
 import { logger } from '../shared/logger'
 import { KETO_NAMESPACES, KETO_RELATIONS, PAGE_SIZE } from '../constants'
