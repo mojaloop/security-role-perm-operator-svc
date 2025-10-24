@@ -29,17 +29,13 @@
 
 import * as keto from '@ory/keto-client'
 import Config from '../shared/config'
+import { createKetoRelationshipApiClient } from '../shared/keto'
 import { logger } from '../shared/logger'
 import { KETO_NAMESPACES, KETO_RELATIONS, PAGE_SIZE } from '../constants'
 
 class KetoTuples {
-  relationshipApi: keto.RelationshipApi
-  adminRelationshipApi: keto.RelationshipApi
-
-  constructor () {
-    this.relationshipApi = new keto.RelationshipApi(undefined, Config.ORY_KETO_READ_SERVICE_URL)
-    this.adminRelationshipApi = new keto.RelationshipApi(undefined, Config.ORY_KETO_WRITE_SERVICE_URL)
-  }
+  relationshipApi = createKetoRelationshipApiClient(Config.ORY_KETO_READ_SERVICE_URL)
+  adminRelationshipApi = createKetoRelationshipApiClient(Config.ORY_KETO_WRITE_SERVICE_URL)
 
   /**
    * Gets all permission exclusions in the namespace from Ory Keto server.

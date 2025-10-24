@@ -30,13 +30,15 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 import * as k8s from '@kubernetes/client-node'
-import { logger } from './shared/logger'
 import Config from './shared/config'
+import { logger as globalLogger } from './shared/logger'
 import { RoleResources } from './lib/role-resources'
 import { RolePermissions, PermissionExclusionsValidator } from './validation/permission-exclusions'
 import KetoChangeProcessor from './lib/keto-change-processor'
 import { KetoTuples } from './lib/role-permission-keto-tuples'
 import { ValidationError } from './validation/validation-error'
+
+const logger = globalLogger.child({ operator: 'RolePermissionOperator' })
 
 const permissionExclusionsValidator = new PermissionExclusionsValidator(Config)
 // Configure the operator to monitor your custom resources
@@ -99,7 +101,7 @@ async function onEvent (phase: string, apiObj: any) {
         } catch (err) {
           logger.error(`Validation failed for the role permission resource: ${resourceName}`, err)
           if (err instanceof ValidationError) {
-            logger.error(JSON.stringify(err.validationErrors))
+            logger.warn(`ValidationError due to: ${err.message}`)
             await _updateResourceStatus(apiObj, 'VALIDATION FAILED', err.validationErrors)
           } else {
             const errorMessage = err instanceof Error ? err.message : String(err)
@@ -107,7 +109,11 @@ async function onEvent (phase: string, apiObj: any) {
             logger.error(`Non-validation error occurred: ${errorName} - ${errorMessage}`)
             // Check if it's a connection/network error that might be transient
             const lowerErrorMessage = errorMessage.toLowerCase()
-            if (lowerErrorMessage.includes('connection') || lowerErrorMessage.includes('network') || lowerErrorMessage.includes('timeout') || lowerErrorMessage.includes('econnrefused')) {
+            if (lowerErrorMessage.includes('connection')
+              || lowerErrorMessage.includes('network')
+              || lowerErrorMessage.includes('timeout')
+              || lowerErrorMessage.includes('econnrefused')
+            ) {
               logger.warn(`Transient error detected, marking for retry: ${resourceName}`)
               await _updateResourceStatus(apiObj, 'RETRY_PENDING', [`Transient error: ${errorMessage}`])
               scheduleRetry(apiObj)
@@ -174,7 +180,7 @@ function scheduleRetry(apiObj: any, retryDelayMs: number = 5000) {
 
 // Helpers to continue watching after an event
 function onDone (err: any) {
-  logger.error(`error: ${err?.message} - connection closed. ${err}`)
+  logger.error(`error: ${err?.message} - connection closed: `, err)
   setTimeout(watchResource, 1000)
 }
 
@@ -200,7 +206,7 @@ export async function startOperator (): Promise<void> {
       logger.error('Can not connect to K8S API')
     } else {
       healthStatus = 'Error: ' + err.message
-      logger.error(err.stack)
+      logger.error('error in watchResource: ', err)
     }
   }
 }

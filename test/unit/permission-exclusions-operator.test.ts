@@ -151,6 +151,7 @@ describe('Permission Exclusion operator', (): void => {
   let spyAddToQueue: jest.Mock
   let spyWatch: jest.Mock
   let peValidatorInstance: any
+
   beforeAll(() => {
     spyUpdateResource = (permissionExclusionResourceStoreObject.updateResource as jest.Mock)
     spyDeleteResource = (permissionExclusionResourceStoreObject.deleteResource as jest.Mock)
@@ -158,6 +159,7 @@ describe('Permission Exclusion operator', (): void => {
     spyAddToQueue = mockAddToQueue
     spyWatch = k8sWatchInstance.watch
   })
+
   describe('Positive Scenarios', (): void => {
     afterEach(() => {
       spyUpdateResource.mockClear()

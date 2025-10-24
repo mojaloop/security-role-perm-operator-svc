@@ -30,13 +30,15 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 import * as k8s from '@kubernetes/client-node'
-import { logger } from './shared/logger'
+import { logger as globalLogger } from './shared/logger'
 import Config from './shared/config'
 import { PermissionExclusionResources } from './lib/permission-exclusions-store'
 import { PermissionExclusions, PermissionExclusionsValidator } from './validation/permission-exclusions'
 import KetoChangeProcessor from './lib/keto-change-processor'
 import { KetoTuples } from './lib/permission-exclusions-keto-tuples'
 import { ValidationError } from './validation/validation-error'
+
+const logger = globalLogger.child({ operator: 'PermissionExclusionsOperator' })
 
 const permissionExclusionsValidator = new PermissionExclusionsValidator(Config)
 // Configure the operator to monitor your custom resources
@@ -98,8 +100,9 @@ async function onEvent (phase: string, apiObj: any) {
           await _updateResourceStatus(apiObj, 'VALIDATED')
         } catch (err) {
           logger.error(`Validation failed for the permission exclusion resource: ${resourceName}`, err)
+
           if (err instanceof ValidationError) {
-            logger.error(JSON.stringify(err.validationErrors))
+            logger.warn(`ValidationError: ${err.message}`)
             await _updateResourceStatus(apiObj, 'VALIDATION FAILED', err.validationErrors)
           } else {
             const errorMessage = err instanceof Error ? err.message : String(err)
@@ -125,7 +128,7 @@ async function onEvent (phase: string, apiObj: any) {
       }
       const permissionExclusionCombos = permissionExclusionResourceStore.getUniquePermissionExclusionCombos()
 
-      logger.info('Current permission exclusions in memory' + JSON.stringify(permissionExclusionCombos))
+      logger.info('Current permission exclusions in memory: ', { permissionExclusionCombos })
       const queueArgs = {
         subjectObjectCombos: permissionExclusionCombos
       }
@@ -176,7 +179,7 @@ function scheduleRetry(apiObj: any, retryDelayMs: number = 5000) {
 
 // Helpers to continue watching after an event
 function onDone (err: any) {
-  logger.error(`error: ${err?.message} - connection closed. ${err}`)
+  logger.error(`error: ${err?.message} - connection closed. `, err)
   setTimeout(watchResource, 1000)
 }
 
@@ -202,7 +205,7 @@ export async function startOperator (): Promise<void> {
       logger.error('Can not connect to K8S API')
     } else {
       healthStatus = 'Error: ' + err.message
-      logger.error(err.stack)
+      logger.error('error in watchResource: ', err)
     }
   }
 }

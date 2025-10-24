@@ -27,18 +27,19 @@
 
  --------------
  ******/
+
 // workaround for lack of typescript types for mojaloop dependencies
- 
 /// <reference path="../../ambient.d.ts"/>
+
 import { Server } from '@hapi/hapi'
+import { validateRoutes } from '@mojaloop/central-services-error-handling'
+
 import { name, version } from '../../package.json'
 import { ServiceConfig } from '../shared/config'
+import { logger } from '../shared/logger'
 import extensions from './extensions'
 import plugins from './plugins'
-
 import onValidateFail from './handlers/onValidateFail'
-import Logger from '@mojaloop/central-services-logger'
-import { validateRoutes } from '@mojaloop/central-services-error-handling'
 
 async function _create (config: ServiceConfig): Promise<Server> {
   const server: Server = new Server({
@@ -60,7 +61,7 @@ async function _create (config: ServiceConfig): Promise<Server> {
 }
 
 async function _start (server: Server): Promise<Server> {
-  Logger.info(`${name}@${version} is running: ${server.info.uri}`)
+  logger.info(`${name}@${version} is running: ${server.info.uri}`)
   await server.start()
   return server
 }

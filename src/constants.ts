@@ -9,4 +9,4 @@ export const KETO_RELATIONS = Object.freeze({
   member: 'member'
 })
 
-export const PAGE_SIZE = 1000000
+export const PAGE_SIZE = 1_000_000

@@ -43,11 +43,12 @@
     "@mojaloop/central-services-error-handling": "13.1.3",
     "@mojaloop/central-services-logger": "11.10.1",
     "@mojaloop/central-services-metrics": "12.8.0",
-    "@mojaloop/central-services-shared": "^18.34.1",
-    "@mojaloop/event-sdk": "14.8.0",
+    "@mojaloop/central-services-shared": "^18.34.2",
+    "@mojaloop/event-sdk": "14.8.1",
     "@ory/keto-client": "^0.11.0-alpha.0",
     "ajv": "8.17.1",
     "ajv-keywords": "5.1.0",
+    "axios": "1.12.2",
     "p-queue": "^9.0.0",
     "parse-strings-in-object": "^1.6.0",
     "rc": "^1.2.8",
@@ -55,21 +56,21 @@
   },
   "devDependencies": {
     "@types/jest": "^30.0.0",
-    "@types/node": "^24.7.0",
+    "@types/node": "^24.9.1",
     "@types/rc": "^1.2.4",
     "@types/ws": "^8.18.1",
-    "@typescript-eslint/eslint-plugin": "^8.46.0",
-    "@typescript-eslint/parser": "^8.46.0",
+    "@typescript-eslint/eslint-plugin": "^8.46.2",
+    "@typescript-eslint/parser": "^8.46.2",
     "audit-ci": "7.1.0",
-    "eslint": "^9.37.0",
+    "eslint": "^9.38.0",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-jest": "^29.0.1",
     "jest": "^30.2.0",
     "jest-junit": "^16.0.0",
     "jest-mock-process": "^2.0.0",
-    "npm-check-updates": "^19.0.0",
+    "npm-check-updates": "^19.1.1",
     "prettier": "^3.6.2",
-    "ts-jest": "^29.4.4",
+    "ts-jest": "^29.4.5",
     "ts-node": "^10.9.2",
     "tsconfig-paths": "^4.2.0"
   },
@@ -77,6 +78,9 @@
     "node": ">=18.x"
   },
   "overrides": {
+    "@ory/keto-client": {
+      "axios": "1.12.2"
+    },
     "shins": {
       "ajv": "6.12.3",
       "ejs": "3.1.10",
