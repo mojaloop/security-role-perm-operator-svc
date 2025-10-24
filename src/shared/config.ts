@@ -31,6 +31,7 @@ import rc from 'rc'
 import parse from 'parse-strings-in-object'
 import Config from '../../config/default.json'
 import Package from '../../package.json'
+
 export interface ServiceConfig {
   // package.json
   PACKAGE: Record<string, unknown>;
@@ -56,7 +57,7 @@ export interface ServiceConfig {
   ORY_KETO_WRITE_SERVICE_URL: string;
 }
 
-const RC = parse(rc('ROLE_PERM_OPERATOR', Config)) as ServiceConfig
+const RC = parse<ServiceConfig>(rc('ROLE_PERM_OPERATOR', Config))
 
 export default {
   ...RC,

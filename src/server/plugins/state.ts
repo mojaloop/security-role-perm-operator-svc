@@ -47,9 +47,7 @@ export const StatePlugin = {
       // prepare toolkit accessors
       server.decorate('toolkit', 'getLogger', (): any => logger)
     } catch (err) {
-      logger.error('StatePlugin: unexpected exception during plugin registration')
-      logger.error(err)
-      logger.error('StatePlugin: exiting process')
+      logger.error('StatePlugin: unexpected exception during plugin registration: ', err)
       process.exit(1)
     }
   }

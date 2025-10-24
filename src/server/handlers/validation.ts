@@ -33,8 +33,10 @@ import { StateResponseToolkit } from '~/server/plugins/state'
 import { Request, ResponseObject } from '@hapi/hapi'
 import { PermissionExclusionsValidator, UserRole, RolePermissions, PermissionExclusions } from '../../validation/permission-exclusions'
 import { ValidationError } from '../../validation/validation-error'
-import { logger } from '../../shared/logger'
+import { logger as globalLogger } from '../../shared/logger'
 import Config from '../../shared/config'
+
+const logger = globalLogger.child({ handler: 'validation' })
 
 interface ValidationErrorResponse {
   isValid: boolean;
@@ -51,7 +53,7 @@ const ValidateUserRole = async (_context: unknown, _request: Request, h: StateRe
     const userRole : UserRole = <UserRole>_request.payload
     await permissionExclusionsValidator.validateUserRole(userRole)
   } catch (err) {
-    if (err instanceof Error) logger.error(`error in ValidateUserRole: ${err.message}`)
+    logger.error('error in ValidateUserRole: ', err)
 
     if (err instanceof ValidationError) {
       const errorResponse: ValidationErrorResponse = {
@@ -61,7 +63,6 @@ const ValidateUserRole = async (_context: unknown, _request: Request, h: StateRe
       return h.response(errorResponse).code(406)
     }
 
-    h.getLogger().error(err)
     return h.response().code(500)
   }
 
@@ -79,7 +80,7 @@ const ValidateRolePermissions = async (_context: unknown, _request: Request, h: 
     await permissionExclusionsValidator
       .validateRolePermissionsAndPermissionExclusions(rolePermissions, permissionExclusions)
   } catch (err) {
-    if (err instanceof Error) logger.error(`error in ValidateRolePermissions: ${err.message}`)
+    logger.error('error in ValidateRolePermissions: ', err)
 
     if (err instanceof ValidationError) {
       const errorResponse: ValidationErrorResponse = {
@@ -89,7 +90,6 @@ const ValidateRolePermissions = async (_context: unknown, _request: Request, h: 
       return h.response(errorResponse).code(406)
     }
 
-    h.getLogger().error(err)
     return h.response().code(500)
   }
 

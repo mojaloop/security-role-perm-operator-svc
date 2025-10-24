@@ -27,23 +27,16 @@
  --------------
  ******/
 
-import {
-  RelationshipApi,
-  Relationship, RelationshipPatch, RelationshipPatchActionEnum
-} from '@ory/keto-client'
+import { Relationship, RelationshipPatch, RelationshipPatchActionEnum } from '@ory/keto-client'
 
 import Config from '../shared/config'
+import { createKetoRelationshipApiClient } from '../shared/keto'
 import { logger } from '../shared/logger'
 import { KETO_NAMESPACES, KETO_RELATIONS, PAGE_SIZE } from '../constants'
 
 class KetoTuples {
-  relationshipApi: RelationshipApi
-  adminRelationshipApi: RelationshipApi
-
-  constructor () {
-    this.relationshipApi = new RelationshipApi(undefined, Config.ORY_KETO_READ_SERVICE_URL)
-    this.adminRelationshipApi = new RelationshipApi(undefined, Config.ORY_KETO_WRITE_SERVICE_URL)
-  }
+  relationshipApi = createKetoRelationshipApiClient(Config.ORY_KETO_READ_SERVICE_URL)
+  adminRelationshipApi = createKetoRelationshipApiClient(Config.ORY_KETO_WRITE_SERVICE_URL)
 
   /**
    * Gets all roles and permissions in the namespace from Ory Keto server.

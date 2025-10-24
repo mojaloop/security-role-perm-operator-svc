@@ -31,8 +31,9 @@ export class ValidationError extends Error {
   validationErrors: string[]
   constructor (errorMessages: string[]) {
     super(JSON.stringify(errorMessages))
+    this.name = this.constructor.name
+    Error.captureStackTrace(this, this.constructor)
     this.validationErrors = errorMessages
-    this.name = 'ValidationError'
   }
 
   getValidationErrors = () : string[] => {

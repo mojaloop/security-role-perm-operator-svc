@@ -27,6 +27,7 @@
  --------------
  ******/
 
-import Logger from '@mojaloop/central-services-logger'
+import { loggerFactory } from '@mojaloop/central-services-logger/src/contextLogger'
+import { ILogger } from '../types'
 
-export const logger = Logger
+export const logger: ILogger = loggerFactory('SRPOS')

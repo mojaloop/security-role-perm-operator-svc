@@ -29,10 +29,12 @@
  ******/
 
 import * as keto from '@ory/keto-client'
-import { ValidationError } from './validation-error'
+import { ILogger } from '~/types'
+import { createKetoRelationshipApiClient } from '~/shared/keto'
 import { ServiceConfig } from '../shared/config'
 import { logger } from '../shared/logger'
 import { KETO_NAMESPACES, KETO_RELATIONS, PAGE_SIZE } from '../constants'
+import { ValidationError } from './validation-error'
 
 export interface UserRole {
   username: string;
@@ -61,13 +63,11 @@ export function isPermissionExclusionCombos (obj: PermissionExclusions | Permiss
 export class PermissionExclusionsValidator {
   relationshipApi: keto.RelationshipApi
   serviceConfig: ServiceConfig
+  log: ILogger = logger.child({ component: this.constructor.name })
 
   constructor (serviceConfig: ServiceConfig) {
     this.serviceConfig = serviceConfig
-    this.relationshipApi = new keto.RelationshipApi(
-      undefined,
-      serviceConfig.ORY_KETO_READ_SERVICE_URL
-    )
+    this.relationshipApi = createKetoRelationshipApiClient(serviceConfig.ORY_KETO_READ_SERVICE_URL)
   }
 
   _getPermissionExclusionsForPermission (
@@ -121,7 +121,9 @@ export class PermissionExclusionsValidator {
             permissionExclusions
           )
           permissionExclusionsForPermission.forEach(perm => permissionExclusionsSet.add(perm))
-        } catch (err) {}
+        } catch (err) {
+          this.log.warn('error in iterating through permissions:', err)
+        }
       })
       rolePermissionExclusions.set(role.rolename, permissionExclusionsSet)
     })
@@ -179,7 +181,7 @@ export class PermissionExclusionsValidator {
           userRoles.get(user)?.push(rolePermissions[i].rolename)
         })
       } catch (err) {
-        logger.error('Unable to get roles for the user')
+        this.log.error('Unable to get roles for the user: ', err)
       }
     }
     const userRolesArray = Array.from(userRoles, ([username, roles]) => ({ username, roles }))
@@ -260,7 +262,7 @@ export class PermissionExclusionsValidator {
       pageSize: PAGE_SIZE
     })
 
-     
+
     const readPermissionExclusionsRelationTuples: keto.Relationship[] = readPermissionExclusionsResponse.data?.relation_tuples || []
     const permissionExclusionCombos: PermissionExclusionCombos[] = readPermissionExclusionsRelationTuples.map(item => {
       return {

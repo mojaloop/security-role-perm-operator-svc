@@ -30,6 +30,7 @@
 
 import * as keto from '@ory/keto-client'
 import { Request, ResponseObject } from '@hapi/hapi'
+import { createKetoRelationshipApiClient } from '~/shared/keto'
 import { StateResponseToolkit } from '~/server/plugins/state'
 import { PermissionExclusionsValidator, UserRole } from '../../validation/permission-exclusions'
 import { ValidationError } from '../../validation/validation-error'
@@ -43,15 +44,9 @@ interface AssignmentErrorResponse {
   errors: string[];
 }
 
-const relationshipApi = new keto.RelationshipApi(
-  undefined,
-  Config.ORY_KETO_READ_SERVICE_URL
-)
+const relationshipApi = createKetoRelationshipApiClient(Config.ORY_KETO_READ_SERVICE_URL)
 
-const adminRelationshipApi = new keto.RelationshipApi(
-  undefined,
-  Config.ORY_KETO_WRITE_SERVICE_URL
-)
+const adminRelationshipApi = createKetoRelationshipApiClient(Config.ORY_KETO_WRITE_SERVICE_URL)
 
 const permissionExclusionsValidator = new PermissionExclusionsValidator(Config)
 
@@ -59,11 +54,9 @@ const AssignUserRole = async (
   _context: unknown,
   _request: Request,
   h: StateResponseToolkit
-): Promise<ResponseObject> => {
-  const response = {}
-
+): Promise<void> => {
   try {
-    const userRole : UserRole = <UserRole>_request.payload
+    const userRole: UserRole = <UserRole>_request.payload
     await permissionExclusionsValidator.validateUserRole(userRole)
 
     // Get current role assignments
@@ -78,23 +71,22 @@ const AssignUserRole = async (
     const relationshipPatch = _generateUserRolesPatchDeltaArray(currentRoles, userRole.roles, userRole.username)
     // Apply patch
     await adminRelationshipApi.patchRelationships({ relationshipPatch })
+
     h.response().code(200)
   } catch (err) {
-    if (err instanceof Error) logger.error(`error in AssignUserRole: ${err.message}`)
+    logger.error('error in AssignUserRole: ', err)
 
     if (err instanceof ValidationError) {
       const errorResponse: AssignmentErrorResponse = {
         isCreated: false,
         errors: err.validationErrors
       }
-      return h.response(errorResponse).code(406)
+      logger.warn('ValidationError:', { errorResponse })
+      h.response(errorResponse).code(406)
+    } else {
+      h.response().code(500)
     }
-
-    h.getLogger().error(err)
-    return h.response().code(500)
   }
-
-  return h.response(response).code(200)
 }
 
 const _generateUserRolesPatchDeltaArray = (
