@@ -29,7 +29,7 @@
  ******/
 
 import * as keto from '@ory/keto-client'
-import { Request } from '@hapi/hapi'
+import { Request, ResponseObject } from '@hapi/hapi'
 import { createKetoRelationshipApiClient } from '../../shared/keto'
 import { StateResponseToolkit } from '~/server/plugins/state'
 import { PermissionExclusionsValidator, UserRole } from '../../validation/permission-exclusions'
@@ -54,7 +54,7 @@ const AssignUserRole = async (
   _context: unknown,
   _request: Request,
   h: StateResponseToolkit
-): Promise<void> => {
+): Promise<ResponseObject> => {
   try {
     const userRole: UserRole = <UserRole>_request.payload
     await permissionExclusionsValidator.validateUserRole(userRole)
@@ -72,7 +72,7 @@ const AssignUserRole = async (
     // Apply patch
     await adminRelationshipApi.patchRelationships({ relationshipPatch })
 
-    h.response().code(200)
+    return h.response().code(200)
   } catch (err) {
     logger.error('error in AssignUserRole: ', err)
 
@@ -82,9 +82,9 @@ const AssignUserRole = async (
         errors: err.validationErrors
       }
       logger.warn('ValidationError:', { errorResponse })
-      h.response(errorResponse).code(406)
+      return h.response(errorResponse).code(406)
     } else {
-      h.response().code(500)
+      return h.response().code(500)
     }
   }
 }

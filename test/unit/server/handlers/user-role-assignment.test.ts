@@ -89,14 +89,14 @@ describe('user role assignment handlers', (): void => {
     }
 
     it('Validate the user role assignment', async () => {
-      await expect(UserRoleAssignmentHandler.AssignUserRole(null, request, toolkit)).resolves.toBeUndefined()
+      await expect(UserRoleAssignmentHandler.AssignUserRole(null, request, toolkit)).resolves.toBeTruthy()
       expect((PermissionExclusionsValidator as jest.Mock).mock.instances[0].validateUserRole).toHaveBeenCalled()
     })
 
     it('Negative scenario1', async () => {
       const peValidatorInstance = (PermissionExclusionsValidator as jest.Mock).mock.instances[0];
-      (peValidatorInstance.validateUserRole as jest.Mock).mockRejectedValue(new Error('Some error'));
-      await expect(UserRoleAssignmentHandler.AssignUserRole(null, request, toolkit)).resolves.toBeUndefined()
+      (peValidatorInstance.validateUserRole as jest.Mock).mockRejectedValue(new Error('Some error'))
+      await expect(UserRoleAssignmentHandler.AssignUserRole(null, request, toolkit)).resolves.toBeTruthy()
       expect(peValidatorInstance.validateUserRole).toHaveBeenCalled()
       expect(spyCodeFn).toHaveBeenCalledWith(500)
     })
@@ -104,7 +104,7 @@ describe('user role assignment handlers', (): void => {
     it('Negative scenario2', async () => {
       const peValidatorInstance = (PermissionExclusionsValidator as jest.Mock).mock.instances[0];
       (peValidatorInstance.validateUserRole as jest.Mock).mockRejectedValue(new ValidationError(['Some error']));
-      await expect(UserRoleAssignmentHandler.AssignUserRole(null, request, toolkit)).resolves.toBeUndefined()
+      await expect(UserRoleAssignmentHandler.AssignUserRole(null, request, toolkit)).resolves.toBeTruthy()
       expect(peValidatorInstance.validateUserRole).toHaveBeenCalled()
       expect(spyCodeFn).toHaveBeenCalledWith(406)
     })
