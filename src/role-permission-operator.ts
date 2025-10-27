@@ -179,7 +179,7 @@ function scheduleRetry(apiObj: any, retryDelayMs: number = 5000) {
 }
 
 // Helpers to continue watching after an event
-function onDone (err: any) {
+function onDone (err?: any) {
   const severity = err instanceof Error ? 'error' : 'info'
   const delay = 1000
   logger[severity](`watch is done, restarting in ${delay}ms`, err)
