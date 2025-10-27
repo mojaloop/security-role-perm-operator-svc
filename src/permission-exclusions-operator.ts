@@ -179,8 +179,10 @@ function scheduleRetry(apiObj: any, retryDelayMs: number = 5000) {
 
 // Helpers to continue watching after an event
 function onDone (err: any) {
-  logger.error(`error: ${err?.message} - connection closed. `, err)
-  setTimeout(watchResource, 1000)
+  const severity = err instanceof Error ? 'error' : 'info'
+  const delay = 1000
+  logger[severity](`watch is done, restarting in ${delay}ms`, err)
+  setTimeout(watchResource, delay)
 }
 
 async function watchResource (): Promise<any> {
