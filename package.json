@@ -1,6 +1,6 @@
 {
   "name": "security-role-perm-operator-svc",
-  "version": "3.0.1-snapshot.1",
+  "version": "3.0.1-snapshot.2",
   "description": "K8S operator for role permission sync",
   "author": "Mojaloop",
   "contributors": [
